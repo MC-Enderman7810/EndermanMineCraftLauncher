@@ -66,6 +66,15 @@ async function search(kind, query, gameVersion, loader) {
   return Array.isArray(json.hits) ? json.hits : [];
 }
 
+async function topMods(gameVersion, loader, limit = 100) {
+  const params = new URLSearchParams();
+  params.set('limit', String(Math.max(1, Math.min(100, Number(limit) || 100))));
+  params.set('index', 'downloads');
+  params.set('facets', JSON.stringify(searchFacets('mod', gameVersion, loader)));
+  const json = await api('/search?' + params.toString());
+  return Array.isArray(json.hits) ? json.hits : [];
+}
+
 async function getProject(projectIdOrSlug) {
   const project = await api('/project/' + encodeURIComponent(projectIdOrSlug));
   // 搜索结果是 project_id，项目详情接口返回 id；统一成 install() 能用的结构
@@ -151,6 +160,7 @@ async function latestModpackFile(project, gameVersion) {
 
 module.exports = {
   search,
+  topMods,
   getProject,
   versions,
   pickFile,
