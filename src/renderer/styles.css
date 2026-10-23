@@ -606,6 +606,31 @@ textarea.input { height: auto; padding: 9px 11px; resize: vertical; line-height:
   align-self: center; margin: 4px 0 8px;
 }
 
+/* ---------------- Mod recommendations ---------------- */
+.recommend-head { display: flex; align-items: center; justify-content: space-between; margin: 14px 0 10px; }
+.recommend-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.recommend-card {
+  display: flex; align-items: flex-start; gap: 11px; padding: 13px;
+  background: #fff; border: 1px solid var(--line); border-radius: 13px;
+  box-shadow: 0 4px 16px rgba(31,80,130,.045);
+}
+.recommend-icon {
+  width: 50px; height: 50px; flex: 0 0 auto; border-radius: 11px; overflow: hidden;
+  background: var(--accent-softer); display: flex; align-items: center; justify-content: center;
+  color: var(--accent); border: 1px solid #DCE9F7;
+}
+.recommend-icon img { width: 100%; height: 100%; object-fit: cover; }
+.recommend-content { flex: 1; min-width: 0; }
+.recommend-title-row { display: flex; align-items: center; gap: 7px; }
+.recommend-title { font-size: 12.5px; font-weight: 850; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.recommend-desc { font-size: 10.5px; color: var(--muted); line-height: 1.55; margin-top: 4px; min-height: 32px; }
+.recommend-meta { font-size: 9.5px; color: var(--muted); margin-top: 5px; }
+.recommend-card .btn { flex: 0 0 auto; align-self: center; }
+
+@media (max-width: 1050px) {
+  .recommend-grid { grid-template-columns: 1fr; }
+}
+
 /* ---------------- Update / announcements ---------------- */
 .update-chip {
   border-color: #F0D3A4; background: #FFF7EA; color: #B56C00; cursor: pointer;

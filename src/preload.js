@@ -46,6 +46,7 @@ contextBridge.exposeInMainWorld('emcl', {
   removeAccount: (id) => ipcRenderer.invoke('account:remove', id),
   selectAccount: (id) => ipcRenderer.invoke('account:select', id),
   getSkin: (force) => ipcRenderer.invoke('skin:get', force),
+  recommendMods: (gameVersion, loader) => ipcRenderer.invoke('recommend:list', gameVersion, loader),
 
   searchContent: (kind, query, gameVersion, loader) =>
     ipcRenderer.invoke('content:search', kind, query, gameVersion, loader),

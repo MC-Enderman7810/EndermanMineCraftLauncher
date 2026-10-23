@@ -27,7 +27,7 @@ function versionParts(value) {
     .map((x) => parseInt(x, 10) || 0);
 }
 
-/** 支持 1.26.25.08 这种四段版本号；返回 >0 表示 a 比 b 新 */
+/** 支持 1.26.25.09 这种四段版本号；返回 >0 表示 a 比 b 新 */
 function compareVersions(a, b) {
   const pa = versionParts(a);
   const pb = versionParts(b);

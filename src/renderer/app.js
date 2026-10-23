@@ -24,6 +24,10 @@ const state = {
   resourceFallback: false,
   resourceVersionId: '',
   resourceWorld: '',
+  recommendHits: [],
+  recommendLoading: false,
+  recommendError: '',
+  recommendKey: '',
   worlds: [],
   contentData: null,
   contentLoading: false,
@@ -231,7 +235,7 @@ function render() {
   if (brandName) brandName.textContent = 'EMCL';
   document.title = 'EMCL · Enderman MineCraft Launcher';
   const versionMini = $('versionMini');
-  if (versionMini) versionMini.textContent = 'v' + (state.appVersion || '1.26.25.08');
+  if (versionMini) versionMini.textContent = 'v' + (state.appVersion || '1.26.25.09');
   const meta = PAGE_META[state.page] || PAGE_META.home;
   $('pageTitle').textContent = meta.title;
   $('pageSubtitle').textContent = meta.subtitle;
@@ -565,6 +569,7 @@ function versionsOnline() {
 /* ---------------- Resources ---------------- */
 
 const RESOURCE_TABS = [
+  { id: 'recommend', label: '推荐' },
   { id: 'mod', label: '模组' },
   { id: 'shader', label: '光影' },
   { id: 'resourcepack', label: '资源包' },
@@ -577,6 +582,7 @@ function pageResources() {
   const vid = state.resourceVersionId || currentVersionId();
   const gv = gameVersionOf(vid);
   const ld = loaderOf(vid);
+  if (state.resourceKind === 'recommend') return pageRecommend(vid, gv, ld);
   const kindLabel = (RESOURCE_TABS.find((t) => t.id === state.resourceKind) || RESOURCE_TABS[0]).label;
   let html = '<div class="toolbar">' +
     '<div class="tabs">' + RESOURCE_TABS.map((t) =>
@@ -623,6 +629,98 @@ function resourceCard(hit) {
     '<div class="resource-foot"><span class="downloads">' + downloads(hit.downloads) + ' 次下载</span><div class="spacer"></div>' +
       '<button class="btn ' + (state.resourceKind === 'modpack' ? 'btn-primary' : 'btn-soft') + ' btn-sm" data-action="install-resource" data-project="' + esc(hit.project_id) + '">' +
         (busy ? '处理中…' : (state.resourceKind === 'modpack' ? '安装整合包' : '安装')) + '</button></div></div>';
+}
+
+function recommendToolbar(vid, gv, ld) {
+  return '<div class="toolbar">' +
+    '<div class="tabs">' + RESOURCE_TABS.map((t) =>
+      '<button class="tab ' + (state.resourceKind === t.id ? 'active' : '') +
+      '" data-action="rkind" data-kind="' + t.id + '">' + t.label + '</button>').join('') + '</div>' +
+    '<div class="spacer"></div>' +
+    '<div class="field" style="margin:0;min-width:180px"><select class="select" data-change="resource-version">' +
+      activeVersionOptions(vid) + '</select></div>' +
+    '<div class="chip">' + (gv ? esc(gv) : '未选版本') + (ld ? ' · ' + esc(ld) : '') + '</div>' +
+    '</div>';
+}
+
+function pageRecommend(vid, gv, ld) {
+  let html = recommendToolbar(vid, gv, ld);
+  if (!vid) {
+    return html + '<div class="card">' + emptyState('还没有选择游戏版本。\n先安装一个版本，推荐会根据版本和加载器自动匹配。', 'box') + '</div>';
+  }
+  if (!ld) {
+    return html + '<div class="card"><div class="card-head"><h3 class="card-title">先安装模组加载器</h3></div>' +
+      '<div class="card-subtitle">推荐模组需要 Fabric / Quilt / Forge / NeoForge。' +
+      '当前版本是原版，安装加载器后这里会自动匹配推荐。</div>' +
+      '<div class="row" style="margin-top:12px"><button class="btn btn-primary" data-action="goto-versions">去安装加载器</button></div></div>';
+  }
+  const key = gv + ':' + ld;
+  if (state.recommendKey !== key && !state.recommendLoading) {
+    setTimeout(() => loadRecommendations(false), 0);
+  }
+  if (state.recommendLoading && !state.recommendHits.length) {
+    html += '<div class="card">' + emptyState('正在根据 ' + gv + ' · ' + ld + ' 匹配推荐模组…', 'box') + '</div>';
+  } else if (state.recommendError) {
+    html += '<div class="card"><div class="empty" style="color:var(--red)">' + esc(state.recommendError) + '</div>' +
+      '<div class="row" style="justify-content:center"><button class="btn btn-soft" data-action="refresh-recommend">重试</button></div></div>';
+  } else if (!state.recommendHits.length) {
+    html += '<div class="card">' + emptyState('当前版本没有可用的推荐。', 'box') + '</div>';
+  } else {
+    html += '<div class="recommend-head"><div><div class="card-title">PCL2 风格推荐</div>' +
+      '<div class="card-subtitle">为 ' + esc(gv) + ' · ' + esc(ld) + ' 挑选的常用模组，点击即可安装。</div></div>' +
+      '<button class="btn btn-ghost btn-sm" data-action="refresh-recommend">' + icon('refresh', 14) + '刷新推荐</button></div>' +
+      '<div class="recommend-grid">' + state.recommendHits.map((item) => {
+        const busy = state.installing === item.projectId;
+        const disabled = !item.available || busy;
+        return '<article class="recommend-card">' +
+          '<div class="recommend-icon">' + (item.icon ? '<img src="' + esc(item.icon) + '" alt="" loading="lazy" />' : icon('box', 24)) + '</div>' +
+          '<div class="recommend-content"><div class="recommend-title-row"><div class="recommend-title">' + esc(item.title) + '</div>' +
+          '<span class="tag tag-blue">' + esc(item.category) + '</span></div>' +
+          '<div class="recommend-desc">' + esc(item.description) + '</div>' +
+          '<div class="recommend-meta">' + (item.available ? esc(item.versionName || '可用') : '当前加载器不兼容') +
+          ' · ' + formatDownloads(item.downloads) + '</div></div>' +
+          '<button class="btn ' + (disabled ? 'btn-ghost' : 'btn-primary') + ' btn-sm" data-action="install-recommend" data-slug="' +
+          esc(item.slug) + '"' + (disabled ? ' disabled' : '') + '>' +
+          (busy ? '安装中…' : (item.available ? '安装' : '不可用')) + '</button></article>';
+      }).join('') + '</div>';
+  }
+  return html;
+}
+
+function formatDownloads(n) {
+  const v = Number(n) || 0;
+  if (v >= 1000000) return (v / 1000000).toFixed(1) + 'M 下载';
+  if (v >= 1000) return (v / 1000).toFixed(0) + 'K 下载';
+  return v + ' 下载';
+}
+
+async function loadRecommendations(force = false) {
+  const vid = state.resourceVersionId || currentVersionId();
+  const gv = gameVersionOf(vid);
+  const ld = loaderOf(vid);
+  if (!gv || !ld) return;
+  const key = gv + ':' + ld;
+  if (!force && state.recommendKey === key && (state.recommendLoading || state.recommendHits.length)) return;
+  state.recommendKey = key;
+  state.recommendLoading = true;
+  state.recommendError = '';
+  if (state.page === 'resources' && state.resourceKind === 'recommend') render();
+  try {
+    const res = await api.recommendMods(gv, ld);
+    if (!res.ok) throw new Error(res.error || '读取推荐失败');
+    state.recommendHits = res.items || [];
+  } catch (e) {
+    state.recommendError = e.message || '读取推荐失败';
+  } finally {
+    state.recommendLoading = false;
+    if (state.page === 'resources' && state.resourceKind === 'recommend') render();
+  }
+}
+
+async function installRecommendation(slug) {
+  const item = state.recommendHits.find((x) => x.slug === slug);
+  if (!item || !item.projectId || !item.available) return;
+  await installResource(item.projectId, { project_id: item.projectId, title: item.title, slug: item.slug }, 'mod');
 }
 
 function resourceInstalled(kindLabel) {
@@ -863,7 +961,7 @@ function updateSettingsCard() {
   }
   return '<div class="card"><div class="card-head"><h3 class="card-title">更新</h3>' +
     '<span class="small">' + tag(status, tone) + '</span></div>' +
-    '<div class="kv"><span class="k">当前版本</span><span class="v">' + esc(state.appVersion || '1.26.25.08') + '</span></div>' +
+    '<div class="kv"><span class="k">当前版本</span><span class="v">' + esc(state.appVersion || '1.26.25.09') + '</span></div>' +
     '<div class="kv"><span class="k">自动检查</span><span class="v">启动后自动检查，每 6 小时一次</span></div>' +
     (u && u.hasUpdate ? '<div class="update-card" style="margin-top:10px;padding:10px;border:1px solid #F0D3A4;border-radius:10px">' +
       '<div class="update-mark">' + icon('download', 20) + '</div><div><div class="update-title">EMCL ' + esc(u.latest) + '</div>' +
@@ -965,7 +1063,7 @@ function pageSettings() {
       updateSettingsCard() +
 
       '<div class="card"><div class="card-head"><h3 class="card-title">关于</h3></div>' +
-        '<div class="kv"><span class="k">版本</span><span class="v">' + esc(state.appVersion || '1.26.25.08') + '</span></div>' +
+        '<div class="kv"><span class="k">版本</span><span class="v">' + esc(state.appVersion || '1.26.25.09') + '</span></div>' +
         '<div class="kv"><span class="k">应用</span><span class="v">EMCL</span></div>' +
         '<div class="kv"><span class="k">全名</span><span class="v">Enderman MineCraft Launcher</span></div>' +
         '<div class="kv"><span class="k">Minecraft</span><span class="v">Java Edition</span></div>' +
@@ -1033,11 +1131,14 @@ async function handleAction(action, el) {
       state.resourceFallback = false;
       state.resourceSearching = false;
       state.contentData = null;
-      await loadContent();
+      if (state.resourceKind === 'recommend') await loadRecommendations(true);
+      else await loadContent();
       render();
       break;
     case 'search-resources': await doSearch(); break;
     case 'install-resource': await installResource(dataset.project); break;
+    case 'install-recommend': await installRecommendation(dataset.slug); break;
+    case 'refresh-recommend': await loadRecommendations(true); render(); break;
     case 'toggle-content': await toggleContent(dataset.kind, dataset.path, dataset.enabled === '1'); break;
     case 'remove-content': await removeContent(dataset.kind, dataset.path, dataset.name); break;
     case 'refresh-content': await loadContent(); render(); break;
@@ -1087,7 +1188,10 @@ function setPage(page) {
   if (!PAGE_META[page]) return;
   if (!state.noticeOpenId) closeModal();
   state.page = page;
-  if (page === 'resources') loadContent().then(render).catch(() => {});
+  if (page === 'resources') {
+    if (state.resourceKind === 'recommend') loadRecommendations(false).then(render).catch(() => {});
+    else loadContent().then(render).catch(() => {});
+  }
   if (page === 'skin') loadSkin(false).catch(() => {});
   if (page === 'logs') loadLatestLog().then(render).catch(() => {});
   if (page === 'versions' && !state.manifest && !state.manifestLoading) loadManifest(false).catch(() => {});
@@ -1473,6 +1577,7 @@ async function importModpack() {
 }
 
 async function loadContent() {
+  if (state.resourceKind === 'recommend') return;
   const vid = state.resourceVersionId || currentVersionId();
   if (!vid) { state.contentData = null; return; }
   state.resourceVersionId = vid;
@@ -1523,12 +1628,13 @@ async function doSearch() {
   }
 }
 
-async function installResource(projectId) {
-  const project = state.resourceHits.find((h) => h.project_id === projectId);
+async function installResource(projectId, projectOverride, kindOverride) {
+  const project = projectOverride || state.resourceHits.find((h) => h.project_id === projectId);
   if (!project) return;
+  const kind = kindOverride || state.resourceKind;
   const vid = state.resourceVersionId || currentVersionId();
   if (!vid) { toast('请先安装或选择一个版本', 'error'); return; }
-  if (state.resourceKind === 'datapack' && !state.resourceWorld) {
+  if (kind === 'datapack' && !state.resourceWorld) {
     toast('请先选择一个存档', 'error');
     return;
   }
@@ -1536,7 +1642,7 @@ async function installResource(projectId) {
   render();
   try {
     let res;
-    if (state.resourceKind === 'modpack') {
+    if (kind === 'modpack') {
       res = await api.downloadModpack(project, { gameVersion: gameVersionOf(vid) });
       if (res.ok) {
         state.installed = res.installed;
@@ -1544,7 +1650,7 @@ async function installResource(projectId) {
         if (res.result.versionId) state.config.lastVersionId = res.result.versionId;
       }
     } else {
-      res = await api.installContent(state.resourceKind, project, {
+      res = await api.installContent(kind, project, {
         versionId: vid,
         gameVersion: gameVersionOf(vid),
         loader: loaderOf(vid),
@@ -1555,6 +1661,8 @@ async function installResource(projectId) {
     toast((state.resourceKind === 'modpack' ? '整合包安装完成' : project.title + ' 已安装'), 'success');
     if (state.resourceKind === 'modpack') {
       state.page = 'modpacks';
+    } else if (state.resourceKind === 'recommend') {
+      await loadRecommendations(true);
     } else {
       await loadContent();
     }
@@ -1794,7 +1902,7 @@ function feedbackSystemInfo() {
   const account = currentAccount();
   const java = state.java;
   return [
-    'EMCL ' + (state.appVersion || '1.26.25.08'),
+    'EMCL ' + (state.appVersion || '1.26.25.09'),
     '通道: 发布版',
     '系统: ' + (navigator.userAgent || navigator.platform || ''),
     'Java: ' + (java && java.ok ? (java.version + ' / ' + java.path) : '未检测到'),
@@ -1916,7 +2024,8 @@ function bind() {
       if (key === 'resource-version') {
         state.resourceVersionId = el.value;
         state.resourceHits = [];
-        await loadContent();
+        if (state.resourceKind === 'recommend') await loadRecommendations(true);
+        else await loadContent();
         render();
       } else if (key === 'resource-world') {
         state.resourceWorld = el.value;

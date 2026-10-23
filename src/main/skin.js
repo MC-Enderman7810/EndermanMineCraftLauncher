@@ -24,7 +24,7 @@ function defaultSkin() {
 
 async function fetchImage(url) {
   const res = await fetch(url, {
-    headers: { 'User-Agent': 'EMCL/1.26.25.08', 'Accept': 'image/png,image/*' },
+    headers: { 'User-Agent': 'EMCL/1.26.25.09', 'Accept': 'image/png,image/*' },
     redirect: 'follow'
   });
   if (!res.ok) throw new Error('皮肤图片下载失败：HTTP ' + res.status);
@@ -57,7 +57,7 @@ async function microsoftSkin(store, account, force) {
     headers: {
       'Authorization': 'Bearer ' + account.accessToken,
       'Accept': 'application/json',
-      'User-Agent': 'EMCL/1.26.25.08'
+      'User-Agent': 'EMCL/1.26.25.09'
     }
   });
   if (res.status === 401) {
@@ -68,7 +68,7 @@ async function microsoftSkin(store, account, force) {
       headers: {
         'Authorization': 'Bearer ' + account.accessToken,
         'Accept': 'application/json',
-        'User-Agent': 'EMCL/1.26.25.08'
+        'User-Agent': 'EMCL/1.26.25.09'
       }
     });
   }
@@ -88,7 +88,7 @@ async function thirdPartySkin(account) {
   if (!root || !uuid) return { url: '', model: 'steve' };
   const json = await fetchJson(root + '/sessionserver/session/minecraft/profile/' + uuid, {
     timeout: 15000,
-    headers: { 'User-Agent': 'EMCL/1.26.25.08' }
+    headers: { 'User-Agent': 'EMCL/1.26.25.09' }
   });
   const skin = skinFromTextures(json.properties);
   return skin || { url: '', model: 'steve' };

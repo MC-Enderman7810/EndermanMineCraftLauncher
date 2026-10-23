@@ -19,6 +19,7 @@ const { exists, ensureDir, formatBytes } = require('./util');
 const java = require('./java');
 const updater = require('./updater');
 const skin = require('./skin');
+const recommend = require('./recommend');
 
 app.setName('EMCL');
 app.setPath('userData', path.join(app.getPath('appData'), 'emcl-launcher'));
@@ -489,6 +490,14 @@ function registerIpc() {
   ipcMain.handle('account:select', async (event, id) => {
     await store.selectAccount(id);
     return { ok: true, activeAccountId: id };
+  });
+
+  ipcMain.handle('recommend:list', async (event, gameVersion, loader) => {
+    try {
+      return await recommend.getRecommendations(gameVersion, loader);
+    } catch (e) {
+      return { ok: false, error: e.message, items: [] };
+    }
   });
 
   ipcMain.handle('skin:get', async (event, force) => {
