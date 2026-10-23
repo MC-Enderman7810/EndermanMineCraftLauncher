@@ -1,17 +1,6 @@
 {
   "announcements": [
     {
-      "id": "web-1792767465197-798f9",
-      "title": "测试公告",
-      "body": "这是一个测试",
-      "date": "2026-10-23",
-      "tag": "公告",
-      "kind": "announcement",
-      "pinned": false,
-      "enabled": true,
-      "url": ""
-    },
-    {
       "id": "2026-10-23-emcl-1.26.25.07",
       "title": "EMCL 1.26.25.07 已发布",
       "body": "所有版本都新增了“反馈”入口：遇到启动失败、安装失败或界面问题时，可以直接生成一份包含版本、Java、系统和最近日志的报告，并打开 GitHub 提交 Issue。\n\n新公告仍会在启动时以居中提示框显示，每个公告只显示一次。\n\n遇到问题请到 GitHub 仓库提交 Issue。",
