@@ -1,0 +1,50 @@
+{
+  "name": "emcl-launcher",
+  "version": "1.26.25.07",
+  "description": "EMCL - a blue PCL2-style Minecraft Java launcher for Windows",
+  "main": "src/main/main.js",
+  "author": "EMCL",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win portable --x64",
+    "pack": "electron-builder --win dir --x64",
+    "postpack": "node scripts/patch-version.js"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.16"
+  },
+  "devDependencies": {
+    "electron": "^38.0.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.emcl.launcher",
+    "productName": "EMCL",
+    "electronVersion": "38.8.6",
+    "electronDist": "cache-electron/dist",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json",
+      "!**/*.map"
+    ],
+    "asar": true,
+    "npmRebuild": false,
+    "win": {
+      "target": [
+        {
+          "target": "dir",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.ico"
+    }
+  }
+}

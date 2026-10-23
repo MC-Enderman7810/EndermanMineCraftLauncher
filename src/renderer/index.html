@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EMCL · Enderman MineCraft Launcher</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="titlebar">
+    <div class="titlebar-brand">
+      <span class="brand-gem"></span>
+      <span>EMCL</span>
+      <span class="titlebar-sub">Enderman MineCraft Launcher</span>
+    </div>
+    <div class="titlebar-drag"></div>
+    <div class="window-buttons">
+      <button id="winMin" class="win-btn" title="最小化" aria-label="最小化"></button>
+      <button id="winMax" class="win-btn" title="最大化" aria-label="最大化"></button>
+      <button id="winClose" class="win-btn win-close" title="关闭" aria-label="关闭"></button>
+    </div>
+  </div>
+
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-block">E</div>
+        <div class="brand-name">EMCL</div>
+      </div>
+      <nav id="nav" class="nav"></nav>
+      <div class="sidebar-bottom">
+        <button class="account-mini" id="accountMini" title="账户"></button>
+        <div class="version-mini" id="versionMini">v1.26.25.07</div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <h1 id="pageTitle">主页</h1>
+          <span id="pageSubtitle" class="page-subtitle"></span>
+        </div>
+        <div class="topbar-right">
+          <button class="chip feedback-chip" id="feedbackChip" title="提交错误或建议">反馈</button>
+          <button class="chip update-chip" id="updateChip" style="display:none"></button>
+          <button class="chip notice-chip" id="noticeChip" style="display:none"></button>
+          <div class="chip" id="javaChip"></div>
+          <div class="chip chip-account" id="accountChip"></div>
+        </div>
+      </header>
+      <section class="content" id="content"></section>
+    </main>
+  </div>
+
+  <div class="task-dock" id="taskDock"></div>
+  <div class="modal-root" id="modalRoot"></div>
+  <div class="toast-root" id="toastRoot"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
