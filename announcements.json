@@ -1,6 +1,17 @@
 {
   "announcements": [
     {
+      "id": "web-1792767671566-89d60",
+      "title": "__dev_manual_test__",
+      "body": "manual",
+      "date": "2026-10-23",
+      "tag": "公告",
+      "kind": "announcement",
+      "pinned": false,
+      "enabled": true,
+      "url": ""
+    },
+    {
       "id": "web-1792767465197-798f9",
       "title": "测试公告",
       "body": "这是一个测试",
