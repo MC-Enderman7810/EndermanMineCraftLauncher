@@ -120,7 +120,7 @@ async function buildLaunch(store, versionId, account, options = {}) {
     natives_directory: nativesDir,
     classpath,
     launcher_name: 'EMCL',
-    launcher_version: '1.26.25.07',
+    launcher_version: '1.26.25.08',
     user_properties: '{}',
     clientid: '',
     auth_xuid: ''
@@ -143,7 +143,7 @@ async function buildLaunch(store, versionId, account, options = {}) {
     jvm.push('-Dminecraft.launcher.brand=EMCL');
   }
   if (!jvm.some((a) => a.startsWith('-Dminecraft.launcher.version='))) {
-    jvm.push('-Dminecraft.launcher.version=1.26.25.07');
+    jvm.push('-Dminecraft.launcher.version=1.26.25.08');
   }
   if (!jvm.some((a) => a.startsWith('-Dlog4j2.formatMsgNoLookups='))) {
     jvm.push('-Dlog4j2.formatMsgNoLookups=true');

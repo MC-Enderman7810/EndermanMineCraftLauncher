@@ -231,7 +231,7 @@ function render() {
   if (brandName) brandName.textContent = 'EMCL';
   document.title = 'EMCL · Enderman MineCraft Launcher';
   const versionMini = $('versionMini');
-  if (versionMini) versionMini.textContent = 'v' + (state.appVersion || '1.26.25.07');
+  if (versionMini) versionMini.textContent = 'v' + (state.appVersion || '1.26.25.08');
   const meta = PAGE_META[state.page] || PAGE_META.home;
   $('pageTitle').textContent = meta.title;
   $('pageSubtitle').textContent = meta.subtitle;
@@ -863,7 +863,7 @@ function updateSettingsCard() {
   }
   return '<div class="card"><div class="card-head"><h3 class="card-title">更新</h3>' +
     '<span class="small">' + tag(status, tone) + '</span></div>' +
-    '<div class="kv"><span class="k">当前版本</span><span class="v">' + esc(state.appVersion || '1.26.25.07') + '</span></div>' +
+    '<div class="kv"><span class="k">当前版本</span><span class="v">' + esc(state.appVersion || '1.26.25.08') + '</span></div>' +
     '<div class="kv"><span class="k">自动检查</span><span class="v">启动后自动检查，每 6 小时一次</span></div>' +
     (u && u.hasUpdate ? '<div class="update-card" style="margin-top:10px;padding:10px;border:1px solid #F0D3A4;border-radius:10px">' +
       '<div class="update-mark">' + icon('download', 20) + '</div><div><div class="update-title">EMCL ' + esc(u.latest) + '</div>' +
@@ -965,7 +965,7 @@ function pageSettings() {
       updateSettingsCard() +
 
       '<div class="card"><div class="card-head"><h3 class="card-title">关于</h3></div>' +
-        '<div class="kv"><span class="k">版本</span><span class="v">' + esc(state.appVersion || '1.26.25.07') + '</span></div>' +
+        '<div class="kv"><span class="k">版本</span><span class="v">' + esc(state.appVersion || '1.26.25.08') + '</span></div>' +
         '<div class="kv"><span class="k">应用</span><span class="v">EMCL</span></div>' +
         '<div class="kv"><span class="k">全名</span><span class="v">Enderman MineCraft Launcher</span></div>' +
         '<div class="kv"><span class="k">Minecraft</span><span class="v">Java Edition</span></div>' +
@@ -1794,7 +1794,7 @@ function feedbackSystemInfo() {
   const account = currentAccount();
   const java = state.java;
   return [
-    'EMCL ' + (state.appVersion || '1.26.25.07'),
+    'EMCL ' + (state.appVersion || '1.26.25.08'),
     '通道: 发布版',
     '系统: ' + (navigator.userAgent || navigator.platform || ''),
     'Java: ' + (java && java.ok ? (java.version + ' / ' + java.path) : '未检测到'),

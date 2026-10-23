@@ -97,7 +97,7 @@ async function postForm(url, values) {
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
       'Accept': 'application/json',
-      'User-Agent': 'EMCL/1.26.25.07'
+      'User-Agent': 'EMCL/1.26.25.08'
     },
     body
   });
@@ -118,7 +118,7 @@ async function postJson(url, value, headers = {}) {
     headers: Object.assign({
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      'User-Agent': 'EMCL/1.26.25.07'
+      'User-Agent': 'EMCL/1.26.25.08'
     }, headers),
     body: JSON.stringify(value)
   });
@@ -177,7 +177,7 @@ async function completeChain(token, clientId, authority = 'live') {
     headers: {
       'Authorization': 'Bearer ' + mc.access_token,
       'Accept': 'application/json',
-      'User-Agent': 'EMCL/1.26.25.07'
+      'User-Agent': 'EMCL/1.26.25.08'
     }
   });
   if (res.status === 404) throw new Error('该微软账户没有 Minecraft: Java 版，或尚未创建玩家档案');
@@ -386,7 +386,7 @@ async function refreshAccount(store, account) {
 
 async function assertMicrosoftOwnership(accessToken) {
   const res = await fetch(MC_PROFILE, {
-    headers: { 'Authorization': 'Bearer ' + accessToken, 'User-Agent': 'EMCL/1.26.25.07' }
+    headers: { 'Authorization': 'Bearer ' + accessToken, 'User-Agent': 'EMCL/1.26.25.08' }
   });
   return res.ok;
 }

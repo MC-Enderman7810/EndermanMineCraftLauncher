@@ -388,7 +388,7 @@ async function installVersion(versionId, jsonUrl, gameDir, source, progress) {
   progress(0, 100, '获取版本 JSON');
   // 总是重新拉取，保证清单里的地址是最新的
   const res = await fetch(mirrorUrl(jsonUrl, source), {
-    headers: { 'User-Agent': 'EMCL/1.26.25.07' }
+    headers: { 'User-Agent': 'EMCL/1.26.25.08' }
   });
   const text = await res.text();
   if (!res.ok) throw new Error('版本 JSON 下载失败：HTTP ' + res.status);

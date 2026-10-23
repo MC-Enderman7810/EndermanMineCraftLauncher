@@ -7,7 +7,7 @@ const crypto = require('crypto');
 const { Readable } = require('stream');
 const AdmZip = require('adm-zip');
 
-const USER_AGENT = 'EMCL/1.26.25.07 (Windows; Minecraft Java Edition launcher)';
+const USER_AGENT = 'EMCL/1.26.25.08 (Windows; Minecraft Java Edition launcher)';
 
 function ensureDir(dir) {
   return fsp.mkdir(dir, { recursive: true });
