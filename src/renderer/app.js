@@ -28,6 +28,7 @@ const state = {
   recommendLoading: false,
   recommendError: '',
   recommendKey: '',
+  recommendLimit: 30,
   worlds: [],
   contentData: null,
   contentLoading: false,
@@ -666,10 +667,11 @@ function pageRecommend(vid, gv, ld) {
   } else if (!state.recommendHits.length) {
     html += '<div class="card">' + emptyState('当前版本没有可用的推荐。', 'box') + '</div>';
   } else {
-    html += '<div class="recommend-head"><div><div class="card-title">PCL2 风格推荐</div>' +
-      '<div class="card-subtitle">为 ' + esc(gv) + ' · ' + esc(ld) + ' 挑选的常用模组，点击即可安装。</div></div>' +
+    const shown = state.recommendHits.slice(0, state.recommendLimit || 30);
+    html += '<div class="recommend-head"><div><div class="card-title">模组热门 Top 100</div>' +
+      '<div class="card-subtitle">Modrinth 下载榜前 100 名，按 ' + esc(gv) + ' · ' + esc(ld) + ' 筛选，点击即可安装。</div></div>' +
       '<button class="btn btn-ghost btn-sm" data-action="refresh-recommend">' + icon('refresh', 14) + '刷新推荐</button></div>' +
-      '<div class="recommend-grid">' + state.recommendHits.map((item) => {
+      '<div class="recommend-grid">' + shown.map((item) => {
         const busy = state.installing === item.projectId;
         const disabled = !item.available || busy;
         return '<article class="recommend-card">' +
@@ -677,12 +679,16 @@ function pageRecommend(vid, gv, ld) {
           '<div class="recommend-content"><div class="recommend-title-row"><div class="recommend-title">' + esc(item.title) + '</div>' +
           '<span class="tag tag-blue">' + esc(item.category) + '</span></div>' +
           '<div class="recommend-desc">' + esc(item.description) + '</div>' +
-          '<div class="recommend-meta">' + (item.available ? esc(item.versionName || '可用') : '当前加载器不兼容') +
+          '<div class="recommend-meta">' + (item.available ? '适配当前版本' : '当前加载器不兼容') +
           ' · ' + formatDownloads(item.downloads) + '</div></div>' +
           '<button class="btn ' + (disabled ? 'btn-ghost' : 'btn-primary') + ' btn-sm" data-action="install-recommend" data-slug="' +
           esc(item.slug) + '"' + (disabled ? ' disabled' : '') + '>' +
           (busy ? '安装中…' : (item.available ? '安装' : '不可用')) + '</button></article>';
-      }).join('') + '</div>';
+      }).join('') + '</div>' +
+      (shown.length < state.recommendHits.length
+        ? '<div class="row" style="justify-content:center;margin-top:12px"><button class="btn btn-soft" data-action="more-recommend">显示更多（' +
+          shown.length + ' / ' + state.recommendHits.length + '）</button></div>'
+        : '');
   }
   return html;
 }
@@ -702,6 +708,7 @@ async function loadRecommendations(force = false) {
   const key = gv + ':' + ld;
   if (!force && state.recommendKey === key && (state.recommendLoading || state.recommendHits.length)) return;
   state.recommendKey = key;
+  state.recommendLimit = 30;
   state.recommendLoading = true;
   state.recommendError = '';
   if (state.page === 'resources' && state.resourceKind === 'recommend') render();
@@ -1138,6 +1145,7 @@ async function handleAction(action, el) {
     case 'search-resources': await doSearch(); break;
     case 'install-resource': await installResource(dataset.project); break;
     case 'install-recommend': await installRecommendation(dataset.slug); break;
+    case 'more-recommend': state.recommendLimit += 30; render(); break;
     case 'refresh-recommend': await loadRecommendations(true); render(); break;
     case 'toggle-content': await toggleContent(dataset.kind, dataset.path, dataset.enabled === '1'); break;
     case 'remove-content': await removeContent(dataset.kind, dataset.path, dataset.name); break;
