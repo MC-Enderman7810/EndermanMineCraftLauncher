@@ -81,6 +81,7 @@ contextBridge.exposeInMainWorld('emcl', {
   serverProperties: (id) => ipcRenderer.invoke('servers:properties', id),
   serverSaveProperties: (id, text) => ipcRenderer.invoke('servers:saveProperties', id, text),
   serverPlayers: (id) => ipcRenderer.invoke('servers:players', id),
+  serverSsh: (id, command) => ipcRenderer.invoke('servers:ssh', id, command),
   serverPlayerAction: (id, action, name) => ipcRenderer.invoke('servers:playerAction', id, action, name),
   serverAnalyze: (id) => ipcRenderer.invoke('servers:analyze', id),
   serverRemove: (id) => ipcRenderer.invoke('servers:remove', id),

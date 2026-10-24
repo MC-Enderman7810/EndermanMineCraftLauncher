@@ -104,6 +104,8 @@ class ServerManager {
       host,
       port: Number(data.port) || 25575,
       password: this.encrypt(String(data.password || '')),
+      sshUser: String(data.sshUser || '').trim(),
+      sshKey: String(data.sshKey || '').trim(),
       createdAt: Date.now()
     };
     const list = await this.load();
@@ -205,6 +207,28 @@ class ServerManager {
     }
     zip.writeZip(target);
     return { ok: true, path: target };
+  }
+
+  async sshCommand(id, command) {
+    const profile = (await this.load()).find((s) => s.id === id);
+    if (!profile) throw new Error('服务器不存在');
+    if (profile.type !== 'remote' || !profile.sshUser) throw new Error('请先配置 SSH 用户');
+    if (!command || !String(command).trim()) throw new Error('请输入 SSH 命令');
+    return new Promise((resolve, reject) => {
+      const args = ['-o', 'BatchMode=yes', '-o', 'ConnectTimeout=10'];
+      if (profile.sshKey) args.push('-i', profile.sshKey);
+      args.push(profile.sshUser + '@' + profile.host, String(command));
+      const child = spawn('ssh', args, { windowsHide: true });
+      let out = '';
+      let err = '';
+      child.stdout.on('data', (d) => { out += d; });
+      child.stderr.on('data', (d) => { err += d; });
+      child.on('error', (e) => reject(new Error('SSH 启动失败：' + e.message)));
+      child.on('exit', (code) => {
+        if (code === 0) resolve({ ok: true, text: out || '(无输出)' });
+        else reject(new Error((err || out || ('SSH 退出码 ' + code)).slice(-2000)));
+      });
+    });
   }
 
   async getProperties(id) {

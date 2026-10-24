@@ -508,6 +508,7 @@ function registerIpc() {
   ipcMain.handle('servers:properties', async (event, id) => serverManager.getProperties(id));
   ipcMain.handle('servers:saveProperties', async (event, id, text) => serverManager.saveProperties(id, text));
   ipcMain.handle('servers:players', async (event, id) => serverManager.getPlayers(id));
+  ipcMain.handle('servers:ssh', async (event, id, command) => serverManager.sshCommand(id, command));
   ipcMain.handle('servers:playerAction', async (event, id, action, name) => serverManager.playerAction(id, action, name));
   ipcMain.handle('servers:analyze', async (event, id) => serverManager.analyze(id));
   ipcMain.handle('servers:remove', async (event, id) => serverManager.remove(id));

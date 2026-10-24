@@ -27,6 +27,7 @@ const state = {
   servers: [],
   serverId: '',
   serverLogs: [],
+  pendingLocal: null,
   recommendHits: [],
   recommendLoading: false,
   recommendError: '',
@@ -812,6 +813,8 @@ function pageServers() {
       (s.type === 'local' ? '<button class="btn btn-ghost btn-sm" data-action="server-properties" data-id="' + esc(s.id) + '">属性</button>' +
         '<button class="btn btn-ghost btn-sm" data-action="server-backups" data-id="' + esc(s.id) + '">备份</button>' +
         '<button class="btn btn-ghost btn-sm" data-action="server-analyze" data-id="' + esc(s.id) + '">分析</button>' : '') +
+      (s.type === 'remote' && s.sshUser ? '<button class="btn btn-ghost btn-sm" data-action="server-ssh" data-id="' +
+        esc(s.id) + '">SSH</button>' : '') +
       '<button class="btn btn-ghost btn-sm" data-action="server-players" data-id="' + esc(s.id) + '">玩家</button>' +
       '<button class="btn ' + (s.running ? 'btn-danger' : 'btn-primary') + ' btn-sm" data-action="' +
       (s.running ? 'stop-server' : 'start-server') + '" data-id="' + esc(s.id) + '">' +
@@ -845,12 +848,35 @@ async function loadServers() {
 async function addLocalServer() {
   const picked = await api.serverPick();
   if (!picked) return;
-  const name = picked.dir.split(/[\\/]/).filter(Boolean).pop() || 'Minecraft Server';
-  const res = await api.serverAddLocal(picked.dir, name, picked.jar, 4096);
+  state.pendingLocal = picked;
+  openModal({
+    title: '添加本地服务端',
+    desc: '目录：' + picked.dir,
+    body: '<div class="field"><label>服务器名称</label><input class="input" id="localSrvName" value="' +
+      esc(picked.dir.split(/[\\/]/).filter(Boolean).pop() || 'Minecraft Server') + '" /></div>' +
+      '<div class="field"><label>服务端 jar</label><input class="input" id="localSrvJar" value="' + esc(picked.jar || 'server.jar') + '" /></div>' +
+      '<div class="grid-2"><div class="field"><label>最大内存 (MB)</label><input class="input" id="localSrvMemory" type="number" value="4096" /></div>' +
+      '<div class="field"><label>Java 路径</label><input class="input" id="localSrvJava" value="' +
+      esc((state.java && state.java.path) || '') + '" placeholder="留空使用 PATH 中的 java" /></div></div>',
+    actions: [{ label: '取消', kind: 'ghost', action: 'close-modal' },
+      { label: '添加', kind: 'primary', action: 'save-local-server' }]
+  });
+}
+
+async function saveLocalServer() {
+  const p = state.pendingLocal;
+  if (!p) return;
+  const res = await api.serverAddLocal(p.dir,
+    $('localSrvName') ? $('localSrvName').value.trim() : '',
+    $('localSrvJar') ? $('localSrvJar').value.trim() : p.jar,
+    $('localSrvMemory') ? Number($('localSrvMemory').value) : 4096,
+    $('localSrvJava') ? $('localSrvJava').value.trim() : '');
   if (!res.ok) { toast(res.error || '添加失败', 'error'); return; }
   state.servers = res.servers;
   state.serverId = res.profile.id;
   state.serverLogs = [];
+  state.pendingLocal = null;
+  closeModal();
   toast('服务器已添加', 'success');
   render();
 }
@@ -862,7 +888,10 @@ function openRemoteServerModal() {
     body: '<div class="field"><label>名称</label><input class="input" id="srvName" placeholder="我的服务器" /></div>' +
       '<div class="grid-2"><div class="field"><label>地址</label><input class="input" id="srvHost" placeholder="127.0.0.1" /></div>' +
       '<div class="field"><label>RCON 端口</label><input class="input" id="srvPort" value="25575" /></div></div>' +
-      '<div class="field"><label>RCON 密码</label><input class="input" id="srvPassword" type="password" /></div>',
+      '<div class="field"><label>RCON 密码</label><input class="input" id="srvPassword" type="password" /></div>' +
+      '<div class="grid-2"><div class="field"><label>SSH 用户（可选）</label><input class="input" id="srvSshUser" placeholder="root" /></div>' +
+      '<div class="field"><label>SSH 私钥路径（可选）</label><input class="input" id="srvSshKey" placeholder="C:\\Users\\...\\.ssh\\id_ed25519" /></div></div>' +
+      '<div class="card-subtitle">SSH 使用 BatchMode，需要事先配置好公钥登录，不支持在应用里输入 SSH 密码。</div>',
     actions: [{ label: '取消', kind: 'ghost', action: 'close-modal' },
       { label: '添加', kind: 'primary', action: 'save-remote-server' }]
   });
@@ -873,7 +902,9 @@ async function saveRemoteServer() {
     name: $('srvName') ? $('srvName').value.trim() : '',
     host: $('srvHost') ? $('srvHost').value.trim() : '',
     port: $('srvPort') ? Number($('srvPort').value) : 25575,
-    password: $('srvPassword') ? $('srvPassword').value : ''
+    password: $('srvPassword') ? $('srvPassword').value : '',
+    sshUser: $('srvSshUser') ? $('srvSshUser').value.trim() : '',
+    sshKey: $('srvSshKey') ? $('srvSshKey').value.trim() : ''
   };
   const res = await api.serverAddRemote(data);
   if (!res.ok) { toast(res.error || '添加失败', 'error'); return; }
@@ -973,6 +1004,30 @@ async function restoreServerBackup(id, name) {
   if (!res.ok) { toast(res.error || '恢复失败', 'error'); return; }
   toast('备份已恢复', 'success');
   closeModal();
+}
+
+function openServerSsh(id) {
+  state.serverId = id;
+  openModal({
+    title: 'SSH 命令',
+    desc: '使用已配置的公钥登录执行一条命令，不保存密码。',
+    body: '<div class="field"><label>命令</label><input class="input" id="sshCommandInput" placeholder="例如：systemctl status minecraft" /></div>',
+    actions: [{ label: '取消', kind: 'ghost', action: 'close-modal' },
+      { label: '执行', kind: 'primary', action: 'run-server-ssh' }]
+  });
+}
+
+async function runServerSsh() {
+  const command = $('sshCommandInput') ? $('sshCommandInput').value.trim() : '';
+  if (!command) { toast('请输入命令', 'error'); return; }
+  const res = await api.serverSsh(state.serverId, command);
+  if (!res.ok) { toast(res.error || 'SSH 执行失败', 'error'); return; }
+  openModal({
+    title: 'SSH 输出',
+    desc: command,
+    body: '<pre class="server-console" style="min-height:200px">' + esc(res.text || '') + '</pre>',
+    actions: [{ label: '关闭', kind: 'ghost', action: 'close-modal' }]
+  });
 }
 
 async function openServerAnalyze(id) {
@@ -1355,6 +1410,7 @@ async function handleAction(action, el) {
     case 'copy-skin-url': await copySkinUrl(); break;
     case 'open-feedback': openFeedbackModal(); break;
     case 'add-local-server': await addLocalServer(); break;
+    case 'save-local-server': await saveLocalServer(); break;
     case 'add-remote-server': openRemoteServerModal(); break;
     case 'save-remote-server': await saveRemoteServer(); break;
     case 'select-server':
@@ -1385,6 +1441,8 @@ async function handleAction(action, el) {
     case 'server-backups': await openServerBackups(dataset.id); break;
     case 'restore-backup': await restoreServerBackup(dataset.id, dataset.name); break;
     case 'server-analyze': await openServerAnalyze(dataset.id); break;
+    case 'server-ssh': openServerSsh(dataset.id); break;
+    case 'run-server-ssh': await runServerSsh(); break;
     case 'copy-feedback': await copyFeedbackReport(); break;
     case 'submit-feedback': await submitFeedback(); break;
     case 'choose-dir': await chooseGameDir(); break;
