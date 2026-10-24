@@ -105,6 +105,7 @@ class ServerManager {
       port: Number(data.port) || 25575,
       password: this.encrypt(String(data.password || '')),
       sshUser: String(data.sshUser || '').trim(),
+      sshPort: Number(data.sshPort) || 22,
       sshKey: String(data.sshKey || '').trim(),
       createdAt: Date.now()
     };
@@ -217,6 +218,7 @@ class ServerManager {
     return new Promise((resolve, reject) => {
       const args = ['-o', 'BatchMode=yes', '-o', 'ConnectTimeout=10'];
       if (profile.sshKey) args.push('-i', profile.sshKey);
+      if (profile.sshPort && profile.sshPort !== 22) args.push('-p', String(profile.sshPort));
       args.push(profile.sshUser + '@' + profile.host, String(command));
       const child = spawn('ssh', args, { windowsHide: true });
       let out = '';

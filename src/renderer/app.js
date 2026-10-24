@@ -890,7 +890,8 @@ function openRemoteServerModal() {
       '<div class="field"><label>RCON 端口</label><input class="input" id="srvPort" value="25575" /></div></div>' +
       '<div class="field"><label>RCON 密码</label><input class="input" id="srvPassword" type="password" /></div>' +
       '<div class="grid-2"><div class="field"><label>SSH 用户（可选）</label><input class="input" id="srvSshUser" placeholder="root" /></div>' +
-      '<div class="field"><label>SSH 私钥路径（可选）</label><input class="input" id="srvSshKey" placeholder="C:\\Users\\...\\.ssh\\id_ed25519" /></div></div>' +
+      '<div class="field"><label>SSH 端口</label><input class="input" id="srvSshPort" value="22" /></div></div>' +
+      '<div class="field"><label>SSH 私钥路径（可选）</label><input class="input" id="srvSshKey" placeholder="C:\\Users\\...\\.ssh\\id_ed25519" /></div>' +
       '<div class="card-subtitle">SSH 使用 BatchMode，需要事先配置好公钥登录，不支持在应用里输入 SSH 密码。</div>',
     actions: [{ label: '取消', kind: 'ghost', action: 'close-modal' },
       { label: '添加', kind: 'primary', action: 'save-remote-server' }]
@@ -904,6 +905,7 @@ async function saveRemoteServer() {
     port: $('srvPort') ? Number($('srvPort').value) : 25575,
     password: $('srvPassword') ? $('srvPassword').value : '',
     sshUser: $('srvSshUser') ? $('srvSshUser').value.trim() : '',
+    sshPort: $('srvSshPort') ? Number($('srvSshPort').value) : 22,
     sshKey: $('srvSshKey') ? $('srvSshKey').value.trim() : ''
   };
   const res = await api.serverAddRemote(data);
