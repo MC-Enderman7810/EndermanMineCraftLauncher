@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>隐私政策 · EMCL Studio</title>
+  <style>
+    body { margin:0; font-family:"Segoe UI","Microsoft YaHei",sans-serif; color:#172B3F; background:#F6FAFF; }
+    main { max-width: 760px; margin:0 auto; padding:56px 24px 72px; }
+    h1 { font-size:34px; margin:0 0 6px; }
+    .date { color:#63788C; font-size:13px; margin-bottom:30px; }
+    h2 { font-size:18px; margin:30px 0 8px; }
+    p, li { color:#40576D; line-height:1.9; font-size:15px; }
+    code { background:#EAF3FC; padding:1px 5px; border-radius:4px; }
+    a { color:#2F7FD1; }
+    .box { background:#fff; border:1px solid #DCE8F4; border-radius:14px; padding:22px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>隐私政策</h1>
+  <div class="date">生效日期：2026-10-24</div>
+  <div class="box">
+    <p>EMCL Studio（以下简称“本应用”）是一款本地优先的 Minecraft Java 服务器与创作工具。我们尽量让数据留在你的电脑上。</p>
+
+    <h2>1. 我们处理哪些数据</h2>
+    <ul>
+      <li><strong>账户信息</strong>：当你使用微软账户登录时，本应用会处理你的 Xbox/Minecraft 标识符、Minecraft 名称、UUID 和公开皮肤。我们不会获取或保存你的微软密码。</li>
+      <li><strong>本地配置</strong>：游戏目录、Java 路径、内存设置、服务器配置、日志和备份保存在你的本机。</li>
+      <li><strong>日志</strong>：启动器/服务端日志可能包含设备、Java 版本、模组列表和错误信息。提交错误报告前会自动移除 JWT、access token、refresh token 等敏感字符串。</li>
+      <li><strong>网络请求</strong>：读取 Mojang/BMCLAPI 版本清单、Modrinth 项目与更新公告时，会向相应服务发送必要的 HTTP 请求，包括 IP 地址和 User-Agent。</li>
+    </ul>
+
+    <h2>2. 账户令牌</h2>
+    <p>微软/Xbox 的 access token 和 refresh token 只保存在本机，使用 Windows DPAPI 加密（或仅限当前用户可读的本地存储）。我们不会把令牌上传到 EMCL 服务器。</p>
+
+    <h2>3. 我们不做什么</h2>
+    <ul>
+      <li>不出售、出租或交换你的个人数据。</li>
+      <li>不收集与功能无关的键盘输入、屏幕内容或通讯录。</li>
+      <li>不把账户令牌发送给第三方广告或分析服务。</li>
+    </ul>
+
+    <h2>4. 第三方服务</h2>
+    <p>本应用可能访问 Microsoft 登录、Xbox Live、Minecraft Services、Mojang/BMCLAPI、Modrinth 和 GitHub。它们各自有自己的隐私政策。你使用这些服务时，同时受其条款约束。</p>
+
+    <h2>5. 数据保留与删除</h2>
+    <p>本地数据由你控制。你可以在应用内删除账户、日志、服务器配置和备份，也可以直接删除应用数据目录：</p>
+    <p><code>%APPDATA%\emcl-launcher</code>（发布版）<br><code>%APPDATA%\emcl-launcher-dev</code>（开发者版）</p>
+    <p>如需协助删除数据，请联系支持邮箱。</p>
+
+    <h2>6. 儿童</h2>
+    <p>本应用不面向 13 岁以下儿童。若你是未成年人，请在监护人同意下使用，并遵守 Minecraft 与 Microsoft 的账户年龄要求。</p>
+
+    <h2>7. 安全</h2>
+    <p>我们采用最小权限、日志脱敏和本地加密等措施，但任何软件都无法保证绝对安全。请保护你的 Microsoft 账户，开启两步验证，不要分享密码或令牌。</p>
+
+    <h2>8. 政策更新</h2>
+    <p>我们可能更新本政策。更新后会修改生效日期，并在本页面发布。继续使用即表示接受更新后的政策。</p>
+
+    <h2>9. 联系方式</h2>
+    <p>支持邮箱：[请替换为你的支持邮箱]</p>
+    <p>项目地址：<a href="https://github.com/MC-Enderman7810/EndermanMineCraftLauncher">GitHub</a></p>
+  </div>
+</main>
+</body>
+</html>
