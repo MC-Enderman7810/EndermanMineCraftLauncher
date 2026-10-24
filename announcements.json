@@ -1,10 +1,10 @@
 {
   "announcements": [
     {
-      "id": "2026-10-23-emcl-1.26.25.09",
-      "title": "EMCL 1.26.25.09 已发布",
-      "body": "资源下载新增“推荐”页：会根据当前游戏版本和加载器，匹配 Sodium、Iris、JEI、REI、小地图等常用模组，并支持直接安装。\n\n同时保留反馈入口、皮肤展示和居中公告提示。\n\n遇到问题请到 GitHub 仓库提交 Issue。",
-      "date": "2026-10-23",
+      "id": "2026-10-24-emcl-1.26.26.00",
+      "title": "EMCL 1.26.26.00 已发布",
+      "body": "新增服务器管理：可以添加本地 Paper / Fabric / Forge / NeoForge 服务端，启动和停止、查看实时控制台、发送命令、编辑 server.properties、管理白名单/OP、备份恢复和查看崩溃日志。远程服务器支持 RCON 和 SSH 命令。\n\n模组推荐升级为 Modrinth 下载榜 Top 100，保留皮肤、反馈和居中公告提示。\n\n遇到问题请到 GitHub 仓库提交 Issue。",
+      "date": "2026-10-24",
       "tag": "更新",
       "kind": "update",
       "pinned": true,
