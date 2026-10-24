@@ -10,7 +10,7 @@ const PELib = require('pe-library');
 const ResEdit = require('resedit');
 
 const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
-const version = String(pkg.version || '1.26.25.09');
+const version = String(pkg.version || '1.26.26.00');
 const parts = version.split('.').map((n) => parseInt(n, 10) || 0);
 while (parts.length < 4) parts.push(0);
 const target = process.argv[2] || path.join(__dirname, '..', 'dist', 'win-unpacked', 'EMCL.exe');

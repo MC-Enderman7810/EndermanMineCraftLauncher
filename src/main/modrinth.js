@@ -23,7 +23,7 @@ const KIND_DIRS = {
 function headers() {
   return {
     'Accept': 'application/json',
-    'User-Agent': 'EMCL/1.26.25.09 (Windows; Minecraft Java launcher)'
+    'User-Agent': 'EMCL/1.26.26.00 (Windows; Minecraft Java launcher)'
   };
 }
 
