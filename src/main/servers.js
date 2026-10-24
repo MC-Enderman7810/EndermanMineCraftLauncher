@@ -207,6 +207,107 @@ class ServerManager {
     return { ok: true, path: target };
   }
 
+  async getProperties(id) {
+    const profile = (await this.load()).find((s) => s.id === id);
+    if (!profile) throw new Error('服务器不存在');
+    if (profile.type !== 'local') throw new Error('远程服务器不支持 properties 编辑');
+    const file = path.join(profile.dir, 'server.properties');
+    try { return { ok: true, text: await fsp.readFile(file, 'utf8') }; }
+    catch { return { ok: true, text: '' }; }
+  }
+
+  async saveProperties(id, text) {
+    const profile = (await this.load()).find((s) => s.id === id);
+    if (!profile) throw new Error('服务器不存在');
+    if (profile.type !== 'local') throw new Error('远程服务器不支持 properties 编辑');
+    const file = path.join(profile.dir, 'server.properties');
+    await fsp.writeFile(file, String(text || ''), 'utf8');
+    return { ok: true };
+  }
+
+  async getPlayers(id) {
+    const profile = (await this.load()).find((s) => s.id === id);
+    if (!profile) throw new Error('服务器不存在');
+    if (profile.type === 'remote') {
+      const reply = await this.rcon(profile, 'list');
+      return { ok: true, remote: true, text: reply, whitelist: [], ops: [] };
+    }
+    const read = async (name) => {
+      try {
+        const raw = (await fsp.readFile(path.join(profile.dir, name), 'utf8')).replace(/^\uFEFF/, '');
+        const data = JSON.parse(raw);
+        return Array.isArray(data) ? data.map((x) => x.name).filter(Boolean) : [];
+      } catch { return []; }
+    };
+    return { ok: true, whitelist: await read('whitelist.json'), ops: await read('ops.json') };
+  }
+
+  async playerAction(id, action, name) {
+    const profile = (await this.load()).find((s) => s.id === id);
+    if (!profile) throw new Error('服务器不存在');
+    const player = String(name || '').trim();
+    if (!player) throw new Error('请输入玩家名');
+    const map = {
+      whitelistAdd: 'whitelist add ' + player,
+      whitelistRemove: 'whitelist remove ' + player,
+      op: 'op ' + player,
+      deop: 'deop ' + player
+    };
+    const command = map[action];
+    if (!command) throw new Error('不支持的操作');
+    return this.command(id, command);
+  }
+
+  async listBackups(id) {
+    const profile = (await this.load()).find((s) => s.id === id);
+    if (!profile) throw new Error('服务器不存在');
+    if (profile.type !== 'local') throw new Error('远程备份暂未实现');
+    const dir = path.join(profile.dir, 'backups');
+    try {
+      const files = (await fsp.readdir(dir)).filter((f) => f.endsWith('.zip'));
+      const items = [];
+      for (const f of files) {
+        const stat = await fsp.stat(path.join(dir, f));
+        items.push({ name: f, size: stat.size, at: stat.mtimeMs });
+      }
+      return { ok: true, items: items.sort((a, b) => b.at - a.at) };
+    } catch { return { ok: true, items: [] }; }
+  }
+
+  async restore(id, name) {
+    const profile = (await this.load()).find((s) => s.id === id);
+    if (!profile) throw new Error('服务器不存在');
+    if (profile.type !== 'local') throw new Error('远程恢复暂未实现');
+    const safe = path.basename(String(name || ''));
+    if (!safe.endsWith('.zip')) throw new Error('备份文件无效');
+    const zipPath = path.join(profile.dir, 'backups', safe);
+    if (!fs.existsSync(zipPath)) throw new Error('备份不存在');
+    if (this.runtimes.get(id)) throw new Error('请先停止服务器再恢复');
+    new AdmZip(zipPath).extractAllTo(profile.dir, true);
+    return { ok: true };
+  }
+
+  async analyze(id) {
+    const profile = (await this.load()).find((s) => s.id === id);
+    if (!profile) throw new Error('服务器不存在');
+    if (profile.type !== 'local') throw new Error('远程日志分析暂未实现');
+    const files = [];
+    try {
+      const reports = (await fsp.readdir(path.join(profile.dir, 'crash-reports'))).sort().reverse();
+      if (reports[0]) files.push(path.join(profile.dir, 'crash-reports', reports[0]));
+    } catch { /* ignore */ }
+    files.push(path.join(profile.dir, 'logs', 'latest.log'));
+    for (const file of files) {
+      try {
+        const raw = await fsp.readFile(file, 'utf8');
+        const lines = raw.split(/\r?\n/);
+        const hits = lines.filter((l) => /error|exception|caused by|failed|outofmemory|mod|mixinextras/i.test(l)).slice(-40);
+        return { ok: true, file: path.basename(file), text: (raw.split(/\r?\n/).slice(-80).join('\n') + '\n\n--- 可疑行 ---\n' + hits.join('\n')).slice(-12000) };
+      } catch { /* next */ }
+    }
+    return { ok: true, file: '', text: '没有找到 crash-reports 或 logs/latest.log。' };
+  }
+
   rcon(profile, command) {
     return new Promise((resolve, reject) => {
       const password = this.decrypt(profile.password);

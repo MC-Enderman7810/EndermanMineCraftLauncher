@@ -809,7 +809,10 @@ function pageServers() {
       '<div class="server-meta">' + esc(s.type === 'local' ? (s.jar + ' · ' + s.dir) : (s.host + ':' + s.port)) + '</div></div>' +
       '<div class="spacer"></div>' +
       '<button class="btn btn-ghost btn-sm" data-action="select-server" data-id="' + esc(s.id) + '">控制台</button>' +
-      (s.type === 'local' ? '<button class="btn btn-ghost btn-sm" data-action="backup-server" data-id="' + esc(s.id) + '">备份</button>' : '') +
+      (s.type === 'local' ? '<button class="btn btn-ghost btn-sm" data-action="server-properties" data-id="' + esc(s.id) + '">属性</button>' +
+        '<button class="btn btn-ghost btn-sm" data-action="server-backups" data-id="' + esc(s.id) + '">备份</button>' +
+        '<button class="btn btn-ghost btn-sm" data-action="server-analyze" data-id="' + esc(s.id) + '">分析</button>' : '') +
+      '<button class="btn btn-ghost btn-sm" data-action="server-players" data-id="' + esc(s.id) + '">玩家</button>' +
       '<button class="btn ' + (s.running ? 'btn-danger' : 'btn-primary') + ' btn-sm" data-action="' +
       (s.running ? 'stop-server' : 'start-server') + '" data-id="' + esc(s.id) + '">' +
       (s.running ? '停止' : '启动') + '</button>' +
@@ -900,6 +903,86 @@ async function sendServerCommand() {
     state.serverLogs = state.serverLogs.slice(-300);
     render();
   } catch (e) { toast(e.message || '发送失败', 'error'); }
+}
+
+async function openServerProperties(id) {
+  const res = await api.serverProperties(id);
+  openModal({
+    title: 'server.properties',
+    desc: '保存后需要重启服务器才会全部生效。',
+    body: '<textarea class="input" id="serverProps" rows="16" style="font:11px/1.7 Consolas,monospace">' + esc(res.text || '') + '</textarea>',
+    actions: [{ label: '取消', kind: 'ghost', action: 'close-modal' },
+      { label: '保存', kind: 'primary', action: 'save-server-properties' }]
+  });
+  state.serverId = id;
+}
+
+async function saveServerProperties() {
+  const text = $('serverProps') ? $('serverProps').value : '';
+  const res = await api.serverSaveProperties(state.serverId, text);
+  if (!res.ok) { toast(res.error || '保存失败', 'error'); return; }
+  closeModal();
+  toast('server.properties 已保存', 'success');
+}
+
+async function openServerPlayers(id) {
+  state.serverId = id;
+  const res = await api.serverPlayers(id);
+  const list = (name) => (name.length ? name.map((n) => '<span class="tag tag-gray">' + esc(n) + '</span>').join(' ') : '<span class="muted">无</span>');
+  openModal({
+    title: '玩家管理',
+    desc: res.remote ? '远程服务器返回：' + res.text : '白名单和 OP 来自服务端文件；添加/删除会发送服务器命令。',
+    body: (res.remote ? '' : '<div class="field"><label>白名单</label><div class="row">' + list(res.whitelist || []) + '</div></div>' +
+      '<div class="field"><label>OP</label><div class="row">' + list(res.ops || []) + '</div></div>') +
+      '<div class="field"><label>玩家名</label><input class="input" id="serverPlayerName" placeholder="输入玩家名" /></div>',
+    actions: [{ label: '取消', kind: 'ghost', action: 'close-modal' },
+      { label: '加白名单', kind: 'ghost', action: 'server-player-whitelist-add' },
+      { label: '加 OP', kind: 'ghost', action: 'server-player-op' },
+      { label: '移除白名单', kind: 'ghost', action: 'server-player-whitelist-remove' }]
+  });
+}
+
+async function serverPlayerAction(action) {
+  const name = $('serverPlayerName') ? $('serverPlayerName').value.trim() : '';
+  if (!name) { toast('请输入玩家名', 'error'); return; }
+  const res = await api.serverPlayerAction(state.serverId, action, name);
+  if (!res.ok) { toast(res.error || '操作失败', 'error'); return; }
+  toast('命令已发送', 'success');
+  closeModal();
+}
+
+async function openServerBackups(id) {
+  state.serverId = id;
+  const res = await api.serverBackups(id);
+  openModal({
+    title: '服务器备份',
+    desc: '备份保存在服务端目录的 backups 文件夹。恢复前请先停止服务器。',
+    body: '<div class="row" style="margin-bottom:10px"><button class="btn btn-primary btn-sm" data-action="backup-server" data-id="' +
+      esc(id) + '">立即备份</button></div>' +
+      (res.items.length ? res.items.map((b) => '<div class="content-row"><div><div class="content-name">' + esc(b.name) + '</div>' +
+        '<div class="content-meta">' + bytes(b.size) + ' · ' + timeText(b.at) + '</div></div><div class="spacer"></div>' +
+        '<button class="btn btn-soft btn-sm" data-action="restore-backup" data-id="' + esc(id) + '" data-name="' + esc(b.name) + '">恢复</button></div>').join('')
+        : emptyState('还没有备份', 'box')),
+    actions: [{ label: '关闭', kind: 'ghost', action: 'close-modal' }]
+  });
+}
+
+async function restoreServerBackup(id, name) {
+  if (!confirm('恢复备份会覆盖当前世界文件，确定继续？')) return;
+  const res = await api.serverRestore(id, name);
+  if (!res.ok) { toast(res.error || '恢复失败', 'error'); return; }
+  toast('备份已恢复', 'success');
+  closeModal();
+}
+
+async function openServerAnalyze(id) {
+  const res = await api.serverAnalyze(id);
+  openModal({
+    title: '崩溃日志分析',
+    desc: res.file ? '来源：' + res.file : '未找到日志',
+    body: '<pre class="server-console" style="min-height:280px;max-height:440px">' + esc(res.text || '没有日志') + '</pre>',
+    actions: [{ label: '关闭', kind: 'ghost', action: 'close-modal' }]
+  });
 }
 
 /* ---------------- Skin ---------------- */
@@ -1293,6 +1376,15 @@ async function handleAction(action, el) {
       await loadServers();
       break;
     case 'send-server-command': await sendServerCommand(); break;
+    case 'server-properties': await openServerProperties(dataset.id); break;
+    case 'save-server-properties': await saveServerProperties(); break;
+    case 'server-players': await openServerPlayers(dataset.id); break;
+    case 'server-player-whitelist-add': await serverPlayerAction('whitelistAdd'); break;
+    case 'server-player-whitelist-remove': await serverPlayerAction('whitelistRemove'); break;
+    case 'server-player-op': await serverPlayerAction('op'); break;
+    case 'server-backups': await openServerBackups(dataset.id); break;
+    case 'restore-backup': await restoreServerBackup(dataset.id, dataset.name); break;
+    case 'server-analyze': await openServerAnalyze(dataset.id); break;
     case 'copy-feedback': await copyFeedbackReport(); break;
     case 'submit-feedback': await submitFeedback(); break;
     case 'choose-dir': await chooseGameDir(); break;

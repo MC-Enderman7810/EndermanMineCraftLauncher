@@ -503,6 +503,13 @@ function registerIpc() {
   ipcMain.handle('servers:stop', async (event, id) => serverManager.stop(id));
   ipcMain.handle('servers:command', async (event, id, command) => serverManager.command(id, command));
   ipcMain.handle('servers:backup', async (event, id) => serverManager.backup(id));
+  ipcMain.handle('servers:backups', async (event, id) => serverManager.listBackups(id));
+  ipcMain.handle('servers:restore', async (event, id, name) => serverManager.restore(id, name));
+  ipcMain.handle('servers:properties', async (event, id) => serverManager.getProperties(id));
+  ipcMain.handle('servers:saveProperties', async (event, id, text) => serverManager.saveProperties(id, text));
+  ipcMain.handle('servers:players', async (event, id) => serverManager.getPlayers(id));
+  ipcMain.handle('servers:playerAction', async (event, id, action, name) => serverManager.playerAction(id, action, name));
+  ipcMain.handle('servers:analyze', async (event, id) => serverManager.analyze(id));
   ipcMain.handle('servers:remove', async (event, id) => serverManager.remove(id));
 
   ipcMain.handle('recommend:list', async (event, gameVersion, loader) => {
