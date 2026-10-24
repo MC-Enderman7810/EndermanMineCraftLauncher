@@ -24,6 +24,9 @@ const state = {
   resourceFallback: false,
   resourceVersionId: '',
   resourceWorld: '',
+  servers: [],
+  serverId: '',
+  serverLogs: [],
   recommendHits: [],
   recommendLoading: false,
   recommendError: '',
@@ -66,6 +69,7 @@ const PAGE_META = {
   resources: { title: '资源下载', subtitle: '模组 · 光影 · 资源包 · 数据包 · 整合包' },
   modpacks: { title: '整合包', subtitle: '导入 PCL2 / Modrinth / CurseForge 整合包' },
   accounts: { title: '账户', subtitle: '离线 · 微软 · 第三方验证' },
+  servers: { title: '服务器', subtitle: '本地 Java 服务端与远程 RCON 管理' },
   skin: { title: '皮肤', subtitle: '当前账户的皮肤预览与纹理' },
   settings: { title: '设置', subtitle: '目录、Java、内存与主题' },
   logs: { title: '日志', subtitle: '启动输出与错误现场' }
@@ -76,6 +80,7 @@ const NAVS = [
   { id: 'versions', label: '版本', icon: 'layers' },
   { id: 'resources', label: '下载', icon: 'download' },
   { id: 'modpacks', label: '整合包', icon: 'box' },
+  { id: 'servers', label: '服务器', icon: 'server' },
   { id: 'accounts', label: '账户', icon: 'user' },
   { id: 'skin', label: '皮肤', icon: 'skin' },
   { id: 'settings', label: '设置', icon: 'settings' },
@@ -247,6 +252,7 @@ function render() {
     modpacks: pageModpacks,
     accounts: pageAccounts,
     skin: pageSkin,
+    servers: pageServers,
     settings: pageSettings,
     logs: pageLogs
   }[state.page] || pageHome)();
@@ -791,6 +797,111 @@ function pageModpacks() {
     '</div>';
 }
 
+/* ---------------- Servers ---------------- */
+
+function pageServers() {
+  const selected = state.servers.find((s) => s.id === state.serverId) || state.servers[0];
+  const list = state.servers.length
+    ? state.servers.map((s) => '<div class="server-row ' + (selected && s.id === selected.id ? 'active' : '') + '">' +
+      '<div class="server-icon">' + icon('server', 18) + '</div>' +
+      '<div style="min-width:0"><div class="server-name">' + esc(s.name) + ' ' +
+      tag(s.running ? '运行中' : '已停止', s.running ? 'green' : 'gray') + '</div>' +
+      '<div class="server-meta">' + esc(s.type === 'local' ? (s.jar + ' · ' + s.dir) : (s.host + ':' + s.port)) + '</div></div>' +
+      '<div class="spacer"></div>' +
+      '<button class="btn btn-ghost btn-sm" data-action="select-server" data-id="' + esc(s.id) + '">控制台</button>' +
+      (s.type === 'local' ? '<button class="btn btn-ghost btn-sm" data-action="backup-server" data-id="' + esc(s.id) + '">备份</button>' : '') +
+      '<button class="btn ' + (s.running ? 'btn-danger' : 'btn-primary') + ' btn-sm" data-action="' +
+      (s.running ? 'stop-server' : 'start-server') + '" data-id="' + esc(s.id) + '">' +
+      (s.running ? '停止' : '启动') + '</button>' +
+      '<button class="btn btn-ghost btn-sm" data-action="remove-server" data-id="' + esc(s.id) + '">删除</button></div>').join('')
+    : emptyState('还没有服务器。添加本地服务端目录，或连接远程 RCON。', 'server');
+  return '<div class="toolbar"><div><div class="card-title">服务器管理</div>' +
+    '<div class="card-subtitle">本地 Paper / Fabric / Forge / NeoForge 服务端与远程 RCON。</div></div><div class="spacer"></div>' +
+    '<button class="btn btn-ghost" data-action="add-local-server">' + icon('folder') + '添加本地服务端</button>' +
+    '<button class="btn btn-primary" data-action="add-remote-server">' + icon('server') + '添加远程 RCON</button></div>' +
+    '<div class="card"><div class="server-list">' + list + '</div></div>' +
+    (selected ? '<div class="card" style="margin-top:12px"><div class="card-head"><h3 class="card-title">' +
+      esc(selected.name) + ' · 控制台</h3><span class="small muted">' + esc(selected.type === 'local' ? selected.jar : 'RCON') +
+      '</span></div><pre class="server-console" id="serverConsole">' +
+      esc(state.serverLogs.join('\n') || '等待服务器输出…') + '</pre>' +
+      '<div class="server-command"><input class="input" id="serverCommand" placeholder="输入服务器命令，例如 list / say hello" />' +
+      '<button class="btn btn-primary" data-action="send-server-command">发送</button></div></div>' : '');
+}
+
+async function loadServers() {
+  try {
+    const res = await api.serverList();
+    state.servers = res.servers || [];
+    if (!state.serverId && state.servers[0]) state.serverId = state.servers[0].id;
+    const selected = state.servers.find((s) => s.id === state.serverId);
+    state.serverLogs = selected && selected.logs ? selected.logs.map((l) => l.line) : state.serverLogs;
+  } catch { /* ignore */ }
+  if (state.page === 'servers') render();
+}
+
+async function addLocalServer() {
+  const picked = await api.serverPick();
+  if (!picked) return;
+  const name = picked.dir.split(/[\\/]/).filter(Boolean).pop() || 'Minecraft Server';
+  const res = await api.serverAddLocal(picked.dir, name, picked.jar, 4096);
+  if (!res.ok) { toast(res.error || '添加失败', 'error'); return; }
+  state.servers = res.servers;
+  state.serverId = res.profile.id;
+  state.serverLogs = [];
+  toast('服务器已添加', 'success');
+  render();
+}
+
+function openRemoteServerModal() {
+  openModal({
+    title: '添加远程 RCON 服务器',
+    desc: '密码只保存在本机，使用 Windows DPAPI 加密。',
+    body: '<div class="field"><label>名称</label><input class="input" id="srvName" placeholder="我的服务器" /></div>' +
+      '<div class="grid-2"><div class="field"><label>地址</label><input class="input" id="srvHost" placeholder="127.0.0.1" /></div>' +
+      '<div class="field"><label>RCON 端口</label><input class="input" id="srvPort" value="25575" /></div></div>' +
+      '<div class="field"><label>RCON 密码</label><input class="input" id="srvPassword" type="password" /></div>',
+    actions: [{ label: '取消', kind: 'ghost', action: 'close-modal' },
+      { label: '添加', kind: 'primary', action: 'save-remote-server' }]
+  });
+}
+
+async function saveRemoteServer() {
+  const data = {
+    name: $('srvName') ? $('srvName').value.trim() : '',
+    host: $('srvHost') ? $('srvHost').value.trim() : '',
+    port: $('srvPort') ? Number($('srvPort').value) : 25575,
+    password: $('srvPassword') ? $('srvPassword').value : ''
+  };
+  const res = await api.serverAddRemote(data);
+  if (!res.ok) { toast(res.error || '添加失败', 'error'); return; }
+  state.servers = res.servers;
+  state.serverId = res.profile.id;
+  state.serverLogs = [];
+  closeModal();
+  toast('远程服务器已添加', 'success');
+  render();
+}
+
+async function serverAction(action, id) {
+  const res = await api[action](id);
+  if (!res.ok) { toast(res.error || '操作失败', 'error'); return; }
+  await loadServers();
+}
+
+async function sendServerCommand() {
+  const input = $('serverCommand');
+  if (!input || !state.serverId || !input.value.trim()) return;
+  const command = input.value.trim();
+  input.value = '';
+  try {
+    const res = await api.serverCommand(state.serverId, command);
+    state.serverLogs.push('> ' + command);
+    if (res.reply) state.serverLogs.push(res.reply);
+    state.serverLogs = state.serverLogs.slice(-300);
+    render();
+  } catch (e) { toast(e.message || '发送失败', 'error'); }
+}
+
 /* ---------------- Skin ---------------- */
 
 function skinSourceLabel(source) {
@@ -1160,6 +1271,28 @@ async function handleAction(action, el) {
     case 'refresh-skin': await loadSkin(true); break;
     case 'copy-skin-url': await copySkinUrl(); break;
     case 'open-feedback': openFeedbackModal(); break;
+    case 'add-local-server': await addLocalServer(); break;
+    case 'add-remote-server': openRemoteServerModal(); break;
+    case 'save-remote-server': await saveRemoteServer(); break;
+    case 'select-server':
+      state.serverId = dataset.id;
+      state.serverLogs = [];
+      await loadServers();
+      break;
+    case 'start-server': await serverAction('serverStart', dataset.id); break;
+    case 'stop-server': await serverAction('serverStop', dataset.id); break;
+    case 'backup-server': {
+      const r = await api.serverBackup(dataset.id);
+      toast(r.ok ? '备份完成：' + r.path : (r.error || '备份失败'), r.ok ? 'success' : 'error');
+      break;
+    }
+    case 'remove-server':
+      if (!confirm('删除这个服务器配置？不会删除服务端文件。')) break;
+      await api.serverRemove(dataset.id);
+      state.serverId = '';
+      await loadServers();
+      break;
+    case 'send-server-command': await sendServerCommand(); break;
     case 'copy-feedback': await copyFeedbackReport(); break;
     case 'submit-feedback': await submitFeedback(); break;
     case 'choose-dir': await chooseGameDir(); break;
@@ -1200,6 +1333,7 @@ function setPage(page) {
     if (state.resourceKind === 'recommend') loadRecommendations(false).then(render).catch(() => {});
     else loadContent().then(render).catch(() => {});
   }
+  if (page === 'servers') loadServers();
   if (page === 'skin') loadSkin(false).catch(() => {});
   if (page === 'logs') loadLatestLog().then(render).catch(() => {});
   if (page === 'versions' && !state.manifest && !state.manifestLoading) loadManifest(false).catch(() => {});
@@ -2076,6 +2210,9 @@ function bind() {
     if (e.key === 'Enter' && e.target.id === 'resourceSearch') {
       doSearch();
     }
+    if (e.key === 'Enter' && e.target.id === 'serverCommand') {
+      sendServerCommand();
+    }
   });
 
   $('modalRoot').addEventListener('click', async (e) => {
@@ -2119,6 +2256,7 @@ async function patchSetting(key, value) {
     render();
     loadLatestLog();
     loadAnnouncements(false);
+    loadServers();
     checkForUpdates(false, false);
     if (!state.installed.length) {
       // 首次启动不自动拉清单，避免无网络时卡住
@@ -2126,6 +2264,14 @@ async function patchSetting(key, value) {
   } catch (e) {
     document.getElementById('content').innerHTML = '<div class="card">' + emptyState('启动器初始化失败：' + e.message, 'info') + '</div>';
   }
+
+  api.onServerLog(({ id, line }) => {
+    if (id !== state.serverId) return;
+    state.serverLogs.push(line);
+    state.serverLogs = state.serverLogs.slice(-300);
+    if (state.page === 'servers') render();
+  });
+  api.onServerState(() => loadServers());
 
   api.onTask((task) => {
     const index = state.tasks.findIndex((t) => t.id === task.id);

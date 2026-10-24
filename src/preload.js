@@ -68,6 +68,18 @@ contextBridge.exposeInMainWorld('emcl', {
   listAnnouncements: (force) => ipcRenderer.invoke('updates:announcements', force),
   openUpdate: (url) => ipcRenderer.invoke('updates:open', url),
 
+  serverList: () => ipcRenderer.invoke('servers:list'),
+  serverPick: () => ipcRenderer.invoke('servers:pick'),
+  serverAddLocal: (dir, name, jar, memory) => ipcRenderer.invoke('servers:addLocal', dir, name, jar, memory),
+  serverAddRemote: (data) => ipcRenderer.invoke('servers:addRemote', data),
+  serverStart: (id) => ipcRenderer.invoke('servers:start', id),
+  serverStop: (id) => ipcRenderer.invoke('servers:stop', id),
+  serverCommand: (id, command) => ipcRenderer.invoke('servers:command', id, command),
+  serverBackup: (id) => ipcRenderer.invoke('servers:backup', id),
+  serverRemove: (id) => ipcRenderer.invoke('servers:remove', id),
+  onServerLog: (callback) => on('server:log', callback),
+  onServerState: (callback) => on('server:state', callback),
+
   onTask: (callback) => on('task:update', callback),
   onLaunchLog: (callback) => on('launch:log', callback),
   onLaunchExit: (callback) => on('launch:exit', callback),

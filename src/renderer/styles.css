@@ -606,6 +606,17 @@ textarea.input { height: auto; padding: 9px 11px; resize: vertical; line-height:
   align-self: center; margin: 4px 0 8px;
 }
 
+/* ---------------- Servers ---------------- */
+.server-list { display: flex; flex-direction: column; gap: 8px; }
+.server-row { display: flex; align-items: center; gap: 10px; padding: 11px 12px; border: 1px solid var(--line); border-radius: 11px; background: #FBFDFF; }
+.server-row.active { border-color: #AFCFEF; background: #F4FAFF; }
+.server-icon { width: 36px; height: 36px; flex: 0 0 auto; border-radius: 9px; display: flex; align-items: center; justify-content: center; color: var(--accent); background: var(--accent-softer); }
+.server-name { font-size: 12.5px; font-weight: 800; display: flex; align-items: center; gap: 7px; }
+.server-meta { font-size: 9.5px; color: var(--muted); margin-top: 3px; word-break: break-all; }
+.server-console { background: #0E2033; color: #D8E8F8; border-radius: 10px; padding: 12px; min-height: 230px; max-height: 360px; overflow: auto; font: 11px/1.65 Consolas, monospace; white-space: pre-wrap; }
+.server-command { display: flex; gap: 8px; margin-top: 8px; }
+.server-command .input { flex: 1; }
+
 /* ---------------- Mod recommendations ---------------- */
 .recommend-head { display: flex; align-items: center; justify-content: space-between; margin: 14px 0 10px; }
 .recommend-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }

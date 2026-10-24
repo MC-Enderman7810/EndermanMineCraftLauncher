@@ -20,12 +20,14 @@ const java = require('./java');
 const updater = require('./updater');
 const skin = require('./skin');
 const recommend = require('./recommend');
+const { ServerManager } = require('./servers');
 
 app.setName('EMCL');
 app.setPath('userData', path.join(app.getPath('appData'), 'emcl-launcher'));
 const APP_NAME = 'EMCL · Enderman MineCraft Launcher';
 let store = null;
 let mainWindow = null;
+let serverManager = null;
 let currentGame = null;
 let manifestCache = null;
 let manifestCacheAt = 0;
@@ -492,6 +494,17 @@ function registerIpc() {
     return { ok: true, activeAccountId: id };
   });
 
+  ipcMain.handle('servers:list', async () => ({ ok: true, servers: await serverManager.list() }));
+  ipcMain.handle('servers:pick', async () => serverManager.pickLocal());
+  ipcMain.handle('servers:addLocal', async (event, dir, name, jar, memory) =>
+    serverManager.addLocal(dir, name, jar, memory));
+  ipcMain.handle('servers:addRemote', async (event, data) => serverManager.addRemote(data));
+  ipcMain.handle('servers:start', async (event, id) => serverManager.start(id));
+  ipcMain.handle('servers:stop', async (event, id) => serverManager.stop(id));
+  ipcMain.handle('servers:command', async (event, id, command) => serverManager.command(id, command));
+  ipcMain.handle('servers:backup', async (event, id) => serverManager.backup(id));
+  ipcMain.handle('servers:remove', async (event, id) => serverManager.remove(id));
+
   ipcMain.handle('recommend:list', async (event, gameVersion, loader) => {
     try {
       return await recommend.getRecommendations(gameVersion, loader);
@@ -672,6 +685,7 @@ app.whenReady().then(async () => {
   app.setAppUserModelId('com.emcl.launcher');
   store = new Store();
   await store.init();
+  serverManager = new ServerManager(send);
   registerIpc();
   createWindow();
   setTimeout(autoCheck, 2500);
