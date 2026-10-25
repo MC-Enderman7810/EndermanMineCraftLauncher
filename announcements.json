@@ -1,3 +1,15 @@
 {
-  "announcements": []
+  "announcements": [
+    {
+      "id": "web-1792890655205-f5d32",
+      "title": "青杉",
+      "body": "test",
+      "date": "2026-10-25",
+      "tag": "公告",
+      "kind": "announcement",
+      "pinned": true,
+      "enabled": true,
+      "url": ""
+    }
+  ]
 }
