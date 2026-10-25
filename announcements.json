@@ -1,6 +1,17 @@
 {
   "announcements": [
     {
+      "id": "web-1792886590052-933a9",
+      "title": "对青杉的公告",
+      "body": "@青杉 你可以收到这条公告吗",
+      "date": "2026-10-25",
+      "tag": "公告",
+      "kind": "announcement",
+      "pinned": true,
+      "enabled": true,
+      "url": ""
+    },
+    {
       "id": "2026-10-24-emcl-1.26.26.00",
       "title": "EMCL 1.26.26.00 已发布",
       "body": "新增服务器管理：可以添加本地 Paper / Fabric / Forge / NeoForge 服务端，启动和停止、查看实时控制台、发送命令、编辑 server.properties、管理白名单/OP、备份恢复和查看崩溃日志。远程服务器支持 RCON 和 SSH 命令。\n\n模组推荐升级为 Modrinth 下载榜 Top 100，保留皮肤、反馈和居中公告提示。\n\n遇到问题请到 GitHub 仓库提交 Issue。",
