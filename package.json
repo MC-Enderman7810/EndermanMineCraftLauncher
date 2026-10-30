@@ -45,6 +45,16 @@
         }
       ],
       "icon": "assets/icon.ico"
+    },
+    "appx": {
+      "applicationId": "EMCL",
+      "identityName": "EnderGameStudios.EMCL",
+      "publisher": "CN=A14D6601-52B6-48FA-AD8F-75C965406CE4",
+      "publisherDisplayName": "Ender Game Studios",
+      "displayName": "EMCL",
+      "backgroundColor": "#2F7FD1",
+      "showNameOnTiles": true,
+      "customManifestPath": "AppxManifest.xml"
     }
   }
 }
