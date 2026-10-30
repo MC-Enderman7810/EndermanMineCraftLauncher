@@ -111,6 +111,21 @@ async function checkUpdates(force = false) {
       error: ''
     };
   }
+  if (process.windowsStore === true) {
+    return {
+      ok: true,
+      current: currentVersion(),
+      latest: currentVersion(),
+      hasUpdate: false,
+      releaseDate: '',
+      notes: ['Microsoft Store 版本请通过 Store 更新'],
+      url: REPO,
+      downloadUrl: REPO,
+      checkedAt: now,
+      error: '',
+      store: true
+    };
+  }
   if (!force && updateCache.value && now - updateCache.at < CACHE_MS) {
     return updateCache.value;
   }

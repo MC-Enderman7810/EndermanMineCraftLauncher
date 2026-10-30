@@ -2167,6 +2167,8 @@ async function checkForUpdates(force = true, notify = true) {
       state.notifiedUpdate = result.latest;
       if (fresh && notify) toast('发现新版本 ' + result.latest, 'success');
       if (notify) showUpdateModal();
+    } else if (result.store) {
+      if (notify) toast('Microsoft Store 版本请通过 Store 更新', 'success');
     } else if (result.ok && notify) {
       toast('当前已是最新版本 ' + (result.current || state.appVersion), 'success');
     } else if (!result.ok && notify) {
