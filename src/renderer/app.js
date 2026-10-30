@@ -58,6 +58,7 @@ const state = {
   appVersion: '',
   update: null,
   updateChecking: false,
+  refreshingAll: false,
   announcements: [],
   remoteAnnouncements: [],
   localAnnouncements: [],
@@ -79,7 +80,6 @@ const PAGE_META = {
   modpacks: { title: '整合包', subtitle: '导入 PCL2 / Modrinth / CurseForge 整合包' },
   accounts: { title: '账户', subtitle: '离线 · 微软 · 第三方验证' },
   servers: { title: '服务器', subtitle: '本地 Java 服务端与远程 RCON 管理' },
-  skin: { title: '皮肤', subtitle: '当前账户的皮肤预览与纹理' },
   settings: { title: '设置', subtitle: '目录、Java、内存与主题' },
   logs: { title: '日志', subtitle: '启动输出与错误现场' }
 };
@@ -90,7 +90,6 @@ const NAVS = [
   { id: 'modpacks', label: '整合包', icon: 'box' },
   { id: 'servers', label: '服务器', icon: 'server' },
   { id: 'accounts', label: '账户', icon: 'user' },
-  { id: 'skin', label: '皮肤', icon: 'skin' },
   { id: 'settings', label: '设置', icon: 'settings' },
   { id: 'logs', label: '日志', icon: 'terminal' }
 ];
@@ -339,7 +338,6 @@ function render() {
     resources: pageResources,
     modpacks: pageModpacks,
     accounts: pageAccounts,
-    skin: pageSkin,
     servers: pageServers,
     settings: pageSettings,
     logs: pageLogs
@@ -1587,259 +1585,6 @@ async function openServerAnalyze(id) {
   });
 }
 
-/* ---------------- Skin ---------------- */
-
-function skinSourceLabel(source) {
-  if (source === 'microsoft') return '微软账户';
-  if (source === 'thirdparty') return '第三方账户';
-  if (source === 'offline') return '离线账户（默认皮肤）';
-  if (source === 'none') return '未登录';
-  if (source === 'error') return '读取失败（默认皮肤）';
-  return source || '';
-}
-
-function pageSkin() {
-  const account = currentAccount();
-  if (!account) {
-    return '<div class="card">' + emptyState('还没有登录账户。\n登录后可以在这里查看正版皮肤、第三方皮肤或默认皮肤。', 'skin') +
-      '<div class="row" style="justify-content:center"><button class="btn btn-primary" data-action="goto-accounts">' +
-      icon('user') + '去登录</button></div></div>';
-  }
-  if (state.skinLoading && !state.skinData) {
-    return '<div class="card">' + emptyState('正在读取 ' + account.name + ' 的皮肤…', 'skin') + '</div>';
-  }
-  const sk = state.skinData || {};
-  const dataUrl = sk.dataUrl || '';
-  const model = sk.model === 'slim' ? 'slim' : 'steve';
-  const style = dataUrl ? ' style="--skin:url(&quot;' + esc(dataUrl) + '&quot;)"' : '';
-  return '<div class="grid-2 skin-layout">' +
-    '<div class="skin-stage">' +
-      (dataUrl ? '<div class="skin-shadow"></div><div class="skin-doll ' + model + '"' + style + '>' +
-        '<div class="skin-part skin-arm skin-arm-r"></div>' +
-        '<div class="skin-part skin-leg skin-leg-l"></div>' +
-        '<div class="skin-part skin-leg skin-leg-r"></div>' +
-        '<div class="skin-part skin-body"></div>' +
-        '<div class="skin-part skin-arm skin-arm-l"></div>' +
-        '<div class="skin-part skin-head"></div>' +
-        '<div class="skin-part skin-hat"></div>' +
-        '</div>' : emptyState('没有可显示的皮肤纹理', 'skin')) +
-      '<div class="skin-stage-label">' + esc(sk.name || account.name) + (sk.isDefault ? ' · 默认皮肤' : '') + '</div>' +
-    '</div>' +
-    '<div class="card"><div class="card-head"><h3 class="card-title">皮肤信息</h3>' +
-      '<button class="btn btn-soft btn-sm" data-action="refresh-skin"' + (state.skinLoading ? ' disabled' : '') + '>' +
-      icon('refresh', 14) + (state.skinLoading ? '读取中…' : '刷新') + '</button></div>' +
-      '<div class="kv"><span class="k">账户</span><span class="v">' + esc(account.name) + '</span></div>' +
-      '<div class="kv"><span class="k">来源</span><span class="v">' + esc(skinSourceLabel(sk.source)) + '</span></div>' +
-      '<div class="kv"><span class="k">模型</span><span class="v">' + (model === 'slim' ? 'Alex / Slim' : 'Steve / Classic') + '</span></div>' +
-      '<div class="kv"><span class="k">UUID</span><span class="v mono">' + esc(account.uuid) + '</span></div>' +
-      '<div class="skin-cape-block"><div class="skin-cape-title">披风' +
-        (sk.activeCapeId ? '<button class="btn btn-ghost btn-sm" data-action="hide-skin-cape">隐藏披风</button>' : '') +
-        '</div>' +
-        ((sk.capes || []).length
-          ? '<div class="skin-cape-list">' + sk.capes.map((c) =>
-            '<div class="skin-cape-item' + (c.active ? ' active' : '') + '">' +
-            (c.url ? '<img src="' + esc(c.url) + '" alt="cape" />' : '<div class="skin-cape-placeholder"></div>') +
-            '<span>' + esc(c.alias) + (c.active ? ' · 使用中' : '') + '</span>' +
-            (c.active ? '' : '<button class="btn btn-soft btn-sm" data-action="use-skin-cape" data-id="' +
-              esc(c.id) + '">使用</button>') + '</div>').join('') + '</div>'
-          : '<div class="card-subtitle">当前账户没有可用披风。' +
-            (sk.source === 'microsoft' ? '' : '只有微软账户支持切换官方披风。') + '</div>') +
-      '</div>' +
-      (sk.skinUrl ? '<div class="kv"><span class="k">纹理地址</span><span class="v mono" style="word-break:break-all">' +
-        esc(sk.skinUrl) + '</span></div>' : '') +
-      (state.skinError ? '<div class="card-subtitle" style="color:var(--red);margin-top:8px">' + esc(state.skinError) + '</div>' : '') +
-      '<div class="row" style="margin-top:12px;flex-wrap:wrap">' +
-        '<button class="btn btn-primary" data-action="goto-accounts">切换账户</button>' +
-        (dataUrl ? '<button class="btn btn-soft" data-action="open-skin-3d">3D 旋转展示</button>' : '') +
-        '<button class="btn btn-ghost" data-action="copy-skin-url">复制纹理地址</button>' +
-      '</div>' +
-      '<div class="skin-head-card"><div class="skin-headview"' + style + '></div>' +
-        '<div><div class="skin-head-title">头像预览</div><div class="card-subtitle">从 64×64 皮肤纹理裁切</div></div></div>' +
-    '</div>' +
-    '<div class="card skin-texture-card"><div class="card-head"><h3 class="card-title">原始纹理</h3>' +
-      '<span class="small muted">64 × 64</span></div>' +
-      (dataUrl ? '<img class="skin-texture" src="' + esc(dataUrl) + '" alt="skin" />' : emptyState('无纹理', 'skin')) +
-    '</div>' +
-    '<div class="card"><div class="card-head"><h3 class="card-title">说明</h3></div>' +
-      '<div class="card-subtitle">皮肤来自当前登录账户的 Minecraft Profile 或第三方 Yggdrasil 会话。' +
-      '离线账户使用 EMCL 内置默认皮肤；换肤请到对应账户平台操作。</div></div>' +
-    '</div>';
-}
-
-function skin3dFace(w, h, d, uv, name, x, y, z) {
-  const point = (key) => (uv && uv[key]) || uv || { u: 0, v: 0 };
-  const face = (key, fw, fh, transform) => {
-    const p = point(key);
-    return '<div style="position:absolute;background-image:var(--skin);background-size:512px 512px;' +
-      'background-position:' + (-p.u * 8) + 'px ' + (-p.v * 8) + 'px;image-rendering:pixelated;' +
-      'width:' + fw + 'px;height:' + fh + 'px;' + transform + '"></div>';
-  };
-  const faces = [
-    face('front', w, h, 'transform:translateZ(' + (d / 2) + 'px)'),
-    face('back', w, h, 'transform:rotateY(180deg) translateZ(' + (d / 2) + 'px)'),
-    face('right', d, h, 'transform:rotateY(90deg) translateZ(' + (w / 2) + 'px)'),
-    face('left', d, h, 'transform:rotateY(-90deg) translateZ(' + (w / 2) + 'px)'),
-    face('top', w, d, 'transform:rotateX(90deg) translateZ(' + (h / 2) + 'px)'),
-    face('bottom', w, d, 'transform:rotateX(-90deg) translateZ(' + (h / 2) + 'px)')
-  ];
-  return '<div class="skin3d-part" data-part="' + esc(name) + '" style="width:' + w + 'px;height:' + h +
-    'px;margin-left:' + (-w / 2) + 'px;margin-top:' + (-h / 2) + 'px;transform:translate3d(' +
-    x + 'px,' + y + 'px,' + z + 'px)">' + faces.join('') + '</div>';
-}
-
-function skin3dModelHtml(model) {
-  const aw = model === 'slim' ? 24 : 32;
-  const head = { front: { u: 8, v: 8 }, back: { u: 24, v: 8 }, right: { u: 0, v: 8 }, left: { u: 16, v: 8 }, top: { u: 8, v: 0 }, bottom: { u: 16, v: 0 } };
-  const body = { front: { u: 20, v: 20 }, back: { u: 32, v: 20 }, right: { u: 16, v: 20 }, left: { u: 28, v: 20 }, top: { u: 20, v: 16 }, bottom: { u: 28, v: 16 } };
-  const armR = { front: { u: 44, v: 20 }, back: { u: 48, v: 20 }, right: { u: 40, v: 20 }, left: { u: 48, v: 20 }, top: { u: 44, v: 16 }, bottom: { u: 48, v: 16 } };
-  const armL = { front: { u: 36, v: 52 }, back: { u: 40, v: 52 }, right: { u: 32, v: 52 }, left: { u: 40, v: 52 }, top: { u: 36, v: 48 }, bottom: { u: 40, v: 48 } };
-  const legR = { front: { u: 4, v: 20 }, back: { u: 8, v: 20 }, right: { u: 0, v: 20 }, left: { u: 8, v: 20 }, top: { u: 4, v: 16 }, bottom: { u: 8, v: 16 } };
-  const legL = { front: { u: 20, v: 52 }, back: { u: 24, v: 52 }, right: { u: 16, v: 52 }, left: { u: 24, v: 52 }, top: { u: 20, v: 48 }, bottom: { u: 24, v: 48 } };
-  return '<div class="skin3d-model" id="skin3dModel">' +
-    skin3dFace(64, 64, 64, head, 'head', 0, -80, 0) +
-    skin3dFace(64, 96, 32, body, 'body', 0, 0, 0) +
-    skin3dFace(aw, 96, 32, armR, 'arm-r', 48, 0, 0) +
-    skin3dFace(aw, 96, 32, armL, 'arm-l', -48, 0, 0) +
-    skin3dFace(32, 96, 32, legR, 'leg-r', 16, 96, 0) +
-    skin3dFace(32, 96, 32, legL, 'leg-l', -16, 96, 0) +
-    '</div>';
-}
-
-function openSkin3D() {
-  const sk = state.skinData || {};
-  if (!sk.dataUrl) { toast('没有可显示的皮肤纹理', 'error'); return; }
-  if (!window.skinview3d) { toast('3D 皮肤组件加载失败', 'error'); return; }
-  openModal({
-    title: '3D 皮肤展示',
-    desc: '按住拖动旋转，滚轮缩放，按钮可切换自动旋转。',
-    body: '<div class="skin3d-viewport" id="skin3dStage">' +
-      '<canvas id="skin3dCanvas"></canvas><div class="skin3d-grid"></div>' +
-      '<div class="skin3d-hint">拖动旋转 · 滚轮缩放</div></div>',
-    actions: [
-      { label: '自动旋转', kind: 'ghost', action: 'toggle-skin-3d-rotate' },
-      { label: '重置视角', kind: 'ghost', action: 'reset-skin-3d' },
-      { label: '关闭', kind: 'primary', action: 'close-modal' }
-    ]
-  });
-  requestAnimationFrame(() => {
-    const canvas = $('skin3dCanvas');
-    if (!canvas) return;
-    const width = canvas.clientWidth || 640;
-    const height = canvas.clientHeight || 440;
-    try {
-      const viewer = new window.skinview3d.SkinViewer({
-        canvas,
-        width,
-        height,
-        skin: sk.dataUrl,
-        model: sk.model === 'slim' ? 'slim' : 'classic',
-        enableControls: true
-      });
-      viewer.background = 0x102a42;
-      viewer.fov = 38;
-      viewer.zoom = 0.62;
-      viewer.autoRotate = false;
-      viewer.controls.enablePan = false;
-      viewer.controls.rotateSpeed = 0.9;
-      viewer.controls.zoomSpeed = 0.8;
-      if (sk.capeDataUrl) viewer.loadCape(sk.capeDataUrl);
-      state.skin3dViewer = viewer;
-    } catch (e) {
-      toast('3D 皮肤加载失败：' + (e.message || e), 'error');
-    }
-  });
-}
-
-function bindSkin3D() {
-  const stage = $('skin3dStage');
-  if (!stage) return;
-  const model = $('skin3dModel');
-  if (!model) return;
-  let rx = -10;
-  let ry = 24;
-  let scale = 1.2;
-  let dragging = false;
-  let lastX = 0;
-  let lastY = 0;
-  const apply = () => {
-    model.style.transform = 'scale(' + scale + ') rotateX(' + rx + 'deg) rotateY(' + ry + 'deg)';
-  };
-  apply();
-  stage.addEventListener('pointerdown', (e) => {
-    dragging = true;
-    lastX = e.clientX;
-    lastY = e.clientY;
-    stage.setPointerCapture(e.pointerId);
-  });
-  stage.addEventListener('pointermove', (e) => {
-    if (!dragging) return;
-    ry += (e.clientX - lastX) * 0.55;
-    rx = Math.max(-80, Math.min(80, rx - (e.clientY - lastY) * 0.4));
-    lastX = e.clientX;
-    lastY = e.clientY;
-    apply();
-  });
-  const stop = () => { dragging = false; };
-  stage.addEventListener('pointerup', stop);
-  stage.addEventListener('pointercancel', stop);
-  stage.addEventListener('wheel', (e) => {
-    e.preventDefault();
-    scale = Math.max(0.65, Math.min(1.8, scale + (e.deltaY > 0 ? -0.08 : 0.08)));
-    apply();
-  }, { passive: false });
-  stage.dataset.skin3dReset = '1';
-  stage._resetSkin3D = () => {
-    rx = -10; ry = 24; scale = 1.2; apply();
-  };
-}
-
-async function changeSkinCape(capeId, hide) {
-  const res = hide ? await api.disableCape() : await api.setCape(capeId);
-  if (!res.ok) {
-    toast(res.error || '切换披风失败', 'error');
-    showErrorModal('切换披风失败', res.error || '未知错误');
-    return;
-  }
-  state.skinData = res.skin;
-  toast(hide ? '已隐藏披风' : '披风已切换', 'success');
-  render();
-}
-
-async function copySkinUrl() {
-  const url = state.skinData && state.skinData.skinUrl;
-  if (!url) {
-    toast('当前皮肤没有可复制的纹理地址', 'error');
-    return;
-  }
-  try {
-    await navigator.clipboard.writeText(url);
-    toast('皮肤纹理地址已复制', 'success');
-  } catch {
-    toast('复制失败', 'error');
-  }
-}
-
-async function loadSkin(force = false) {
-  if (!currentAccount()) {
-    state.skinData = null;
-    state.skinError = '';
-    return;
-  }
-  state.skinLoading = true;
-  state.skinError = '';
-  if (state.page === 'skin') render();
-  try {
-    const res = await api.getSkin(force);
-    if (!res || res.ok === false) throw new Error((res && res.error) || '读取皮肤失败');
-    state.skinData = res;
-  } catch (e) {
-    state.skinError = e.message || '读取皮肤失败';
-  } finally {
-    state.skinLoading = false;
-    if (state.page === 'skin') render();
-  }
-}
-
 /* ---------------- Accounts ---------------- */
 
 function pageAccounts() {
@@ -1968,9 +1713,7 @@ function pageSettings() {
         '<option value="live"' + (c.msAuthority !== 'entra' ? ' selected' : '') + '>Minecraft Live（默认公共通道）</option>' +
         '<option value="entra"' + (c.msAuthority === 'entra' ? ' selected' : '') + '>Azure Entra（自有应用）</option>' +
       '</select>' +
-      '<div class="card-subtitle">' + (isDeveloper()
-        ? '开发者版使用已通过 Mojang allowlist 的 Azure appID。'
-        : '发布版当前仍使用公共 Live 回退；自有 appID 已通过 allowlist，切换前需要单独确认。') + '</div></div>' +
+      '<div class="card-subtitle">微软登录默认使用已通过 Mojang allowlist 的自有 appID；旧版公共 Live 账户仍可自动续期。</div></div>' +
     '<div class="field"><label>微软 OAuth client id</label>' +
       '<input class="input" id="msClientId" value="' + esc(c.msClientId) + '" data-change="msClientId" />' +
       '<div class="card-subtitle">Azure 应用重定向 URI：https://login.microsoftonline.com/common/oauth2/nativeclient</div></div></div>';
@@ -2211,28 +1954,6 @@ async function handleAction(action, el) {
     case 'select-account': await selectAccount(dataset.id); break;
     case 'remove-account': await removeAccount(dataset.id); break;
     case 'refresh-account': await refreshAccount(dataset.id); break;
-    case 'refresh-skin': await loadSkin(true); break;
-    case 'use-skin-cape': await changeSkinCape(dataset.id, false); break;
-    case 'hide-skin-cape': await changeSkinCape('', true); break;
-    case 'open-skin-3d': openSkin3D(); break;
-    case 'reset-skin-3d': {
-      const viewer = state.skin3dViewer;
-      if (viewer) {
-        viewer.autoRotate = false;
-        viewer.zoom = 0.62;
-        viewer.resetCameraPose();
-      }
-      break;
-    }
-    case 'toggle-skin-3d-rotate': {
-      const viewer = state.skin3dViewer;
-      if (viewer) {
-        viewer.autoRotate = !viewer.autoRotate;
-        toast(viewer.autoRotate ? '已开启自动旋转' : '已关闭自动旋转');
-      }
-      break;
-    }
-    case 'copy-skin-url': await copySkinUrl(); break;
     case 'open-feedback': openFeedbackModal(); break;
     case 'add-local-server': await addLocalServer(); break;
     case 'save-local-server': await saveLocalServer(); break;
@@ -2352,6 +2073,7 @@ async function handleAction(action, el) {
     case 'copy-log': await copyLog(); break;
     case 'refresh-log': await loadLatestLog(); render(); break;
     case 'check-update': await checkForUpdates(true); break;
+    case 'refresh-all': await refreshAll(); break;
     case 'show-update': showUpdateModal(); break;
     case 'open-update': await openUpdate(); break;
     case 'open-repo': await openOfficialRepo(); break;
@@ -2399,9 +2121,38 @@ function setPage(page) {
     }
   }
   if (page === 'servers') loadServers();
-  if (page === 'skin') loadSkin(false).catch(() => {});
   if (page === 'logs') loadLatestLog().then(render).catch(() => {});
   render();
+}
+
+async function refreshAll() {
+  if (state.refreshingAll) return;
+  state.refreshingAll = true;
+  render();
+  try {
+    const [update, announcements] = await Promise.all([
+      api.checkUpdates(true),
+      api.listAnnouncements(true)
+    ]);
+    state.update = update;
+    state.announcements = (announcements && announcements.items) || [];
+    state.announcementError = announcements && announcements.ok === false
+      ? (announcements.error || '公告刷新失败') : '';
+    if (unseenPopupAnnouncements().length) scheduleAnnouncementPopup();
+    if (update && update.hasUpdate) {
+      toast('发现新版本 ' + update.latest, 'success');
+      showUpdateModal();
+    } else if (update && update.ok === false) {
+      toast(update.error || '更新检查失败', 'error');
+    } else {
+      toast('公告和更新已刷新', 'success');
+    }
+  } catch (e) {
+    toast(e.message || '刷新失败', 'error');
+  } finally {
+    state.refreshingAll = false;
+    render();
+  }
 }
 
 async function checkForUpdates(force = true, notify = true) {
@@ -3569,10 +3320,6 @@ function openModal({ title, desc, body, actions, className }) {
 function closeModal() {
   state.noticeOpenId = '';
   clearNoticeRetry();
-  if (state.skin3dViewer) {
-    try { state.skin3dViewer.dispose(); } catch { /* ignore */ }
-    state.skin3dViewer = null;
-  }
   const root = $('modalRoot');
   root.classList.remove('open');
   root.innerHTML = '';

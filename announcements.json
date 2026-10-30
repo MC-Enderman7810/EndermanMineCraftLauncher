@@ -3,18 +3,8 @@
     {
       "id": "2026-10-25-emcl-1.26.26.01",
       "title": "EMCL 1.26.26.01 已发布",
-      "body": "Mojang 已通过 EMCL 自有 Azure appID 的 API allowlist 申请。\n\n发布版微软登录默认切换到已批准的自有 appID（Entra 通道）；旧版公共 Live 账户仍可自动续期，不会被强制登出。\n\n版本号更新为 1.26.26.01。",
+      "body": "Mojang 已通过 EMCL 自有 Azure appID 的 API allowlist 申请。\n\n发布版微软登录默认切换到已批准的自有 appID（Entra 通道）；旧版公共 Live 账户仍可自动续期，不会被强制登出。\n\n同时加入主页服务器推荐、服务器生成向导、多账户启动选择、启动前模组依赖检查，以及“刷新公告和更新”按钮。\n\n皮肤页面、3D 皮肤展示和披风切换入口已移除。\n\n版本号更新为 1.26.26.01。",
       "date": "2026-10-25",
-      "tag": "更新",
-      "kind": "update",
-      "pinned": true,
-      "url": "https://github.com/MC-Enderman7810/EndermanMineCraftLauncher"
-    },
-    {
-      "id": "2026-10-24-emcl-1.26.26.00",
-      "title": "EMCL 1.26.26.00 已发布",
-      "body": "新增服务器管理：可以添加本地 Paper / Fabric / Forge / NeoForge 服务端，启动和停止、查看实时控制台、发送命令、编辑 server.properties、管理白名单/OP、备份恢复和查看崩溃日志。远程服务器支持 RCON 和 SSH 命令。\n\n模组推荐升级为 Modrinth 下载榜 Top 100，保留皮肤、反馈和居中公告提示。\n\n遇到问题请到 GitHub 仓库提交 Issue。",
-      "date": "2026-10-24",
       "tag": "更新",
       "kind": "update",
       "pinned": true,

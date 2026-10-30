@@ -6,6 +6,8 @@
     "微软登录默认切换到已批准的自有 appID（Entra 通道）",
     "旧版公共 Live 账户仍可自动续期，不会被强制登出",
     "新增一次性配置迁移：旧版自动切换到自有 appID",
+    "新增“刷新公告和更新”按钮，可同时刷新公告与版本检查",
+    "移除皮肤页面、3D 皮肤展示和披风切换入口",
     "版本号更新为 1.26.26.01"
   ],
   "url": "https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases",
