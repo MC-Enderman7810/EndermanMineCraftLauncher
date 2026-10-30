@@ -6,6 +6,67 @@ const path = require('path');
 const { spawn } = require('child_process');
 const { app, safeStorage, dialog } = require('electron');
 const AdmZip = require('adm-zip');
+const minecraft = require('./minecraft');
+const { Readable } = require('stream');
+const { pipeline } = require('stream/promises');
+
+async function downloadVanillaServer(version, dir) {
+  const target = path.join(dir, 'server.jar');
+  if (fs.existsSync(target) && fs.statSync(target).size > 1024 * 1024) return target;
+  const mirrors = [
+    'https://bmclapi2.bangbang93.com/version/' + encodeURIComponent(version) + '/server'
+  ];
+  try {
+    const manifest = await minecraft.fetchManifest('mojang');
+    const item = manifest.versions.find((v) => v.id === version);
+    if (item && item.url) {
+      const json = await (await fetch(item.url)).json();
+      const url = json.downloads && json.downloads.server && json.downloads.server.url;
+      if (url) mirrors.push(url);
+    }
+  } catch { /* BMCLAPI fallback only */ }
+  let lastError = null;
+  for (const url of mirrors) {
+    try {
+      await downloadToFile(url, target);
+      if (fs.existsSync(target) && fs.statSync(target).size > 1024 * 1024) return target;
+    } catch (e) { lastError = e; }
+  }
+  throw new Error('无法下载 ' + version + ' 的原版服务端 jar，Forge/NeoForge 安装器需要它：' +
+    (lastError ? lastError.message : '未知错误'));
+}
+
+async function runInstaller(java, jar, cwd, args) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(java || 'java', ['-jar', jar, '--installServer'].concat(args || []), {
+      cwd, windowsHide: true
+    });
+    let out = '';
+    const append = (d) => { out = (out + String(d)).slice(-12000); };
+    child.stdout.on('data', append);
+    child.stderr.on('data', append);
+    const timer = setTimeout(() => {
+      child.kill();
+      reject(new Error('安装器超时（10 分钟）\n' + out.slice(-3000)));
+    }, 10 * 60 * 1000);
+    child.on('error', (e) => { clearTimeout(timer); reject(new Error('无法启动 Java 安装器：' + e.message)); });
+    child.on('exit', (code) => {
+      clearTimeout(timer);
+      if (code === 0) resolve(out);
+      else reject(new Error('安装器失败，退出码 ' + code + '\n' + out.slice(-3000)));
+    });
+  });
+}
+
+async function downloadToFile(url, target, headers) {
+  const res = await fetch(url, {
+    headers: Object.assign({ 'User-Agent': 'EMCL/1.26.25.14 (server setup)' }, headers || {}),
+    redirect: 'follow'
+  });
+  if (!res.ok) throw new Error('下载失败 HTTP ' + res.status + '：' + url);
+  await fsp.mkdir(path.dirname(target), { recursive: true });
+  await pipeline(Readable.fromWeb(res.body), fs.createWriteStream(target));
+}
 
 const JAR_RE = /^(server|paper|fabric-server-launch|forge|neoforge|minecraft_server).*\.jar$/i;
 const DEFAULTS = { memory: 4096, minMemory: 1024, javaPath: '' };
@@ -25,7 +86,9 @@ class ServerManager {
   async load() {
     try {
       const list = JSON.parse(await fsp.readFile(this.file, 'utf8'));
-      return Array.isArray(list) ? list : [];
+      if (Array.isArray(list)) return list;
+      if (list && typeof list === 'object' && list.id) return [list];
+      return [];
     } catch {
       return [];
     }
@@ -72,21 +135,133 @@ class ServerManager {
     return { dir, jar };
   }
 
-  async addLocal(dir, name, jar, memory) {
+  async chooseDir() {
+    const result = await dialog.showOpenDialog({
+      title: '选择新服务器目录',
+      properties: ['openDirectory', 'createDirectory']
+    });
+    if (result.canceled || !result.filePaths[0]) return null;
+    return result.filePaths[0];
+  }
+
+  async createLocal(data) {
+    const dir = String(data.dir || '').trim();
+    const version = String(data.version || '').trim();
+    const loader = String(data.loader || 'paper').toLowerCase();
+    if (!dir) throw new Error('请选择服务器目录');
+    if (!version) throw new Error('请选择 Minecraft 版本');
+    if (!data.eula) throw new Error('需要先接受 Minecraft EULA');
+    await fsp.mkdir(dir, { recursive: true });
+    if (fs.existsSync(path.join(dir, 'server.jar'))) throw new Error('目录里已经有 server.jar，请换一个空目录');
+
+    let jarName = 'server.jar';
+    let startScript = '';
+    if (loader === 'paper') {
+      const res = await fetch('https://fill.papermc.io/v3/projects/paper/versions/' +
+        encodeURIComponent(version) + '/builds/latest', {
+        headers: { 'User-Agent': 'EMCL/1.26.25.14 (server setup)' }
+      });
+      if (!res.ok) throw new Error('Paper 没有找到 ' + version + ' 的服务端（HTTP ' + res.status + '）');
+      const info = await res.json();
+      const download = info.downloads && info.downloads['server:default'];
+      if (!download || !download.url) throw new Error('Paper 下载信息不完整');
+      jarName = download.name || ('paper-' + version + '.jar');
+      await downloadToFile(download.url, path.join(dir, jarName));
+    } else if (loader === 'fabric') {
+      const meta = await fetch('https://meta.fabricmc.net/v2/versions/loader/' + encodeURIComponent(version));
+      if (!meta.ok) throw new Error('Fabric 没有找到 ' + version + '（HTTP ' + meta.status + '）');
+      const list = await meta.json();
+      const first = Array.isArray(list) ? list[0] : null;
+      if (!first || !first.loader) throw new Error('Fabric 加载器列表为空');
+      const loaderVersion = first.loader.version;
+      const url = 'https://meta.fabricmc.net/v2/versions/loader/' +
+        encodeURIComponent(version) + '/' + encodeURIComponent(loaderVersion) + '/server/jar';
+      jarName = 'fabric-server-launch.jar';
+      await downloadToFile(url, path.join(dir, jarName));
+    } else if (loader === 'vanilla') {
+      const manifest = await minecraft.fetchManifest('mojang');
+      const item = manifest.versions.find((v) => v.id === version);
+      if (!item || !item.url) throw new Error('版本清单里没有 ' + version);
+      const json = await (await fetch(item.url)).json();
+      const serverUrl = json.downloads && json.downloads.server && json.downloads.server.url;
+      if (!serverUrl) throw new Error('这个版本没有服务端下载');
+      await downloadToFile(serverUrl, path.join(dir, 'server.jar'));
+    } else if (loader === 'forge') {
+      const promo = await (await fetch('https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json',
+        { headers: { 'User-Agent': 'EMCL/1.26.25.14 (server setup)' } })).json();
+      const forgeVersion = (promo.promos && (promo.promos[version + '-recommended'] || promo.promos[version + '-latest'])) || '';
+      if (!forgeVersion) throw new Error('Forge 没有找到 ' + version + ' 的推荐版本');
+      const full = version + '-' + forgeVersion;
+      await downloadVanillaServer(version, dir);
+      const installer = 'forge-' + full + '-installer.jar';
+      await downloadToFile('https://maven.minecraftforge.net/net/minecraftforge/forge/' + full + '/' + installer,
+        path.join(dir, installer));
+      await runInstaller(data.javaPath || 'java', installer, dir);
+      startScript = fs.existsSync(path.join(dir, 'run.bat')) ? 'run.bat'
+        : (fs.existsSync(path.join(dir, 'run.sh')) ? 'run.sh' : '');
+      if (!startScript) throw new Error('Forge 安装完成，但没有找到 run.bat / run.sh');
+      jarName = '';
+    } else if (loader === 'neoforge') {
+      const meta = await fetch('https://maven.neoforged.net/api/maven/versions/releases/net/neoforged/neoforge',
+        { headers: { 'User-Agent': 'EMCL/1.26.25.14 (server setup)' } });
+      if (!meta.ok) throw new Error('NeoForge 版本服务不可达（HTTP ' + meta.status + '）');
+      const json = await meta.json();
+      const prefix = version.split('.').slice(1).join('.') + '.';
+      const versions = (json.versions || []).filter((v) => v.startsWith(prefix)).sort((a, b) =>
+        a.localeCompare(b, undefined, { numeric: true }));
+      const neoVersion = versions[versions.length - 1];
+      if (!neoVersion) throw new Error('NeoForge 没有找到 ' + version + ' 的版本');
+      await downloadVanillaServer(version, dir);
+      const installer = 'neoforge-' + neoVersion + '-installer.jar';
+      await downloadToFile('https://maven.neoforged.net/releases/net/neoforged/neoforge/' +
+        neoVersion + '/' + installer, path.join(dir, installer));
+      await runInstaller(data.javaPath || 'java', installer, dir);
+      startScript = fs.existsSync(path.join(dir, 'run.bat')) ? 'run.bat'
+        : (fs.existsSync(path.join(dir, 'run.sh')) ? 'run.sh' : '');
+      if (!startScript) throw new Error('NeoForge 安装完成，但没有找到 run.bat / run.sh');
+      jarName = '';
+    } else {
+      throw new Error('未知的服务端类型：' + loader);
+    }
+
+    await fsp.writeFile(path.join(dir, 'eula.txt'), 'eula=true\n', 'utf8');
+    const settings = data.settings || {};
+    const props = {
+      motd: settings.motd || 'EMCL Studio Server',
+      'server-port': settings.port || 25565,
+      gamemode: settings.gamemode || 'survival',
+      difficulty: settings.difficulty || 'normal',
+      'max-players': settings.maxPlayers || 20,
+      'online-mode': settings.onlineMode === false ? 'false' : 'true',
+      pvp: settings.pvp === false ? 'false' : 'true',
+      'view-distance': settings.viewDistance || 10,
+      'simulation-distance': settings.simulationDistance || 10,
+      'level-seed': settings.seed || '',
+      'enable-command-block': 'true'
+    };
+    await fsp.writeFile(path.join(dir, 'server.properties'),
+      Object.entries(props).map(([k, v]) => k + '=' + v).join('\n') + '\n', 'utf8');
+    return this.addLocal(dir, data.name || path.basename(dir), jarName,
+      Number(data.memory) || 4096, data.javaPath || '', startScript);
+  }
+
+  async addLocal(dir, name, jar, memory, javaPath, startScript) {
     if (!dir) throw new Error('没有选择服务端目录');
     const list = await this.load();
     let files = [];
     try { files = await fsp.readdir(dir); } catch { throw new Error('目录不可读取'); }
-    const found = jar || files.find((f) => JAR_RE.test(f)) || '';
-    if (!found) throw new Error('目录里没有找到服务端 jar');
+    const found = (startScript && !jar) ? '' : (jar || files.find((f) => JAR_RE.test(f)) || '');
+    if (!found && !startScript) throw new Error('目录里没有找到服务端 jar');
     const profile = {
       id: makeId(),
       type: 'local',
       name: name || path.basename(dir),
       dir,
       jar: found,
+      startScript: startScript || '',
       memory: Number(memory) || DEFAULTS.memory,
       minMemory: DEFAULTS.minMemory,
+      javaPath: String(javaPath || ''),
       createdAt: Date.now()
     };
     list.unshift(profile);
@@ -107,12 +282,22 @@ class ServerManager {
       sshUser: String(data.sshUser || '').trim(),
       sshPort: Number(data.sshPort) || 22,
       sshKey: String(data.sshKey || '').trim(),
+      sshLogPath: String(data.sshLogPath || 'logs/latest.log').trim(),
       createdAt: Date.now()
     };
     const list = await this.load();
     list.unshift(profile);
     await this.save(list);
     return { ok: true, profile, servers: await this.list() };
+  }
+
+  async setJava(id, javaPath) {
+    const list = await this.load();
+    const profile = list.find((s) => s.id === id);
+    if (!profile) throw new Error('服务器不存在');
+    profile.javaPath = String(javaPath || '');
+    await this.save(list);
+    return { ok: true, servers: await this.list() };
   }
 
   async remove(id) {
@@ -123,10 +308,85 @@ class ServerManager {
     return { ok: true, servers: await this.list() };
   }
 
+  async findJavaProcess(dir) {
+    return new Promise((resolve) => {
+      const script = 'Get-CimInstance Win32_Process -Filter "Name=\'java.exe\'" | Where-Object { $_.CommandLine -like ("*" + $env:EMCL_SERVER_DIR + "*") } | Select-Object -ExpandProperty ProcessId';
+      const child = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], {
+        windowsHide: true,
+        env: Object.assign({}, process.env, { EMCL_SERVER_DIR: dir })
+      });
+      let out = '';
+      child.stdout.on('data', (d) => { out += String(d); });
+      child.on('error', () => resolve(0));
+      child.on('exit', () => resolve(parseInt(out.trim().split(/\r?\n/)[0], 10) || 0));
+    });
+  }
+
+  async findPortPid(port) {
+    return new Promise((resolve) => {
+      const script = 'Get-NetTCPConnection -LocalPort $env:EMCL_PORT -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty OwningProcess';
+      const child = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], {
+        windowsHide: true,
+        env: Object.assign({}, process.env, { EMCL_PORT: String(port) })
+      });
+      let out = '';
+      child.stdout.on('data', (d) => { out += String(d); });
+      child.on('error', () => resolve(0));
+      child.on('exit', () => resolve(parseInt(out.trim(), 10) || 0));
+    });
+  }
+
+  async detectRunning(id) {
+    const profile = (await this.load()).find((s) => s.id === id);
+    if (!profile || profile.type !== 'local') return { ok: true, running: false, reasons: [] };
+    const reasons = [];
+    let pid = await this.findJavaProcess(profile.dir);
+    let port = 0;
+    try {
+      const props = await fsp.readFile(path.join(profile.dir, 'server.properties'), 'utf8');
+      const m = props.match(/^server-port=(\d+)/m);
+      port = m ? Number(m[1]) : 25565;
+    } catch { port = 25565; }
+    let portOpen = false;
+    if (!pid && port) {
+      portOpen = await new Promise((resolve) => {
+        const socket = require('net').connect(port, '127.0.0.1');
+        const done = (v) => { try { socket.destroy(); } catch { /* ignore */ } resolve(v); };
+        socket.setTimeout(500);
+        socket.once('connect', () => done(true));
+        socket.once('timeout', () => done(false));
+        socket.once('error', () => done(false));
+      });
+    }
+    if (!pid && portOpen) pid = await this.findPortPid(port);
+    if (pid) reasons.push('检测到服务端进程 PID ' + pid);
+    if (portOpen) reasons.push('端口 ' + port + ' 已被占用');
+    if (fs.existsSync(path.join(profile.dir, 'session.lock')) && (pid || portOpen)) {
+      reasons.push('session.lock 被占用');
+    }
+    return { ok: true, running: !!pid || portOpen, reasons, pid, port };
+  }
+
+  async stopExisting(id) {
+    const state = await this.detectRunning(id);
+    if (!state.running) return { ok: true, running: false };
+    if (!state.pid) throw new Error('检测到端口占用，但无法定位服务端进程，请手动结束后重试');
+    await new Promise((resolve, reject) => {
+      const child = spawn('taskkill.exe', ['/PID', String(state.pid), '/T', '/F'], { windowsHide: true });
+      child.on('error', reject);
+      child.on('exit', (code) => code === 0 ? resolve() : reject(new Error('结束旧服务端进程失败，退出码 ' + code)));
+    });
+    return { ok: true, stopped: true };
+  }
+
   async start(id) {
     const profile = (await this.load()).find((s) => s.id === id);
     if (!profile) throw new Error('服务器不存在');
-    if (this.runtimes.has(id)) return { ok: true, running: true };
+    if (this.runtimes.has(id)) return { ok: false, code: 'SERVER_RUNNING', running: true, reasons: ['EMCL 正在管理该服务器进程'] };
+    if (profile.type === 'local') {
+      const existing = await this.detectRunning(id);
+      if (existing.running) return { ok: false, code: 'SERVER_RUNNING', running: true, reasons: existing.reasons, pid: existing.pid };
+    }
     if (profile.type === 'remote') {
       await this.rcon(profile, 'list');
       return { ok: true, running: true, remote: true };
@@ -134,7 +394,26 @@ class ServerManager {
     const java = profile.javaPath || 'java';
     const args = ['-Xms' + Math.max(256, profile.minMemory || 1024) + 'M',
       '-Xmx' + Math.max(512, profile.memory || 4096) + 'M', '-jar', profile.jar, 'nogui'];
-    const child = spawn(java, args, { cwd: profile.dir, windowsHide: true });
+    const env = Object.assign({}, process.env);
+    if (profile.javaPath) {
+      const bin = path.dirname(profile.javaPath);
+      env.JAVA_HOME = path.dirname(bin);
+      env.PATH = bin + path.delimiter + (env.PATH || '');
+    }
+    if (profile.startScript) {
+      const userArgs = path.join(profile.dir, 'user_jvm_args.txt');
+      if (fs.existsSync(userArgs)) {
+        const text = fs.readFileSync(userArgs, 'utf8')
+          .split(/\r?\n/).filter((l) => !/^\s*-Xm[sx]/i.test(l)).join('\n');
+        fs.writeFileSync(userArgs, text.trimEnd() + '\n-Xmx' + Math.max(512, profile.memory || 4096) + 'M\n', 'utf8');
+      }
+    }
+    const child = profile.startScript
+      ? (process.platform === 'win32'
+        ? spawn(process.env.ComSpec || 'C:\\Windows\\System32\\cmd.exe',
+          ['/c', profile.startScript, 'nogui'], { cwd: profile.dir, windowsHide: true, env })
+        : spawn('sh', [profile.startScript, 'nogui'], { cwd: profile.dir, windowsHide: true, env }))
+      : spawn(java, args, { cwd: profile.dir, windowsHide: true, env });
     this.runtimes.set(id, child);
     const push = (stream) => (data) => {
       const lines = String(data || '').split(/\r?\n/).filter((x) => x !== '');
@@ -153,6 +432,11 @@ class ServerManager {
     });
     child.on('error', (e) => {
       this.runtimes.delete(id);
+      const line = '启动失败：' + e.message;
+      const log = this.logs.get(id) || [];
+      log.push({ at: Date.now(), stream: 'err', line });
+      this.logs.set(id, log.slice(-500));
+      this.emit('server:log', { id, line, stream: 'err' });
       this.emit('server:state', { id, running: false, error: e.message });
     });
     this.emit('server:state', { id, running: true });
@@ -180,12 +464,50 @@ class ServerManager {
     if (!profile) throw new Error('服务器不存在');
     if (profile.type === 'remote') {
       const reply = await this.rcon(profile, command);
+      const line = '> ' + command + '\n' + String(reply || '');
+      const log = this.logs.get(id) || [];
+      log.push({ at: Date.now(), stream: 'out', line });
+      this.logs.set(id, log.slice(-500));
+      this.emit('server:log', { id, line, stream: 'out' });
       return { ok: true, reply };
     }
     const child = this.runtimes.get(id);
     if (!child) throw new Error('服务器未启动');
     child.stdin.write(command + '\n');
     return { ok: true };
+  }
+
+  async saveConsole(id) {
+    const profile = (await this.load()).find((s) => s.id === id);
+    if (!profile) throw new Error('服务器不存在');
+    const lines = (this.logs.get(id) || []).map((item) =>
+      '[' + new Date(item.at).toLocaleString() + '] ' + item.line);
+    if (!lines.length && profile.type === 'local') {
+      try {
+        const raw = await fsp.readFile(path.join(profile.dir, 'logs', 'latest.log'), 'utf8');
+        lines.push(...raw.split(/\r?\n/).slice(-2000));
+      } catch { /* no log yet */ }
+    }
+    const header = [
+      'EMCL 服务器控制台信息',
+      '服务器：' + profile.name,
+      '类型：' + (profile.type === 'local' ? '本地服务端' : '远程 RCON'),
+      '位置：' + (profile.type === 'local' ? profile.dir : profile.host + ':' + profile.port),
+      '导出时间：' + new Date().toLocaleString(),
+      '============================================================',
+      ''
+    ].join('\n');
+    const text = header + (lines.join('\n') || '（当前没有控制台输出）') + '\n';
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const result = await dialog.showSaveDialog({
+      title: '保存服务器控制台信息',
+      defaultPath: path.join(app.getPath('downloads'),
+        'EMCL-' + String(profile.name).replace(/[\\/:*?"<>|]/g, '_') + '-console-' + stamp + '.txt'),
+      filters: [{ name: '文本文件', extensions: ['txt'] }]
+    });
+    if (result.canceled || !result.filePath) return { ok: false, canceled: true };
+    await fsp.writeFile(result.filePath, text, 'utf8');
+    return { ok: true, path: result.filePath };
   }
 
   async backup(id) {
@@ -208,6 +530,69 @@ class ServerManager {
     }
     zip.writeZip(target);
     return { ok: true, path: target };
+  }
+
+  async remoteStatus(id) {
+    const profile = (await this.load()).find((s) => s.id === id);
+    if (!profile) throw new Error('服务器不存在');
+    if (profile.type !== 'remote') {
+      const local = await this.detectRunning(id);
+      return { ok: true, mode: 'local', running: local.running, reasons: local.reasons, pid: local.pid };
+    }
+    const started = Date.now();
+    try {
+      const reply = await this.rcon(profile, 'list');
+      return {
+        ok: true, mode: 'remote', running: true, latency: Date.now() - started,
+        players: String(reply || '').trim(), error: ''
+      };
+    } catch (e) {
+      return {
+        ok: true, mode: 'remote', running: false, latency: Date.now() - started,
+        players: '', error: e.message || 'RCON 连接失败'
+      };
+    }
+  }
+
+  async remoteLogs(id, lines = 80) {
+    const profile = (await this.load()).find((s) => s.id === id);
+    if (!profile) throw new Error('服务器不存在');
+    const count = Math.max(20, Math.min(400, Number(lines) || 80));
+    if (profile.type === 'local') {
+      const file = path.join(profile.dir, 'logs', 'latest.log');
+      try {
+        const text = await fsp.readFile(file, 'utf8');
+        return { ok: true, text: text.split(/\r?\n/).slice(-count).join('\n'), file };
+      } catch {
+        return { ok: false, error: '还没有 latest.log', text: '' };
+      }
+    }
+    if (!profile.sshUser) return { ok: false, error: '未配置 SSH，无法读取远程日志', text: '' };
+    const logPath = profile.sshLogPath || 'logs/latest.log';
+    const res = await this.sshCommand(id, 'tail -n ' + count + ' ' + JSON.stringify(logPath));
+    return { ok: true, text: res.text, file: logPath };
+  }
+
+  async updateRemote(id, data) {
+    const list = await this.load();
+    const profile = list.find((s) => s.id === id);
+    if (!profile) throw new Error('服务器不存在');
+    if (profile.type !== 'remote') throw new Error('只能编辑远程服务器');
+    if (data.name) profile.name = String(data.name).trim();
+    if (data.host) profile.host = String(data.host).trim();
+    if (data.port) profile.port = Number(data.port);
+    if (data.sshUser !== undefined) profile.sshUser = String(data.sshUser || '').trim();
+    if (data.sshPort) profile.sshPort = Number(data.sshPort);
+    if (data.sshKey !== undefined) profile.sshKey = String(data.sshKey || '').trim();
+    if (data.sshLogPath !== undefined) profile.sshLogPath = String(data.sshLogPath || '').trim();
+    if (data.password) profile.password = this.encrypt(String(data.password));
+    await this.save(list);
+    return { ok: true, servers: await this.list() };
+  }
+
+  async testSsh(id) {
+    const res = await this.sshCommand(id, 'printf EMCL_SSH_OK');
+    return { ok: String(res.text || '').includes('EMCL_SSH_OK'), text: res.text };
   }
 
   async sshCommand(id, command) {

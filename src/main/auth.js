@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const { BrowserWindow } = require('electron');
 const { DEFAULT_MS_CLIENT_ID } = require('./store');
+const PUBLIC_MS_CLIENT_ID = '00000000402b5328';
 
 const LIVE_AUTHORIZE = 'https://login.live.com/oauth20_authorize.srf';
 const LIVE_TOKEN = 'https://login.live.com/oauth20_token.srf';
@@ -97,7 +98,7 @@ async function postForm(url, values) {
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
       'Accept': 'application/json',
-      'User-Agent': 'EMCL/1.26.26.00'
+      'User-Agent': 'EMCL/1.26.25.14'
     },
     body
   });
@@ -118,7 +119,7 @@ async function postJson(url, value, headers = {}) {
     headers: Object.assign({
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      'User-Agent': 'EMCL/1.26.26.00'
+      'User-Agent': 'EMCL/1.26.25.14'
     }, headers),
     body: JSON.stringify(value)
   });
@@ -177,7 +178,7 @@ async function completeChain(token, clientId, authority = 'live') {
     headers: {
       'Authorization': 'Bearer ' + mc.access_token,
       'Accept': 'application/json',
-      'User-Agent': 'EMCL/1.26.26.00'
+      'User-Agent': 'EMCL/1.26.25.14'
     }
   });
   if (res.status === 404) throw new Error('该微软账户没有 Minecraft: Java 版，或尚未创建玩家档案');
@@ -310,8 +311,11 @@ async function loginMicrosoft(store, parent, clientId) {
 
 async function refreshMicrosoft(store, account) {
   const config = store.getConfig();
-  const id = config.msClientId || DEFAULT_MS_CLIENT_ID;
   const authority = authorityOf(account.authority || config.msAuthority);
+  // 旧账户的 refresh token 属于公共 Live client，不能拿新 appID 续期。
+  const id = authority === 'live'
+    ? PUBLIC_MS_CLIENT_ID
+    : (config.msClientId || DEFAULT_MS_CLIENT_ID);
   const tokenUrl = authority === 'entra' ? ENTRA_TOKEN : LIVE_TOKEN;
   const redirectUri = authority === 'entra' ? ENTRA_REDIRECT : LIVE_REDIRECT;
   if (!account.refreshToken) throw new Error('登录凭据已失效，请重新登录微软账户');
@@ -386,7 +390,7 @@ async function refreshAccount(store, account) {
 
 async function assertMicrosoftOwnership(accessToken) {
   const res = await fetch(MC_PROFILE, {
-    headers: { 'Authorization': 'Bearer ' + accessToken, 'User-Agent': 'EMCL/1.26.26.00' }
+    headers: { 'Authorization': 'Bearer ' + accessToken, 'User-Agent': 'EMCL/1.26.25.14' }
   });
   return res.ok;
 }

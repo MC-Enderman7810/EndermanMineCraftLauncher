@@ -1,19 +1,12 @@
 {
-  "version": "1.26.26.00",
-  "releaseDate": "2026-10-24",
+  "version": "1.26.26.01",
+  "releaseDate": "2026-10-25",
   "notes": [
-    "新增服务器管理：本地 Java 服务端与远程 RCON/SSH",
-    "本地服务器支持启停、控制台、命令、属性、白名单/OP、备份恢复和崩溃分析",
-    "在线安装版本时可直接选择 Fabric / Quilt / Forge / NeoForge",
-    "安装版本时可同时安装 Iris / Oculus 光影加载器",
-    "新增皮肤展示页：角色预览、头像、原始纹理与模型信息",
-    "模组推荐改为 Modrinth 下载榜 Top 100",
-    "新增反馈入口：自动收集版本、Java、系统与最近日志，生成 GitHub Issue 报告",
-    "新增启动时自动检查更新，每 6 小时检查一次",
-    "新公告改为居中提示框，启动时自动弹出",
-    "新增远程公告，可在主页查看并标记已读",
-    "版本号更新为 1.26.26.00",
-    "优化微软登录与 Azure 登录通道"
+    "Mojang 已通过 EMCL 自有 Azure appID 的 API allowlist 申请",
+    "微软登录默认切换到已批准的自有 appID（Entra 通道）",
+    "旧版公共 Live 账户仍可自动续期，不会被强制登出",
+    "新增一次性配置迁移：旧版自动切换到自有 appID",
+    "版本号更新为 1.26.26.01"
   ],
   "url": "https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases",
   "downloadUrl": "https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/latest"

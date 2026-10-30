@@ -18,6 +18,34 @@ function report(progress, percent, message) {
   if (progress) progress(percent, message || '');
 }
 
+async function dedupeFabricMods(modsDir) {
+  if (!await exists(modsDir)) return 0;
+  const files = (await fsp.readdir(modsDir)).filter((f) => f.toLowerCase().endsWith('.jar'));
+  const byId = new Map();
+  let moved = 0;
+  const disabledDir = path.join(path.dirname(modsDir), 'mods-disabled');
+  for (const file of files) {
+    try {
+      const zip = new AdmZip(path.join(modsDir, file));
+      const raw = zip.readAsText('fabric.mod.json');
+      const meta = JSON.parse(raw.replace(/^\uFEFF/, ''));
+      const id = meta.id;
+      if (!id) continue;
+      const version = String(meta.version || '0');
+      const old = byId.get(id);
+      if (!old) { byId.set(id, { file, version }); continue; }
+      const keepNew = version.localeCompare(old.version, undefined, { numeric: true }) >= 0;
+      const loser = keepNew ? old : { file, version };
+      const keeper = keepNew ? { file, version } : old;
+      await ensureDir(disabledDir);
+      await fsp.rename(path.join(modsDir, loser.file), path.join(disabledDir, loser.file));
+      byId.set(id, keeper);
+      moved++;
+    } catch { /* not a Fabric mod */ }
+  }
+  return moved;
+}
+
 async function ensureBaseVersion(store, mcVersion, progress) {
   const config = store.getConfig();
   const jsonPath = path.join(config.gameDir, 'versions', mcVersion, mcVersion + '.json');
@@ -58,6 +86,7 @@ async function installLoaderDependency(store, index, mcVersion, progress) {
 
 async function installMrpack(store, unpacked, index, progress) {
   const config = store.getConfig();
+  if (!config.isolation) { await store.patchConfig({ isolation: true }); config.isolation = true; }
   const mcVersion = index.dependencies && index.dependencies.minecraft;
   if (!mcVersion) throw new Error('整合包没有声明 Minecraft 版本');
   await ensureBaseVersion(store, mcVersion, progress);
@@ -131,8 +160,59 @@ function detectGenericRoot(unpacked) {
   return '';
 }
 
+async function importMmcPack(store, unpacked, mmc, progress) {
+  const config = store.getConfig();
+  if (!config.isolation) { await store.patchConfig({ isolation: true }); config.isolation = true; }
+  const components = Array.isArray(mmc.components) ? mmc.components : [];
+  const minecraft = components.find((c) => c.uid === 'net.minecraft');
+  if (!minecraft || !minecraft.version) return null;
+  const mcVersion = minecraft.version;
+  await ensureBaseVersion(store, mcVersion, progress);
+  let loader = { versionId: mcVersion, loader: '原版' };
+  const fabric = components.find((c) => c.uid === 'net.fabricmc.fabric-loader');
+  const forge = components.find((c) => c.uid === 'net.minecraftforge');
+  const neo = components.find((c) => c.uid === 'net.neoforged');
+  if (fabric && fabric.version) {
+    loader = await installLoader(store, 'fabric', mcVersion, config.gameDir,
+      (p, msg) => report(progress, 22 + p * 0.1, msg), { loaderVersion: fabric.version });
+  } else if (forge && forge.version) {
+    loader = await installLoader(store, 'forge', mcVersion, config.gameDir,
+      (p, msg) => report(progress, 22 + p * 0.1, msg), { loaderVersion: forge.version });
+  } else if (neo && neo.version) {
+    loader = await installLoader(store, 'neoforge', mcVersion, config.gameDir,
+      (p, msg) => report(progress, 22 + p * 0.1, msg), { loaderVersion: neo.version });
+  }
+  const instance = instanceDir(config, loader.versionId || mcVersion);
+  await ensureDir(instance);
+  const minecraftDir = path.join(unpacked, '.minecraft');
+  if (await exists(minecraftDir)) {
+    await copyTree(minecraftDir, instance, {
+      filter: (full, name) => name !== 'PCL' && name !== 'logs' && name !== 'crash-reports'
+    });
+  }
+  const deduped = await dedupeFabricMods(path.join(instance, 'mods'));
+  const cfg = await fsp.readFile(path.join(unpacked, 'instance.cfg'), 'utf8').catch(() => '');
+  const nameMatch = cfg.match(/^name=(.+)$/m);
+  report(progress, 100, 'HMCL / MultiMC 整合包导入完成');
+  return {
+    name: nameMatch ? nameMatch[1].trim() : 'HMCL 整合包',
+    versionId: loader.versionId || mcVersion,
+    mcVersion,
+    message: '已导入 HMCL / MultiMC 整合包：Minecraft ' + mcVersion +
+      (loader.loader && loader.loader !== '原版' ? ' + ' + loader.loader : '') +
+      '，模组和配置已复制到实例目录' +
+      (deduped ? '；发现 ' + deduped + ' 个重复 Fabric 模组，旧版本已移到 mods-disabled' : '')
+  };
+}
+
 async function importGeneric(store, unpacked, progress) {
   const config = store.getConfig();
+  if (!config.isolation) { await store.patchConfig({ isolation: true }); config.isolation = true; }
+  const mmc = await readJson(path.join(unpacked, 'mmc-pack.json'), null);
+  if (mmc && Array.isArray(mmc.components)) {
+    const imported = await importMmcPack(store, unpacked, mmc, progress);
+    if (imported) return imported;
+  }
   const manifestPath = path.join(unpacked, 'manifest.json');
   const manifest = await readJson(manifestPath, null);
   if (manifest && manifest.minecraft && manifest.minecraft.version) {
@@ -228,6 +308,7 @@ module.exports = {
   importArchive,
   importFromUrl,
   importGeneric,
+  dedupeFabricMods,
   installMrpack,
   ensureBaseVersion
 };

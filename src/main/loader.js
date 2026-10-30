@@ -177,7 +177,7 @@ async function installForge(store, mcVersion, gameDir, progress, options = {}) {
 
 async function neoForgeVersions(mcVersion) {
   const xml = await (await fetch(NEOFORGE_MAVEN, {
-    headers: { 'User-Agent': 'EMCL/1.26.26.00' }
+    headers: { 'User-Agent': 'EMCL/1.26.25.14' }
   })).text();
   const versions = [...xml.matchAll(/<version>([^<]+)<\/version>/g)].map((m) => m[1]);
   if (!/^1\./.test(mcVersion)) return [];

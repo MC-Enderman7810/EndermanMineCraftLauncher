@@ -7,7 +7,7 @@ const crypto = require('crypto');
 const { Readable } = require('stream');
 const AdmZip = require('adm-zip');
 
-const USER_AGENT = 'EMCL/1.26.26.00 (Windows; Minecraft Java Edition launcher)';
+const USER_AGENT = 'EMCL/1.26.25.14 (Windows; Minecraft Java Edition launcher)';
 
 function ensureDir(dir) {
   return fsp.mkdir(dir, { recursive: true });
@@ -125,56 +125,75 @@ async function downloadFile(url, dest, options = {}) {
   const {
     onProgress = () => {},
     expectedSha1 = '',
-    timeout = 120000,
-    headers = {}
+    timeout = 300000,
+    headers = {},
+    retries = 3
   } = options;
   await ensureDir(path.dirname(dest));
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeout);
-  try {
-    const res = await fetch(url, {
-      headers: Object.assign({ 'User-Agent': USER_AGENT, 'Accept': '*/*' }, headers),
-      redirect: 'follow',
-      signal: controller.signal
-    });
-    if (!res.ok) {
-      let detail = '';
-      try { detail = (await res.text()).slice(0, 200); } catch { /* ignore */ }
-      throw new Error('HTTP ' + res.status + ' ' + res.statusText + (detail ? '：' + detail : ''));
-    }
-    const total = Number(res.headers.get('content-length') || 0);
-    let received = 0;
-    let lastTick = 0;
-    const tmp = dest + '.part';
-    const out = fs.createWriteStream(tmp);
-    const body = Readable.fromWeb(res.body);
-    body.on('data', (chunk) => {
-      received += chunk.length;
-      const now = Date.now();
-      if (now - lastTick > 120) {
-        lastTick = now;
-        onProgress(received, total);
+  const tmp = dest + '.part';
+  let lastError = null;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeout);
+    let start = 0;
+    try {
+      try { start = (await fsp.stat(tmp)).size; } catch { start = 0; }
+      const reqHeaders = Object.assign({ 'User-Agent': USER_AGENT, 'Accept': '*/*', 'Accept-Encoding': 'identity' }, headers);
+      if (start > 0) reqHeaders.Range = 'bytes=' + start + '-';
+      const res = await fetch(url, {
+        headers: reqHeaders,
+        redirect: 'follow',
+        signal: controller.signal
+      });
+      if (res.status === 416) {
+        await fsp.unlink(tmp).catch(() => {});
+        throw new Error('断点位置无效，重新下载');
       }
-    });
-    await new Promise((resolve, reject) => {
-      body.on('error', reject);
-      out.on('error', reject);
-      out.on('finish', resolve);
-      body.pipe(out);
-    });
-    await fsp.rename(tmp, dest);
-    onProgress(received, total || received);
-    if (expectedSha1) {
-      const actual = await sha1File(dest);
-      if (actual.toLowerCase() !== expectedSha1.toLowerCase()) {
-        await fsp.unlink(dest).catch(() => {});
-        throw new Error('SHA-1 校验失败');
+      if (!res.ok) {
+        let detail = '';
+        try { detail = (await res.text()).slice(0, 200); } catch { /* ignore */ }
+        throw new Error('HTTP ' + res.status + ' ' + res.statusText + (detail ? '：' + detail : ''));
       }
+      if (start > 0 && res.status !== 206) start = 0;
+      const remaining = Number(res.headers.get('content-length') || 0);
+      const total = start > 0 ? start + remaining : remaining;
+      let received = start;
+      let lastTick = 0;
+      const out = fs.createWriteStream(tmp, { flags: start > 0 ? 'a' : 'w' });
+      const body = Readable.fromWeb(res.body);
+      body.on('data', (chunk) => {
+        received += chunk.length;
+        const now = Date.now();
+        if (now - lastTick > 120) {
+          lastTick = now;
+          onProgress(received, total);
+        }
+      });
+      await new Promise((resolve, reject) => {
+        body.on('error', reject);
+        out.on('error', reject);
+        out.on('finish', resolve);
+        body.pipe(out);
+      });
+      await fsp.rename(tmp, dest);
+      onProgress(received, total || received);
+      if (expectedSha1) {
+        const actual = await sha1File(dest);
+        if (actual.toLowerCase() !== expectedSha1.toLowerCase()) {
+          await fsp.unlink(dest).catch(() => {});
+          await fsp.unlink(tmp).catch(() => {});
+          throw new Error('SHA-1 校验失败');
+        }
+      }
+      return received;
+    } catch (e) {
+      lastError = e;
+      if (attempt < retries) await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
+    } finally {
+      clearTimeout(timer);
     }
-    return received;
-  } finally {
-    clearTimeout(timer);
   }
+  throw lastError || new Error('下载失败');
 }
 
 async function fetchJson(url, options = {}) {

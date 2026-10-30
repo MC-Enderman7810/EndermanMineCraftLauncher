@@ -1,15 +1,20 @@
 'use strict';
 
-const { app, BrowserWindow, ipcMain, dialog, shell, screen } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell, screen, clipboard } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const fsp = fs.promises;
 
+const { channel, isDev } = require('./channel');
 const { Store } = require('./store');
 const {
-  fetchManifest, scanInstalled, installVersion, repairVersion, getWorlds, instanceDir
+  fetchManifest, scanInstalled, installVersion, repairVersion, verifyVersion, getWorlds, instanceDir
 } = require('./minecraft');
 const { installLoader } = require('./loader');
+const loaderVersions = require('./loader-versions');
+const optifine = require('./optifine');
+const serverRecommend = require('./server-recommend');
+const legacy = require('./legacy');
 const { launchGame, buildLaunch } = require('./launch');
 const auth = require('./auth');
 const modrinth = require('./modrinth');
@@ -21,10 +26,12 @@ const updater = require('./updater');
 const skin = require('./skin');
 const recommend = require('./recommend');
 const { ServerManager } = require('./servers');
+const modcheck = require('./modcheck');
 
-app.setName('EMCL');
-app.setPath('userData', path.join(app.getPath('appData'), 'emcl-launcher'));
-const APP_NAME = 'EMCL · Enderman MineCraft Launcher';
+app.setName(isDev ? 'EMCL 开发者版本' : 'EMCL');
+app.setPath('userData', path.join(app.getPath('appData'),
+  isDev ? 'emcl-launcher-dev' : 'emcl-launcher'));
+const APP_NAME = isDev ? 'EMCL 开发者版本 · Enderman MineCraft Launcher' : 'EMCL · Enderman MineCraft Launcher';
 let store = null;
 let mainWindow = null;
 let serverManager = null;
@@ -135,9 +142,10 @@ function pickJavaInfo(info) {
   };
 }
 
-async function installShaderLoader(store, finalVersionId, mcVersion, loader, taskId, title) {
-  // Forge 用 Oculus；Fabric / Quilt / NeoForge 用 Iris
-  const projectId = loader === 'forge' ? 'oculus' : 'iris';
+async function installShaderLoader(store, finalVersionId, mcVersion, loader, taskId, title, shaderType, shaderVersion) {
+  if (shaderType === 'optifine') throw new Error('OptiFine 暂不支持自动安装');
+  // 用户选择优先；未指定时 Forge 用 Oculus，其余用 Iris
+  const projectId = shaderType === 'oculus' || (!shaderType && loader === 'forge') ? 'oculus' : 'iris';
   const project = await modrinth.getProject(projectId);
   const config = store.getConfig();
   const instance = instanceDir(config, finalVersionId);
@@ -147,6 +155,7 @@ async function installShaderLoader(store, finalVersionId, mcVersion, loader, tas
     loader,
     instanceDir: instance,
     strict: true,
+    versionId: shaderVersion || '',
     onProgress: (received, total) => {
       const pct = total ? 92 + Math.min(6, received / total * 6) : 94;
       updateTask(taskId, title, pct, '下载 ' + (project.title || projectId));
@@ -264,19 +273,40 @@ function registerIpc() {
     try {
       await updateTask(id, '安装 ' + versionId, 0, '准备中');
       const config = store.getConfig();
+      if (String(versionId).startsWith('2.0-')) {
+        const legacyResult = await legacy.installLegacy(store, versionId,
+          (p, msg) => updateTask(id, '安装 ' + versionId, p, msg));
+        let verify = await verifyVersion(versionId, config.gameDir);
+        if (!verify.ok) {
+          updateTask(id, '安装 ' + versionId, 92, '补全缺失文件');
+          await repairVersion(versionId, config.gameDir, config.downloadSource,
+            (p, total, msg) => updateTask(id, '安装 ' + versionId, 92 + p * 0.08, msg)).catch(() => {});
+          verify = await verifyVersion(versionId, config.gameDir);
+        }
+        taskDone(id, '安装 ' + versionId, verify.ok ? 'Minecraft 2.0 安装完成' : 'Minecraft 2.0 安装完成，仍有文件缺失');
+        await store.patchConfig({ lastVersionId: versionId });
+        return { ok: true, result: legacyResult, installed: await refreshInstalled(), missing: verify.missing };
+      }
       const result = await installVersion(versionId, url, config.gameDir, config.downloadSource,
         (done, total, msg) => {
           updateTask(id, '安装 ' + versionId, total ? done / total * 100 : 0, msg);
         });
-      taskDone(id, '安装 ' + versionId, '安装完成');
+      let verify = await verifyVersion(versionId, config.gameDir);
+      if (!verify.ok) {
+        updateTask(id, '安装 ' + versionId, 90, '补全缺失的 ' + verify.missing.length + ' 个文件');
+        await repairVersion(versionId, config.gameDir, config.downloadSource,
+          (p, total, msg) => updateTask(id, '安装 ' + versionId, 90 + p * 0.1, msg));
+        verify = await verifyVersion(versionId, config.gameDir);
+      }
+      taskDone(id, '安装 ' + versionId, verify.ok ? '安装完成' : '安装完成，但仍有文件缺失');
       await store.patchConfig({ lastVersionId: versionId });
-      return { ok: true, result, installed: await refreshInstalled() };
+      return { ok: true, result, installed: await refreshInstalled(), missing: verify.missing };
     } catch (e) {
       return taskError(id, '安装 ' + versionId, e);
     }
   });
 
-  ipcMain.handle('versions:installWithLoader', async (event, versionId, url, loader, shader) => {
+  ipcMain.handle('versions:installWithLoader', async (event, versionId, url, loader, shader, shaderType, loaderVersion, shaderVersion) => {
     const rawLoader = String(loader || '').toLowerCase();
     const selected = (rawLoader === 'vanilla' || rawLoader === '原版' || rawLoader === 'none')
       ? '' : rawLoader;
@@ -295,6 +325,25 @@ function registerIpc() {
       let loaderResult = null;
       let shaderResult = null;
       let shaderError = '';
+
+      if (shaderType === 'optifine') {
+        if (selected) throw new Error('OptiFine 只能与原版一起安装，请把模组加载器选为原版');
+        const patches = await optifine.versions(versionId);
+        const patch = shaderVersion || (patches[0] && patches[0].patch);
+        if (!patch) throw new Error('没有找到适配 ' + versionId + ' 的 OptiFine 版本');
+        updateTask(taskId, '安装 ' + versionId, 72, '安装 OptiFine ' + patch);
+        const opti = await optifine.install(store, versionId, patch,
+          (p, msg) => updateTask(taskId, '安装 ' + versionId, 72 + p * 0.26, msg));
+        finalVersionId = opti.versionId || versionId;
+        shaderResult = { optifine: true, versionId: finalVersionId, patch };
+        taskDone(taskId, '安装 ' + versionId, 'OptiFine ' + patch + ' 安装完成');
+        await store.patchConfig({ lastVersionId: finalVersionId });
+        return {
+          ok: true, result, shader: shaderResult, optifine: opti,
+          versionId: finalVersionId, installed: await refreshInstalled()
+        };
+      }
+
       if (selected) {
         updateTask(taskId, '安装 ' + versionId, 70, '准备安装 ' + selected);
         const loaderEnd = withShader ? 90 : 100;
@@ -303,14 +352,14 @@ function registerIpc() {
             updateTask(taskId, '安装 ' + versionId,
               68 + Math.max(0, Math.min(100, percent)) * ((loaderEnd - 68) / 100),
               msg || ('安装 ' + selected));
-          });
+          }, { loaderVersion: loaderVersion || undefined });
         if (loaderResult && loaderResult.versionId) finalVersionId = loaderResult.versionId;
       }
 
       if (withShader && selected) {
         try {
           shaderResult = await installShaderLoader(store, finalVersionId, versionId, selected,
-            taskId, '安装 ' + versionId);
+            taskId, '安装 ' + versionId, shaderType, shaderVersion);
         } catch (e) {
           shaderError = e.message || '光影加载器安装失败';
           console.warn('[EMCL] shader loader failed:', shaderError);
@@ -319,6 +368,13 @@ function registerIpc() {
         shaderError = '原版不能直接安装光影加载器，请先选择 Fabric / Quilt / Forge / NeoForge';
       }
 
+      let verify = await verifyVersion(finalVersionId, config.gameDir);
+      if (!verify.ok) {
+        updateTask(taskId, '安装 ' + versionId, 96, '补全缺失的 ' + verify.missing.length + ' 个文件');
+        await repairVersion(finalVersionId, config.gameDir, config.downloadSource,
+          (p, total, msg) => updateTask(taskId, '安装 ' + versionId, 96 + p * 0.04, msg)).catch(() => {});
+        verify = await verifyVersion(finalVersionId, config.gameDir);
+      }
       const shaderNote = shaderResult ? ' + 光影加载器' : (shaderError ? '（光影加载器未安装）' : '');
       taskDone(taskId, '安装 ' + versionId,
         '安装完成' + (loaderResult ? '：' + (loaderResult.message || selected) : '') + shaderNote +
@@ -331,7 +387,8 @@ function registerIpc() {
         shader: shaderResult,
         shaderError,
         versionId: finalVersionId,
-        installed: await refreshInstalled()
+        installed: await refreshInstalled(),
+        missing: verify.missing
       };
     } catch (e) {
       return taskError(taskId, '安装 ' + versionId, e);
@@ -367,24 +424,88 @@ function registerIpc() {
     }
   });
 
-  ipcMain.handle('launch:start', async (event, versionId) => {
+  ipcMain.handle('launch:start', async (event, versionId, accountId) => {
     try {
-      let account = store.activeAccount();
+      let account = isDev && accountId ? store.getAccountFull(accountId) : store.activeAccount();
       if (!account) throw new Error('请先添加账户');
+      if (isDev && accountId) await store.selectAccount(account.id);
       if (account.kind === 1 && account.expiresAt && account.expiresAt < Date.now() + 60000) {
+        send('launch:progress', { percent: 6, text: '刷新账户凭据' });
         account = await auth.refreshAccount(store, account);
         await store.updateAccount(account);
       }
-      const result = await launchGame(store, versionId, account,
-        (level, text) => send('launch:log', { level, text }),
-        (code, signal) => {
-          currentGame = null;
-          send('launch:exit', { code, signal });
-          if (code === 0) {
-            refreshInstalled().then((installed) => send('versions:changed', installed)).catch(() => {});
-          }
+      send('launch:progress', { percent: 12, text: '检查游戏账户' });
+      try {
+        send('launch:progress', { percent: 15, text: '自动检查版本文件' });
+        await repairVersion(versionId, store.getConfig().gameDir, store.getConfig().downloadSource,
+          (percent, total, msg) => {
+            send('launch:progress', {
+              percent: 15 + Math.max(0, Math.min(100, percent)) * 0.18,
+              text: msg || '自动补全版本文件'
+            });
+          });
+      } catch (e) {
+        send('launch:log', { level: 'warn', text: '自动补全跳过：' + (e.message || e) });
+      }
+      try {
+        const config = store.getConfig();
+        const installed = await scanInstalled(config.gameDir);
+        const ver = installed.find((v) => v.id === versionId);
+        const loaderMap = { Fabric: 'fabric', Quilt: 'quilt', Forge: 'forge', NeoForge: 'neoforge' };
+        const modsDir = path.join(instanceDir(config, versionId), 'mods');
+        send('launch:progress', { percent: 18, text: '检查模组依赖' });
+        await modcheck.checkAndInstall({
+          modsDir,
+          gameVersion: ver ? (ver.mcVersion || versionId) : versionId,
+          loader: ver ? (loaderMap[ver.loader] || String(ver.loader || '').toLowerCase()) : '',
+          log: (text) => send('launch:log', { level: 'info', text })
         });
+      } catch (e) {
+        send('launch:log', { level: 'warn', text: '模组依赖检查跳过：' + (e.message || e) });
+      }
+      send('launch:progress', { percent: 38, text: '构建启动参数' });
+      const cfg = store.getConfig();
+      const optionsFile = path.join(cfg.gameDir, 'options.txt');
+      const legacyOptionsFile = path.join(cfg.gameDir, 'options-2.0.txt');
+      const modernBackup = path.join(cfg.gameDir, 'options.emcl-modern.bak');
+      let restoreOptions = false;
+      if (String(versionId).startsWith('2.0-')) {
+        try {
+          if (fs.existsSync(optionsFile)) {
+            if (fs.existsSync(modernBackup)) fs.rmSync(modernBackup, { force: true });
+            fs.renameSync(optionsFile, modernBackup);
+            restoreOptions = true;
+          }
+          if (fs.existsSync(legacyOptionsFile)) fs.copyFileSync(legacyOptionsFile, optionsFile);
+        } catch { restoreOptions = false; }
+      }
+      const restoreLegacyOptions = () => {
+        if (!restoreOptions) return;
+        try {
+          if (fs.existsSync(optionsFile)) fs.copyFileSync(optionsFile, legacyOptionsFile);
+          if (fs.existsSync(modernBackup)) fs.renameSync(modernBackup, optionsFile);
+        } catch { /* ignore */ }
+        restoreOptions = false;
+      };
+      let result;
+      try {
+        send('launch:progress', { percent: 55, text: '启动游戏进程' });
+        result = await launchGame(store, versionId, account,
+          (level, text) => send('launch:log', { level, text }),
+          (code, signal) => {
+            currentGame = null;
+            restoreLegacyOptions();
+            send('launch:exit', { code, signal });
+            if (code === 0) {
+              refreshInstalled().then((installed) => send('versions:changed', installed)).catch(() => {});
+            }
+          });
+      } catch (e) {
+        restoreLegacyOptions();
+        throw e;
+      }
       currentGame = result;
+      send('launch:progress', { percent: 100, text: '游戏已启动' });
       await store.patchConfig({ lastVersionId: versionId });
       if (store.getConfig().closeAfterLaunch) {
         setTimeout(() => mainWindow && mainWindow.minimize(), 800);
@@ -496,12 +617,26 @@ function registerIpc() {
 
   ipcMain.handle('servers:list', async () => ({ ok: true, servers: await serverManager.list() }));
   ipcMain.handle('servers:pick', async () => serverManager.pickLocal());
-  ipcMain.handle('servers:addLocal', async (event, dir, name, jar, memory) =>
-    serverManager.addLocal(dir, name, jar, memory));
+  ipcMain.handle('servers:chooseDir', async () => serverManager.chooseDir());
+  ipcMain.handle('servers:createLocal', async (event, data) => serverManager.createLocal(data));
+  ipcMain.handle('servers:addLocal', async (event, dir, name, jar, memory, javaPath) =>
+    serverManager.addLocal(dir, name, jar, memory, javaPath));
   ipcMain.handle('servers:addRemote', async (event, data) => serverManager.addRemote(data));
+  ipcMain.handle('servers:recommend', async (event, type) => {
+    try { return await serverRecommend.recommend(type); }
+    catch (e) { return { ok: false, error: e.message, list: [] }; }
+  });
+  ipcMain.handle('servers:recommendTypes', async () => ({ ok: true, types: serverRecommend.TYPES }));
+  ipcMain.handle('servers:status', async (event, id) => serverManager.remoteStatus(id));
+  ipcMain.handle('servers:logs', async (event, id, lines) => serverManager.remoteLogs(id, lines));
+  ipcMain.handle('servers:updateRemote', async (event, id, data) => serverManager.updateRemote(id, data));
+  ipcMain.handle('servers:testSsh', async (event, id) => serverManager.testSsh(id));
+  ipcMain.handle('servers:detect', async (event, id) => serverManager.detectRunning(id));
+  ipcMain.handle('servers:stopExisting', async (event, id) => serverManager.stopExisting(id));
   ipcMain.handle('servers:start', async (event, id) => serverManager.start(id));
   ipcMain.handle('servers:stop', async (event, id) => serverManager.stop(id));
   ipcMain.handle('servers:command', async (event, id, command) => serverManager.command(id, command));
+  ipcMain.handle('servers:saveConsole', async (event, id) => serverManager.saveConsole(id));
   ipcMain.handle('servers:backup', async (event, id) => serverManager.backup(id));
   ipcMain.handle('servers:backups', async (event, id) => serverManager.listBackups(id));
   ipcMain.handle('servers:restore', async (event, id, name) => serverManager.restore(id, name));
@@ -511,6 +646,78 @@ function registerIpc() {
   ipcMain.handle('servers:ssh', async (event, id, command) => serverManager.sshCommand(id, command));
   ipcMain.handle('servers:playerAction', async (event, id, action, name) => serverManager.playerAction(id, action, name));
   ipcMain.handle('servers:analyze', async (event, id) => serverManager.analyze(id));
+  ipcMain.handle('optifine:versions', async (event, mcVersion) => {
+    try { return { ok: true, versions: await optifine.versions(mcVersion) }; }
+    catch (e) { return { ok: false, error: e.message, versions: [] }; }
+  });
+  ipcMain.handle('optifine:install', async (event, mcVersion, url, patch) => {
+    const taskId = 'optifine:' + mcVersion;
+    try {
+      await updateTask(taskId, '安装 OptiFine ' + mcVersion, 0, '准备安装');
+      const config = store.getConfig();
+      const installed = await scanInstalled(config.gameDir);
+      if (!installed.some((v) => v.id === mcVersion)) {
+        await installVersion(mcVersion, url, config.gameDir, config.downloadSource,
+          (done, total, msg) => updateTask(taskId, '安装 OptiFine ' + mcVersion,
+            total ? done / total * 40 : 10, msg));
+      }
+      const result = await optifine.install(store, mcVersion, patch,
+        (p, msg) => updateTask(taskId, '安装 OptiFine ' + mcVersion, 45 + p * 0.55, msg));
+      taskDone(taskId, '安装 OptiFine ' + mcVersion, result.versionId ? '已生成 ' + result.versionId : '安装完成');
+      return { ok: true, result, installed: await refreshInstalled() };
+    } catch (e) {
+      return taskError(taskId, '安装 OptiFine ' + mcVersion, e);
+    }
+  });
+  ipcMain.handle('shader:versions', async (event, type, mcVersion, loader) => {
+    try {
+      const project = type === 'oculus' ? 'oculus' : 'iris';
+      const list = await modrinth.versions(project, mcVersion, type === 'oculus' ? 'forge' : loader);
+      return {
+        ok: true,
+        versions: list.map((v) => ({
+          id: v.id,
+          name: v.name || v.version_number,
+          version: v.version_number,
+          gameVersions: v.game_versions || []
+        })).slice(0, 40),
+        recommended: list[0] ? list[0].id : ''
+      };
+    } catch (e) {
+      return { ok: false, error: e.message, versions: [] };
+    }
+  });
+  ipcMain.handle('loader:versions', async (event, type, mcVersion) => {
+    try {
+      return { ok: true, ...(await loaderVersions.list(type, mcVersion)) };
+    } catch (e) {
+      return { ok: false, error: e.message, versions: [] };
+    }
+  });
+  ipcMain.handle('mods:check', async (event, versionId) => {
+    try {
+      const config = store.getConfig();
+      const installed = await scanInstalled(config.gameDir);
+      const ver = installed.find((v) => v.id === versionId);
+      const loaderMap = { Fabric: 'fabric', Quilt: 'quilt', Forge: 'forge', NeoForge: 'neoforge' };
+      const loader = ver ? (loaderMap[ver.loader] || String(ver.loader || '').toLowerCase()) : '';
+      const modsDir = path.join(instanceDir(config, versionId), 'mods');
+      return await modcheck.checkLoaderCompatibility(modsDir, loader);
+    } catch (e) {
+      return { ok: false, error: e.message, mismatched: [] };
+    }
+  });
+  ipcMain.handle('mods:disable', async (event, versionId, names) => {
+    try {
+      const config = store.getConfig();
+      const modsDir = path.join(instanceDir(config, versionId), 'mods');
+      return { ok: true, disabled: await modcheck.disableMods(modsDir, names) };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+  });
+
+  ipcMain.handle('servers:setJava', async (event, id, javaPath) => serverManager.setJava(id, javaPath));
   ipcMain.handle('servers:remove', async (event, id) => serverManager.remove(id));
 
   ipcMain.handle('recommend:list', async (event, gameVersion, loader) => {
@@ -521,6 +728,22 @@ function registerIpc() {
     }
   });
 
+  ipcMain.handle('skin:setCape', async (event, capeId) => {
+    try {
+      const info = await skin.changeCape(store, capeId, false);
+      return { ok: true, skin: info };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+  });
+  ipcMain.handle('skin:disableCape', async () => {
+    try {
+      const info = await skin.changeCape(store, '', true);
+      return { ok: true, skin: info };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+  });
   ipcMain.handle('skin:get', async (event, force) => {
     try {
       return await skin.getSkin(store, !!force);
@@ -529,7 +752,7 @@ function registerIpc() {
     }
   });
 
-  ipcMain.handle('content:search', async (event, kind, query, gameVersion, loader) => {
+  ipcMain.handle('content:search', async (event, kind, query, gameVersion, loader, source) => {
     try {
       let hits = await modrinth.search(kind, query, gameVersion, loader);
       let fallback = false;
@@ -658,6 +881,44 @@ function registerIpc() {
 
   ipcMain.handle('logs:latest', async () => store.readLatestLog());
 
+  ipcMain.handle('announcements:local:list', async () => {
+    return { ok: true, items: await store.loadLocalAnnouncements() };
+  });
+
+  ipcMain.handle('announcements:local:save', async (event, input) => {
+    try {
+      const title = String(input && input.title || '').trim();
+      const body = String(input && input.body || '').trim();
+      if (!title) throw new Error('公告标题不能为空');
+      if (!body) throw new Error('公告正文不能为空');
+      const list = await store.loadLocalAnnouncements();
+      const id = String(input && input.id || '').trim() ||
+        'local-' + Date.now() + '-' + Math.random().toString(16).slice(2, 7);
+      const item = {
+        id,
+        title: title.slice(0, 80),
+        body: body.slice(0, 4000),
+        date: String(input && input.date || '').trim() || new Date().toISOString().slice(0, 10),
+        tag: String(input && input.tag || '公告').trim().slice(0, 20) || '公告',
+        pinned: !!(input && input.pinned),
+        local: true
+      };
+      const index = list.findIndex((x) => String(x.id) === id);
+      if (index >= 0) list[index] = item;
+      else list.unshift(item);
+      await store.saveLocalAnnouncements(list);
+      return { ok: true, items: list };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+  });
+
+  ipcMain.handle('announcements:local:delete', async (event, id) => {
+    const list = (await store.loadLocalAnnouncements()).filter((x) => String(x.id) !== String(id));
+    await store.saveLocalAnnouncements(list);
+    return { ok: true, items: list };
+  });
+
   ipcMain.handle('updates:check', async (event, force) => {
     return updater.checkUpdates(!!force);
   });
@@ -690,7 +951,7 @@ async function autoCheck() {
 }
 
 app.whenReady().then(async () => {
-  app.setAppUserModelId('com.emcl.launcher');
+  app.setAppUserModelId(isDev ? 'com.emcl.launcher.dev' : 'com.emcl.launcher');
   store = new Store();
   await store.init();
   serverManager = new ServerManager(send);
@@ -701,8 +962,18 @@ app.whenReady().then(async () => {
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
-}).catch((error) => {
-  dialog.showErrorBox('EMCL 启动失败', String(error && error.stack ? error.stack : error));
+}).catch(async (error) => {
+  const detail = String(error && error.stack ? error.stack : error);
+  const result = await dialog.showMessageBox({
+    type: 'error',
+    title: 'EMCL 启动失败',
+    message: 'EMCL 启动失败',
+    detail,
+    buttons: ['复制错误信息', '退出'],
+    defaultId: 0,
+    cancelId: 1
+  });
+  if (result.response === 0) clipboard.writeText('EMCL 启动失败\n\n' + detail);
   app.quit();
 });
 

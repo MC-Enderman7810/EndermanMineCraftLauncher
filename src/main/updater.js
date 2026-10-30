@@ -1,7 +1,10 @@
 'use strict';
 
 const { app, shell } = require('electron');
+const fs = require('fs');
+const path = require('path');
 const { fetchJson } = require('./util');
+const { isDev } = require('./channel');
 
 const REPO = 'https://github.com/MC-Enderman7810/EndermanMineCraftLauncher';
 const UPDATE_URL = 'https://raw.githubusercontent.com/MC-Enderman7810/EndermanMineCraftLauncher/main/update.json';
@@ -27,7 +30,7 @@ function versionParts(value) {
     .map((x) => parseInt(x, 10) || 0);
 }
 
-/** 支持 1.26.26.00 这种四段版本号；返回 >0 表示 a 比 b 新 */
+/** 支持 1.26.25.14 这种四段版本号；返回 >0 表示 a 比 b 新 */
 function compareVersions(a, b) {
   const pa = versionParts(a);
   const pb = versionParts(b);
@@ -94,6 +97,20 @@ async function readRepoJson(fileName, rawUrl) {
 
 async function checkUpdates(force = false) {
   const now = Date.now();
+  if (isDev) {
+    return {
+      ok: true,
+      current: currentVersion(),
+      latest: currentVersion(),
+      hasUpdate: false,
+      releaseDate: '',
+      notes: [],
+      url: REPO,
+      downloadUrl: REPO,
+      checkedAt: now,
+      error: ''
+    };
+  }
   if (!force && updateCache.value && now - updateCache.at < CACHE_MS) {
     return updateCache.value;
   }
@@ -169,6 +186,17 @@ function normalizeAnnouncements(data) {
 
 async function getAnnouncements(force = false) {
   const now = Date.now();
+  if (isDev) {
+    try {
+      const file = path.join(app.getAppPath(), 'announcements-dev.json');
+      const data = JSON.parse(fs.readFileSync(file, 'utf8').replace(/^\uFEFF/, ''));
+      const items = normalizeAnnouncements(data).filter((item) =>
+        item.tag === '开发者版' || String(item.id).includes('dev'));
+      return { ok: true, items, checkedAt: now, error: '' };
+    } catch (e) {
+      return { ok: true, items: [], checkedAt: now, error: '' };
+    }
+  }
   if (!force && announcementCache.value && now - announcementCache.at < CACHE_MS) {
     return announcementCache.value;
   }

@@ -30,7 +30,7 @@
       <nav id="nav" class="nav"></nav>
       <div class="sidebar-bottom">
         <button class="account-mini" id="accountMini" title="账户"></button>
-        <div class="version-mini" id="versionMini">v1.26.26.00</div>
+        <div class="version-mini" id="versionMini">v1.26.25.14</div>
       </div>
     </aside>
 
@@ -48,6 +48,10 @@
           <div class="chip chip-account" id="accountChip"></div>
         </div>
       </header>
+      <div class="launch-progress-global" id="launchProgress" style="display:none">
+        <div class="launch-progress-head"><span id="launchProgressText">正在启动…</span><span id="launchProgressPct">0%</span></div>
+        <div class="launch-progress-track"><div class="launch-progress-fill" id="launchProgressFill"></div></div>
+      </div>
       <section class="content" id="content"></section>
     </main>
   </div>
@@ -56,6 +60,7 @@
   <div class="modal-root" id="modalRoot"></div>
   <div class="toast-root" id="toastRoot"></div>
 
+  <script src="vendor/skinview3d.bundle.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

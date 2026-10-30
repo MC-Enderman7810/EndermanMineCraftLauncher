@@ -5,15 +5,18 @@ const fs = require('fs');
 const fsp = fs.promises;
 const { app } = require('electron');
 const { readJson, writeJson, ensureDir, exists } = require('./util');
+const { isDev } = require('./channel');
 
 const DEFAULT_MS_CLIENT_ID = 'c540f4df-4a1d-4d3b-b587-6c626b8ba692';
 const PUBLIC_MS_CLIENT_ID = '00000000402b5328';
+const APPROVED_MS_CLIENT_ID = '46c5d0e7-080d-4d20-ab2c-2b515e8edc72';
 
 class Store {
   constructor() {
     this.root = app.getPath('userData');
     this.configFile = path.join(this.root, 'config.json');
     this.accountsFile = path.join(this.root, 'accounts.json');
+    this.localAnnouncementsFile = path.join(this.root, 'local-announcements.json');
     this.logsDir = path.join(this.root, 'logs');
     this.cacheDir = path.join(this.root, 'cache');
     this.config = null;
@@ -63,14 +66,19 @@ class Store {
       isolation: false,
       accent: '#2F7FD1',
       colorMode: 'light',
-      msClientId: PUBLIC_MS_CLIENT_ID,
-      msAuthority: 'live',
+      msClientId: APPROVED_MS_CLIENT_ID,
+      msAuthority: 'entra',
+      authMigratedToApproved: true,
+      localAdmin: isDev,
+      developerEdition: isDev,
+      announcerToken: '',
       seenAnnouncements: [],
       showSnapshots: true,
       showOldVersions: false,
       closeAfterLaunch: false,
       lastVersionId: '',
       lastAccountId: '',
+      versionNames: {},
       firstRun: true
     };
   }
@@ -85,8 +93,16 @@ class Store {
     if (out.minMemory > out.maxMemory) out.minMemory = Math.min(1024, out.maxMemory);
     if (!out.gameDir || typeof out.gameDir !== 'string') out.gameDir = defaults.gameDir;
     if (!out.accent || !/^#[0-9a-fA-F]{6}$/.test(out.accent)) out.accent = defaults.accent;
+    out.localAdmin = isDev;
+    out.developerEdition = isDev;
+    // 把旧版公共 Live 配置迁移到已获 Mojang allowlist 的自有 appID。
+    if (out.msClientId === PUBLIC_MS_CLIENT_ID && out.msAuthority !== 'entra') {
+      out.msClientId = APPROVED_MS_CLIENT_ID;
+      out.msAuthority = 'entra';
+    }
+    out.authMigratedToApproved = true;
     out.msAuthority = out.msAuthority === 'entra' ? 'entra' : 'live';
-    if (!out.msClientId) out.msClientId = PUBLIC_MS_CLIENT_ID;
+    if (!out.msClientId) out.msClientId = APPROVED_MS_CLIENT_ID;
     if (!Array.isArray(out.seenAnnouncements)) out.seenAnnouncements = [];
     return out;
   }
@@ -162,6 +178,17 @@ class Store {
 
   activeAccount() {
     return this.getAccountFull(this.config.lastAccountId) || this.accounts[0] || null;
+  }
+
+  async loadLocalAnnouncements() {
+    const list = await readJson(this.localAnnouncementsFile, []);
+    return Array.isArray(list) ? list : [];
+  }
+
+  async saveLocalAnnouncements(list) {
+    const safe = Array.isArray(list) ? list.slice(0, 100) : [];
+    await writeJson(this.localAnnouncementsFile, safe);
+    return safe;
   }
 
   defaultLogFile() {

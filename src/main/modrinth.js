@@ -23,7 +23,7 @@ const KIND_DIRS = {
 function headers() {
   return {
     'Accept': 'application/json',
-    'User-Agent': 'EMCL/1.26.26.00 (Windows; Minecraft Java launcher)'
+    'User-Agent': 'EMCL/1.26.25.14 (Windows; Minecraft Java launcher)'
   };
 }
 
@@ -126,7 +126,7 @@ async function install(kind, project, options = {}) {
   }
   if (!list.length) list = await versions(projectId, '', '');
   if (!list.length) throw new Error('该项目没有可下载的文件');
-  const version = list[0];
+  const version = options.versionId ? (list.find((v) => v.id === options.versionId) || list[0]) : list[0];
   const file = pickFile(version);
   if (!file) throw new Error('该项目没有可下载的文件');
   if (!trusted(file.url)) throw new Error('下载地址不在 Modrinth CDN，已拒绝');

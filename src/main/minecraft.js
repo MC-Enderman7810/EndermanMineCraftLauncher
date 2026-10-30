@@ -78,6 +78,7 @@ async function scanInstalled(gameDir) {
       jsonPath,
       loader: detectLoader(id, json),
       type: json.type || 'release',
+      releaseTime: json.releaseTime || json.time || '',
       mcVersion: json.inheritsFrom || id,
       javaVersion: json.javaVersion ? json.javaVersion.majorVersion : 0,
       lastPlayed: st ? st.mtimeMs : 0,
@@ -285,7 +286,7 @@ async function ensureLibrary(artifact, gameDir, source, progress, label) {
   const url = mirrorUrl(artifact.url, source);
   await downloadFile(url, dest, {
     expectedSha1: artifact.sha1,
-    timeout: 180000,
+    timeout: 600000,
     onProgress: (received, total) => {
       if (progress && total) {
         progress.subBytes = (progress.subBytes || 0) + received;
@@ -388,7 +389,7 @@ async function installVersion(versionId, jsonUrl, gameDir, source, progress) {
   progress(0, 100, '获取版本 JSON');
   // 总是重新拉取，保证清单里的地址是最新的
   const res = await fetch(mirrorUrl(jsonUrl, source), {
-    headers: { 'User-Agent': 'EMCL/1.26.26.00' }
+    headers: { 'User-Agent': 'EMCL/1.26.25.14' }
   });
   const text = await res.text();
   if (!res.ok) throw new Error('版本 JSON 下载失败：HTTP ' + res.status);
@@ -480,6 +481,23 @@ async function repairVersion(versionId, gameDir, source, progress) {
   return { versionId };
 }
 
+async function verifyVersion(versionId, gameDir) {
+  const version = await resolveVersion(gameDir, versionId);
+  const missing = [];
+  if (!version.clientJarPath) missing.push({ type: 'client', name: versionId + '.jar' });
+  const { artifacts } = collectLibraries(version);
+  for (const art of artifacts) {
+    if (!await exists(path.join(gameDir, 'libraries', art.path))) {
+      missing.push({ type: 'library', name: art.path });
+    }
+  }
+  const assetIndex = version.assetIndex && version.assetIndex.id;
+  if (assetIndex && !await exists(path.join(gameDir, 'assets', 'indexes', assetIndex + '.json'))) {
+    missing.push({ type: 'assets-index', name: assetIndex + '.json' });
+  }
+  return { ok: missing.length === 0, missing };
+}
+
 async function getWorlds(gameDir, versionId, isolation) {
   const instance = isolation && versionId ? path.join(gameDir, 'versions', versionId) : gameDir;
   const dir = path.join(instance, 'saves');
@@ -523,6 +541,7 @@ module.exports = {
   installAssets,
   installVersion,
   repairVersion,
+  verifyVersion,
   getWorlds,
   instanceDir
 };

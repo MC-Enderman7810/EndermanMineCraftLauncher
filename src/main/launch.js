@@ -120,7 +120,7 @@ async function buildLaunch(store, versionId, account, options = {}) {
     natives_directory: nativesDir,
     classpath,
     launcher_name: 'EMCL',
-    launcher_version: '1.26.26.00',
+    launcher_version: '1.26.25.14',
     user_properties: '{}',
     clientid: '',
     auth_xuid: ''
@@ -143,7 +143,7 @@ async function buildLaunch(store, versionId, account, options = {}) {
     jvm.push('-Dminecraft.launcher.brand=EMCL');
   }
   if (!jvm.some((a) => a.startsWith('-Dminecraft.launcher.version='))) {
-    jvm.push('-Dminecraft.launcher.version=1.26.26.00');
+    jvm.push('-Dminecraft.launcher.version=1.26.25.14');
   }
   if (!jvm.some((a) => a.startsWith('-Dlog4j2.formatMsgNoLookups='))) {
     jvm.push('-Dlog4j2.formatMsgNoLookups=true');
@@ -164,6 +164,10 @@ async function buildLaunch(store, versionId, account, options = {}) {
   let game = collectArgs(version.arguments && version.arguments.game, vars);
   if (!game.length && version.minecraftArguments) {
     game = parseArgsLine(version.minecraftArguments).map((a) => substitute(a, vars));
+  }
+  if (String(versionId).startsWith('2.0-')) {
+    // 2.0 默认使用 854x480 的固定渲染区域，窗口被放大后会出现黑边。
+    game.push('--width', '1600', '--height', '900');
   }
   const mainClass = version.mainClass || 'net.minecraft.client.main.Main';
   const args = [...jvm, mainClass, ...game];
