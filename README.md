@@ -49,7 +49,6 @@ Desktop\EMCL\EMCL.exe
 | 数据包 | 选择存档，安装到 `saves/<存档>/datapacks/`，按存档管理 |
 | 整合包 | Modrinth 在线安装；导入 `.mrpack`、带 `.minecraft` 的通用 zip、CurseForge manifest + overrides |
 | 账户 | 离线（Java 同款 v3 UUID）、微软 OAuth（已通过 Mojang allowlist 的自有 appID）、第三方 Yggdrasil / authlib-injector；支持多账户启动选择 |
-| 皮肤展示 | 角色预览、3D 旋转展示、头部裁切、原始 64×64 纹理、Steve/Alex 模型与 UUID 信息；微软账户可切换已拥有的官方披风 |
 | 服务器 | 本地服务器生成向导、启停、控制台、命令、属性、白名单/OP、备份恢复、崩溃分析、控制台日志下载；远程 RCON / SSH |
 | 主页与下载 | 主页服务器推荐、整合后的游戏版本与资源下载、启动前模组依赖检查、启动进度显示 |
 | 导入与兼容 | 导入 PCL2 / 官方 `.minecraft` 文件夹、HMCL MultiMC 整合包、zip / mrpack / CurseForge manifest 整合包 |
