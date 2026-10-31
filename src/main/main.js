@@ -27,6 +27,7 @@ const skin = require('./skin');
 const recommend = require('./recommend');
 const { ServerManager } = require('./servers');
 const modcheck = require('./modcheck');
+const mcsm = require('./mcsm');
 
 app.setName(isDev ? 'EMCL 开发者版本' : 'EMCL');
 app.setPath('userData', path.join(app.getPath('appData'),
@@ -622,6 +623,22 @@ function registerIpc() {
   ipcMain.handle('servers:addLocal', async (event, dir, name, jar, memory, javaPath) =>
     serverManager.addLocal(dir, name, jar, memory, javaPath));
   ipcMain.handle('servers:addRemote', async (event, data) => serverManager.addRemote(data));
+  ipcMain.handle('mcsm:status', async () => {
+    const cfg = store.getConfig();
+    return mcsm.status(cfg.mcsmMode === 'wsl' ? cfg.mcsmDistro : '');
+  });
+  ipcMain.handle('mcsm:start', async () => {
+    const cfg = store.getConfig();
+    try { return await mcsm.start(cfg.mcsmMode === 'wsl' ? cfg.mcsmDistro : ''); }
+    catch (e) { return { ok: false, error: e.message }; }
+  });
+  ipcMain.handle('mcsm:stop', async () => {
+    const cfg = store.getConfig();
+    try { return await mcsm.stop(cfg.mcsmMode === 'wsl' ? cfg.mcsmDistro : ''); }
+    catch (e) { return { ok: false, error: e.message }; }
+  });
+  ipcMain.handle('mcsm:open', async () => mcsm.openPanel());
+
   ipcMain.handle('servers:recommend', async (event, type) => {
     try { return await serverRecommend.recommend(type); }
     catch (e) { return { ok: false, error: e.message, list: [] }; }
@@ -714,6 +731,22 @@ function registerIpc() {
       return { ok: true, disabled: await modcheck.disableMods(modsDir, names) };
     } catch (e) {
       return { ok: false, error: e.message };
+    }
+  });
+
+  ipcMain.handle('mcsm:detect', async () => mcsm.detect());
+  ipcMain.handle('mcsm:install', async (event, mode, distro) => {
+    const taskId = 'mcsm:' + Date.now();
+    try {
+      await updateTask(taskId, '安装 MCSManager', 0, '准备中');
+      const result = mode === 'wsl'
+        ? await mcsm.installWsl(distro, (p, msg) => updateTask(taskId, '安装 MCSManager', p, msg))
+        : await mcsm.installWindows((p, msg) => updateTask(taskId, '安装 MCSManager', p, msg));
+      await store.patchConfig({ mcsmMode: mode, mcsmDistro: distro || '' });
+      taskDone(taskId, '安装 MCSManager', mode === 'wsl' ? 'WSL 安装完成' : 'Windows 安装完成');
+      return { ok: true, result };
+    } catch (e) {
+      return taskError(taskId, '安装 MCSManager', e);
     }
   });
 

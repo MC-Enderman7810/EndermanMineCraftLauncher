@@ -76,6 +76,8 @@ class Store {
       showSnapshots: true,
       showOldVersions: false,
       closeAfterLaunch: false,
+      mcsmMode: '',
+      mcsmDistro: '',
       lastVersionId: '',
       lastAccountId: '',
       versionNames: {},

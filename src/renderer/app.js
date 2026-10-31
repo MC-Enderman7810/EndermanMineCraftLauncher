@@ -978,9 +978,9 @@ function pageServers() {
     '<div class="card-subtitle">本地 Paper / Fabric / Forge / NeoForge 服务端与远程 RCON。</div></div><div class="spacer"></div>' +
     '<button class="btn btn-ghost" data-action="add-local-server">' + icon('folder') + '添加本地服务端</button>' +
     '<button class="btn btn-ghost" data-action="create-server-wizard">' + icon('download') + '生成服务器</button>' +
-    (isDeveloper() ? '<button class="btn btn-ghost" data-action="open-tunnel">内网穿透</button>' +
-      '<button class="btn btn-ghost" data-action="install-mcsm">安装 MCSManager</button>' +
-      '<button class="btn btn-ghost" data-action="open-mcsm">MCSManager 面板</button>' : '') +
+    '<button class="btn btn-ghost" data-action="install-mcsm">安装 MCSManager</button>' +
+    '<button class="btn btn-ghost" data-action="open-mcsm">MCSManager 面板</button>' +
+    (isDeveloper() ? '<button class="btn btn-ghost" data-action="open-tunnel">内网穿透</button>' : '') +
     '<button class="btn btn-primary" data-action="add-remote-server">' + icon('server') + '添加远程 RCON</button></div>' +
     '<div class="card"><div class="server-list">' + list + '</div></div>' +
     (selected ? '<div class="card" style="margin-top:12px"><div class="card-head"><h3 class="card-title">' +
