@@ -1,6 +1,8 @@
 'use strict';
 
 const api = window.emcl;
+const OFFICIAL_URL = 'https://www.emcl.life';
+const SUPPORT_EMAIL = 'EMCLsupport2026@163.com';
 
 const state = {
   config: null,
@@ -1844,6 +1846,7 @@ async function handleAction(action, el) {
     case 'goto-modpacks': setPage('modpacks'); break;
     case 'goto-resources-modpack': state.resourceKind = 'modpack'; setPage('resources'); break;
     case 'copy-error': await copyErrorInfo(); break;
+    case 'email-error': await emailErrorInfo(); break;
     case 'save-version-name': await confirmVersionName(); break;
     case 'launch': await doLaunch(); break;
     case 'launch-with-account':
@@ -3452,6 +3455,7 @@ function showErrorModal(title, message) {
       '<div class="card-subtitle" style="margin-top:8px">复制内容会包含版本、系统、错误信息和最近日志。</div>',
     actions: [
       { label: '复制错误信息（含日志文件）', kind: 'primary', action: 'copy-error' },
+      { label: '发送到支持邮箱', kind: 'ghost', action: 'email-error' },
       { label: '查看日志', kind: 'ghost', action: 'goto-logs' },
       { label: '知道了', kind: 'ghost', action: 'close-modal' }
     ]
@@ -3492,6 +3496,41 @@ async function copyErrorInfo() {
   }
 }
 
+async function emailErrorInfo() {
+  const err = state.lastError || { title: '错误', message: '未知错误' };
+  let logs = (state.logLines || []).slice(-50).map((line) => {
+    if (typeof line === 'string') return line;
+    return (line && (line.text || line.message)) || String(line);
+  }).join('\n');
+  try {
+    const latest = await api.latestLog();
+    const text = typeof latest === 'string' ? latest : (latest && latest.text);
+    if (text) logs += '\n\n--- 最近启动日志 ---\n' + text.split(/\r?\n/).slice(-150).join('\n');
+  } catch { /* ignore */ }
+  const body = [
+    'EMCL 错误报告',
+    '时间：' + new Date().toLocaleString(),
+    '版本：' + (state.appVersion || '') + (isDeveloper() ? 'kfz' : ''),
+    '系统：' + navigator.userAgent,
+    '标题：' + err.title,
+    '',
+    '错误信息：',
+    String(err.message || ''),
+    '',
+    '最近日志：',
+    logs || '（无）'
+  ].join('\n').slice(0, 1800);
+  const url = 'mailto:' + SUPPORT_EMAIL +
+    '?subject=' + encodeURIComponent('[EMCL] ' + err.title) +
+    '&body=' + encodeURIComponent(body);
+  try {
+    const ok = await api.openExternal(url);
+    toast(ok ? '已打开邮件客户端，请确认发送' : '无法打开邮件客户端', ok ? 'success' : 'error');
+  } catch {
+    toast('无法打开邮件客户端', 'error');
+  }
+}
+
 window.addEventListener('unhandledrejection', (event) => {
   const reason = event.reason;
   const message = reason && reason.message ? reason.message : String(reason || '未知错误');
@@ -3508,6 +3547,7 @@ function bind() {
   });
   $('accountMini').addEventListener('click', () => setPage('accounts'));
   $('accountChip').addEventListener('click', () => setPage('accounts'));
+  $('websiteChip').addEventListener('click', () => api.openExternal(OFFICIAL_URL));
   $('feedbackChip').addEventListener('click', () => openFeedbackModal());
   $('updateChip').addEventListener('click', () => showUpdateModal());
   $('noticeChip').addEventListener('click', () => setPage('home'));

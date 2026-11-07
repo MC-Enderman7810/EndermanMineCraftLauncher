@@ -17,6 +17,7 @@ contextBridge.exposeInMainWorld('emcl', {
   chooseJava: () => ipcRenderer.invoke('dialog:java'),
   chooseModpack: () => ipcRenderer.invoke('dialog:modpack'),
   openPath: (target) => ipcRenderer.invoke('shell:openPath', target),
+  openExternal: (url) => ipcRenderer.invoke('shell:openExternal', url),
   showItem: (target) => ipcRenderer.invoke('shell:showItem', target),
 
   windowMinimize: () => ipcRenderer.invoke('window:minimize'),

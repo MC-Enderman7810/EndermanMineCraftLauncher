@@ -36,6 +36,8 @@
     '启动游戏': 'Launch game',
     '刷新': 'Refresh',
     '反馈': 'Feedback',
+    '官网': 'Website',
+    '发送到支持邮箱': 'Send to support email',
     '刷新公告和更新': 'Refresh announcements and updates',
     '提交错误或建议': 'Report a bug or suggestion',
     '当前版本': 'Current version',
