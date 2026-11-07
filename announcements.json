@@ -1,6 +1,16 @@
 {
   "announcements": [
     {
+      "id": "2026-10-31-emcl-1.26.26.05",
+      "title": "EMCL 1.26.26.05 已发布",
+      "body": "发布版加入 7 种界面语言：简体中文、繁體中文、English、日本語、한국어、Français、Русский。\\n\\n登录通道不再向用户开放，统一使用已通过 Mojang allowlist 的 appID。\\n\\n版本号更新为 1.26.26.05。",
+      "date": "2026-10-31",
+      "tag": "更新",
+      "kind": "update",
+      "pinned": true,
+      "url": "https://www.emcl.life"
+    },
+    {
       "id": "2026-10-31-emcl-1.26.26.02",
       "title": "EMCL 1.26.26.02 已发布",
       "body": "发布版加入 MCSManager：服务器页面可以直接安装 MCSManager，支持 Windows 版和 WSL 发行版，并提供启动、停止和打开面板入口。\n\nMCSManager 面板默认使用本地 23333 端口。\n\n版本号更新为 1.26.26.02。",

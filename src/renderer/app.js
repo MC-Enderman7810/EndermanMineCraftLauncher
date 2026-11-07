@@ -350,6 +350,7 @@ function render() {
   renderLaunchProgress();
   $('accountMini').innerHTML = avatar(currentAccount() ? currentAccount().name : '?', '') +
     '<span class="mini-name">' + esc(currentAccount() ? currentAccount().name : '未登录') + '</span>';
+  if (window.EMCL_I18N) window.EMCL_I18N.apply();
 }
 
 function renderNav() {
@@ -541,7 +542,7 @@ function homeAnnouncements() {
       '<div class="row">' + (unread.length ? '<span class="tag tag-blue">' + unread.length + ' 条未读</span>' : '') +
       (unread.length ? '<button class="btn btn-ghost btn-sm" data-action="mark-notices-read">全部已读</button>' : '') +
       '</div></div>' +
-    '<div class="announce-list">' + announcements.map((a) => {
+    '<div class="announce-list" data-i18n-skip>' + announcements.map((a) => {
       const isUnread = unread.some((x) => String(x.id) === String(a.id));
       return '<div class="announce-item" data-action="open-announcement" data-id="' + esc(a.id) + '">' +
         '<span class="announce-dot ' + (isUnread ? 'unread' : '') + '"></span>' +
@@ -1610,7 +1611,7 @@ function pageAccounts() {
     '</div>' +
     '<div class="card" style="margin-top:12px"><div class="card-subtitle">' +
       '微软登录会打开独立窗口，由微软官方页面处理密码，启动器不会接触你的密码。' +
-      (state.config.msClientId ? ' 当前 client id：' + esc(state.config.msClientId) + '（可在设置中修改）。' : '') +
+      (state.config.msClientId ? ' 当前 client id：' + esc(state.config.msClientId) + '。' : '') +
       '</div></div>';
 }
 
@@ -1707,16 +1708,6 @@ function updateSettingsCard() {
 function pageSettings() {
   const c = state.config;
   const java = state.java;
-  const accountCard = '<div class="card"><div class="card-head"><h3 class="card-title">账户高级</h3></div>' +
-    '<div class="field"><label>登录通道</label>' +
-      '<select class="select" data-change="msAuthority">' +
-        '<option value="live"' + (c.msAuthority !== 'entra' ? ' selected' : '') + '>Minecraft Live（默认公共通道）</option>' +
-        '<option value="entra"' + (c.msAuthority === 'entra' ? ' selected' : '') + '>Azure Entra（自有应用）</option>' +
-      '</select>' +
-      '<div class="card-subtitle">微软登录默认使用已通过 Mojang allowlist 的自有 appID；旧版公共 Live 账户仍可自动续期。</div></div>' +
-    '<div class="field"><label>微软 OAuth client id</label>' +
-      '<input class="input" id="msClientId" value="' + esc(c.msClientId) + '" data-change="msClientId" />' +
-      '<div class="card-subtitle">Azure 应用重定向 URI：https://login.microsoftonline.com/common/oauth2/nativeclient</div></div></div>';
   return '<div class="settings-grid">' +
     '<div class="stack">' +
       '<div class="card"><div class="card-head"><h3 class="card-title">游戏目录</h3>' +
@@ -1778,6 +1769,18 @@ function pageSettings() {
           '<div class="setting-control"><label class="switch"><input type="checkbox" data-change="closeAfterLaunch"' +
             (c.closeAfterLaunch ? ' checked' : '') + '><span></span></label></div></div></div>' +
 
+      '<div class="card"><div class="card-head"><h3 class="card-title">界面语言</h3></div>' +
+        '<div class="field"><label>显示语言</label><select class="select" data-change="language" data-i18n-skip>' +
+          '<option value="zh-CN"' + ((c.language || 'zh-CN') === 'zh-CN' ? ' selected' : '') + '>简体中文</option>' +
+          '<option value="zh-TW"' + (c.language === 'zh-TW' ? ' selected' : '') + '>繁體中文</option>' +
+          '<option value="en-US"' + (c.language === 'en-US' ? ' selected' : '') + '>English</option>' +
+          '<option value="ja-JP"' + (c.language === 'ja-JP' ? ' selected' : '') + '>日本語</option>' +
+          '<option value="ko-KR"' + (c.language === 'ko-KR' ? ' selected' : '') + '>한국어</option>' +
+          '<option value="fr-FR"' + (c.language === 'fr-FR' ? ' selected' : '') + '>Français</option>' +
+          '<option value="ru-RU"' + (c.language === 'ru-RU' ? ' selected' : '') + '>Русский</option>' +
+        '</select>' +
+        '<div class="card-subtitle">开发者版先提供多种语言。切换后界面会重新加载。</div></div></div>' +
+
       '<div class="card"><div class="card-head"><h3 class="card-title">主题</h3><span class="small muted">蓝色为主</span></div>' +
         '<div class="setting-row"><div class="setting-info"><div class="setting-title">强调色</div>' +
           '<div class="setting-desc">默认 PCL 蓝，修改后全局立即生效。</div></div>' +
@@ -1785,8 +1788,6 @@ function pageSettings() {
             '<button class="swatch ' + (c.accent.toLowerCase() === color.toLowerCase() ? 'active' : '') +
             '" style="background:' + color + '" data-action="set-theme" data-color="' + color + '" title="' + color + '"></button>').join('') +
           '</div></div></div>' +
-
-      accountCard +
 
       announcerCard() +
       updateSettingsCard() +
@@ -3542,10 +3543,14 @@ function bind() {
         render();
       } else if (key === 'maxMemory' || key === 'minMemory') {
         await patchSetting(key, Number(el.value));
+      } else if (key === 'language') {
+        const lang = ['zh-CN', 'zh-TW', 'en-US', 'ja-JP', 'ko-KR', 'fr-FR', 'ru-RU'].includes(el.value)
+          ? el.value : 'zh-CN';
+        await api.patchConfig({ language: lang });
+        location.reload();
       } else if (key === 'isolation' || key === 'closeAfterLaunch') {
         await patchSetting(key, el.checked);
-      } else if (key === 'downloadSource' || key === 'gc' || key === 'jvmArgs' ||
-        key === 'msClientId' || key === 'msAuthority') {
+      } else if (key === 'downloadSource' || key === 'gc' || key === 'jvmArgs') {
         await patchSetting(key, el.value);
       }
       return;
@@ -3621,6 +3626,7 @@ async function patchSetting(key, value) {
     state.resourceVersionId = currentVersionId();
     state.firstRun = s.config.firstRun;
     state.page = 'home';
+    if (window.EMCL_I18N) window.EMCL_I18N.setLanguage(state.config.language || 'zh-CN');
     render();
     loadLatestLog();
     loadLocalAnnouncements();

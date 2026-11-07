@@ -7,8 +7,8 @@ const { fetchJson } = require('./util');
 const { isDev } = require('./channel');
 
 const REPO = 'https://github.com/MC-Enderman7810/EndermanMineCraftLauncher';
-const UPDATE_URL = 'https://raw.githubusercontent.com/MC-Enderman7810/EndermanMineCraftLauncher/main/update.json';
-const ANNOUNCEMENT_URL = 'https://raw.githubusercontent.com/MC-Enderman7810/EndermanMineCraftLauncher/main/announcements.json';
+const UPDATE_URL = 'https://www.emcl.life/update.json';
+const ANNOUNCEMENT_URL = 'https://www.emcl.life/announcements.json';
 const CONTENT_API = 'https://api.github.com/repos/MC-Enderman7810/EndermanMineCraftLauncher/contents/';
 const CACHE_MS = 15 * 60 * 1000;
 
@@ -72,10 +72,16 @@ function normalizeNotes(value) {
 }
 
 /**
- * 优先用 GitHub Contents API 读取，避免 raw.githubusercontent.com 的 CDN 缓存
- * 让刚发布的 update.json / announcements.json 延迟生效；API 失败再回退 raw。
+ * 优先读取 emcl.life 上的更新清单，避免 GitHub raw / API 的缓存和网络差异。
+ * 域名失败时再回退 GitHub Contents API。
  */
 async function readRepoJson(fileName, rawUrl) {
+  try {
+    return await fetchJson(rawUrl + '?t=' + Date.now(), {
+      timeout: 15000,
+      headers: { 'Cache-Control': 'no-cache' }
+    });
+  } catch { /* fall through to GitHub */ }
   try {
     const data = await fetchJson(CONTENT_API + fileName + '?ref=main', {
       timeout: 15000,
@@ -88,11 +94,8 @@ async function readRepoJson(fileName, rawUrl) {
       const text = Buffer.from(data.content.replace(/\s/g, ''), 'base64').toString('utf8');
       return JSON.parse(text);
     }
-  } catch { /* fall through to raw */ }
-  return fetchJson(rawUrl + '?t=' + Date.now(), {
-    timeout: 15000,
-    headers: { 'Cache-Control': 'no-cache' }
-  });
+  } catch { /* ignore */ }
+  throw new Error('无法读取更新清单');
 }
 
 async function checkUpdates(force = false) {

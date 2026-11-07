@@ -66,6 +66,7 @@ class Store {
       isolation: false,
       accent: '#2F7FD1',
       colorMode: 'light',
+      language: 'zh-CN',
       msClientId: APPROVED_MS_CLIENT_ID,
       msAuthority: 'entra',
       authMigratedToApproved: true,
@@ -97,14 +98,10 @@ class Store {
     if (!out.accent || !/^#[0-9a-fA-F]{6}$/.test(out.accent)) out.accent = defaults.accent;
     out.localAdmin = isDev;
     out.developerEdition = isDev;
-    // 把旧版公共 Live 配置迁移到已获 Mojang allowlist 的自有 appID。
-    if (out.msClientId === PUBLIC_MS_CLIENT_ID && out.msAuthority !== 'entra') {
-      out.msClientId = APPROVED_MS_CLIENT_ID;
-      out.msAuthority = 'entra';
-    }
+    // 登录通道不向用户开放，统一使用已通过 Mojang allowlist 的自有 appID。
     out.authMigratedToApproved = true;
-    out.msAuthority = out.msAuthority === 'entra' ? 'entra' : 'live';
-    if (!out.msClientId) out.msClientId = APPROVED_MS_CLIENT_ID;
+    out.msClientId = APPROVED_MS_CLIENT_ID;
+    out.msAuthority = 'entra';
     if (!Array.isArray(out.seenAnnouncements)) out.seenAnnouncements = [];
     return out;
   }
