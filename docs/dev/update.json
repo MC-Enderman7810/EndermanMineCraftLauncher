@@ -1,0 +1,14 @@
+{
+  "version": "1.26.25.15kfz",
+  "releaseDate": "2026-10-31",
+  "notes": [
+    "开发者更新通道接入 emcl.life/dev/update.json",
+    "新增顶栏“刷新公告和更新”按钮",
+    "移除皮肤页面、3D 皮肤展示和披风入口",
+    "Mojang appID allowlist 已通过，开发者版使用自有 Azure appID",
+    "主页服务器推荐与服务器生成向导",
+    "多账户启动选择与启动前模组依赖检查"
+  ],
+  "url": "https://www.emcl.life/dev/",
+  "downloadUrl": "https://www.emcl.life/dev/"
+}

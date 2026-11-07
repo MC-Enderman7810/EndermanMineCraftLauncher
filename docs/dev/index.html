@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EMCL 开发者模式</title>
+  <meta name="robots" content="noindex,nofollow">
+  <style>
+    :root { --blue:#2F7FD1; --blue-dark:#1D5FA8; --ink:#14283B; --muted:#62788D; --line:#D8E7F5; --bg:#F3F8FE; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; font-family:"Segoe UI","Microsoft YaHei",sans-serif; color:var(--ink);
+      background:radial-gradient(circle at 80% 0,#DCEFFF 0,rgba(220,239,255,0) 34%),var(--bg); }
+    .wrap { max-width:980px; margin:0 auto; padding:0 24px 48px; }
+    header { display:flex; justify-content:space-between; align-items:center; padding:22px 0; }
+    .brand { display:flex; gap:10px; align-items:center; font-weight:800; color:var(--ink); text-decoration:none; }
+    .gem { width:28px; height:28px; border-radius:8px; background:linear-gradient(145deg,#59A9FF,#1F6FCA); }
+    .brand small { display:block; font-size:10px; color:var(--muted); letter-spacing:1.4px; }
+    nav a { color:var(--muted); text-decoration:none; font-size:13px; font-weight:600; margin-left:16px; }
+    nav a:hover { color:var(--blue); }
+    .hero { padding:24px 0 8px; }
+    .badge { display:inline-block; padding:5px 10px; border-radius:999px; background:#E8F3FF; color:var(--blue-dark); font-size:12px; font-weight:800; }
+    h1 { margin:16px 0 8px; font-size:40px; letter-spacing:-1.5px; }
+    .lead { color:var(--muted); line-height:1.8; }
+    .grid { display:grid; grid-template-columns:1.35fr 1fr; gap:14px; margin-top:24px; }
+    .card { background:#fff; border:1px solid var(--line); border-radius:16px; padding:20px; box-shadow:0 14px 40px rgba(31,80,130,.07); }
+    .card h2 { margin:0 0 8px; font-size:15px; }
+    .kv { display:flex; justify-content:space-between; gap:12px; padding:8px 0; border-bottom:1px dashed #E1ECF7; font-size:13px; color:var(--muted); }
+    .kv b { color:var(--ink); }
+    .log { margin:0; padding:0; list-style:none; }
+    .log li { padding:10px 0; border-bottom:1px solid #EDF5FC; font-size:13px; line-height:1.65; color:var(--muted); }
+    .log b { display:block; color:var(--ink); font-size:12px; margin-bottom:2px; }
+    .actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
+    .btn { display:inline-flex; align-items:center; justify-content:center; min-height:40px; padding:0 15px;
+      border-radius:10px; background:var(--blue); color:#fff; text-decoration:none; font-size:13px; font-weight:800; }
+    .btn:hover { background:var(--blue-dark); }
+    .btn.ghost { background:#F4F9FF; color:var(--blue-dark); border:1px solid var(--line); }
+    .note { color:var(--muted); font-size:12px; line-height:1.8; margin-top:10px; }
+    footer { margin-top:30px; color:#8A9BAC; font-size:12px; }
+    .gate { position:fixed; inset:0; z-index:20; display:flex; align-items:center; justify-content:center;
+      padding:24px; background:rgba(15,35,55,.72); backdrop-filter:blur(8px); }
+    .gate-card { width:100%; max-width:420px; background:#fff; border:1px solid var(--line); border-radius:18px;
+      padding:26px; box-shadow:0 24px 80px rgba(0,0,0,.25); }
+    .gate-card h2 { margin:0 0 8px; font-size:22px; letter-spacing:-.5px; }
+    .gate-card p { margin:0; color:var(--muted); font-size:13px; line-height:1.7; }
+    .gate-card input { width:100%; height:44px; margin-top:16px; padding:0 12px; border:1px solid var(--line);
+      border-radius:10px; font:inherit; font-size:14px; outline:none; }
+    .gate-card input:focus { border-color:#7DB8EB; box-shadow:0 0 0 3px rgba(47,127,209,.1); }
+    .gate-card button { width:100%; height:44px; margin-top:10px; border:0; border-radius:10px; background:var(--blue);
+      color:#fff; font:inherit; font-size:14px; font-weight:800; cursor:pointer; }
+    .gate-card button:hover { background:var(--blue-dark); }
+    .gate-error { min-height:18px; margin-top:8px; color:#C63737; font-size:12px; }
+    [hidden] { display:none !important; }
+    @media (max-width:700px) { .grid { grid-template-columns:1fr; } h1 { font-size:32px; } nav a:first-child { display:none; } }
+  </style>
+</head>
+<body>
+<div class="gate" id="gate">
+  <div class="gate-card">
+    <div class="badge">RESTRICTED</div>
+    <h2 style="margin-top:14px">EMCL 开发者模式</h2>
+    <p>此页面仅向内部开发人员开放。请输入访问密码。</p>
+    <input id="gatePassword" type="password" autocomplete="current-password" placeholder="访问密码" autofocus>
+    <button id="gateSubmit" type="button">进入开发者模式</button>
+    <div class="gate-error" id="gateError"></div>
+  </div>
+</div>
+
+<div class="wrap" id="devApp" hidden>
+  <header>
+    <a class="brand" href="../index.html">
+      <span class="gem"></span>
+      <span>EMCL <small>DEVELOPER MODE</small></span>
+    </a>
+    <nav>
+      <a href="../index.html">官网</a>
+      <a href="../download.html">下载</a>
+      <a href="update.json">更新清单</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="badge">INTERNAL · 开发者通道</div>
+      <h1>开发者模式</h1>
+      <p class="lead">开发者版更新通道。这里发布内部构建的版本说明、测试重点和更新记录。正式用户请使用 <a href="../download.html">稳定版下载页</a>。</p>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h2>当前开发者版本</h2>
+        <div class="kv"><span>版本号</span><b>1.26.25.15kfz</b></div>
+        <div class="kv"><span>通道</span><b>Developer / 内部测试</b></div>
+        <div class="kv"><span>更新方式</span><b>开发者版启动器检查更新</b></div>
+        <div class="kv"><span>更新清单</span><b><a href="update.json">update.json</a></b></div>
+        <div class="actions">
+          <a class="btn" href="update.json">查看更新清单</a>
+          <a class="btn ghost" href="../download.html">稳定版下载</a>
+        </div>
+        <p class="note">开发者版二进制不在公开网站分发；请通过内部构建渠道获取。启动器会读取此目录的 <code>update.json</code> 检查新版本。</p>
+      </div>
+
+      <div class="card">
+        <h2>最新更新</h2>
+        <ul class="log">
+          <li><b>2026-10-31 · 1.26.25.15kfz</b>开发者更新通道接入 emcl.life；新增“刷新公告和更新”，移除皮肤页面、3D 皮肤和披风入口。</li>
+          <li><b>2026-10-25 · 1.26.25.15kfz</b>Mojang appID 通过 allowlist，开发者版切换到自有 Azure appID。</li>
+          <li><b>2026-10-25 · 1.26.25.15kfz</b>服务器推荐、服务器生成向导、多账户启动选择。</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="card" style="margin-top:14px">
+      <h2>开发者更新规则</h2>
+      <ul class="log">
+        <li><b>更新清单</b>修改 <code>dev/update.json</code> 的 version、releaseDate 和 notes 后提交到网站仓库。</li>
+        <li><b>版本比较</b>开发者版启动器会把当前版本与清单版本比较，发现新版本时显示更新提示。</li>
+        <li><b>发布范围</b>此页面和开发者版构建仅用于内部测试，不作为正式用户下载入口。</li>
+      </ul>
+      <p class="note">如需修改访问密码，更新本页中的密码哈希即可。静态页面的密码保护只能阻止普通访问，不能替代服务器端鉴权。</p>
+    </section>
+  </main>
+  <footer>© 2026 Ender Game Studios · EMCL Developer Channel</footer>
+</div>
+
+<script>
+  (function () {
+    var PASSWORD_HASH = '3cf8825da8ff0a73366013acda02684c394d0008dcbbcf2978f24419a5482a36';
+    var SESSION_KEY = 'emcl_dev_access_v1';
+    var gate = document.getElementById('gate');
+    var app = document.getElementById('devApp');
+    var input = document.getElementById('gatePassword');
+    var error = document.getElementById('gateError');
+
+    function unlock() {
+      gate.hidden = true;
+      app.hidden = false;
+    }
+
+    if (sessionStorage.getItem(SESSION_KEY) === '1') unlock();
+
+    async function sha256(text) {
+      var data = new TextEncoder().encode(text);
+      var digest = await crypto.subtle.digest('SHA-256', data);
+      return Array.from(new Uint8Array(digest)).map(function (b) {
+        return b.toString(16).padStart(2, '0');
+      }).join('');
+    }
+
+    async function submit() {
+      error.textContent = '';
+      var value = input.value;
+      if (!value) { error.textContent = '请输入密码'; return; }
+      try {
+        var hash = await sha256(value);
+        if (hash === PASSWORD_HASH) {
+          sessionStorage.setItem(SESSION_KEY, '1');
+          unlock();
+        } else {
+          error.textContent = '密码错误';
+          input.select();
+        }
+      } catch (e) {
+        error.textContent = '当前环境不支持密码校验，请使用 HTTPS 访问';
+      }
+    }
+
+    document.getElementById('gateSubmit').addEventListener('click', submit);
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') submit();
+    });
+  })();
+</script>
+</body>
+</html>
