@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>下载 EMCL - Enderman MineCraft Launcher</title>
+  <meta name="description" content="下载 EMCL，蓝色主题的 Minecraft Java 版启动器。支持 Windows 10/11 x64，提供 Microsoft Store、安装版和便携版。">
+  <style>
+    :root {
+      color-scheme: light;
+      --blue: #2F7FD1;
+      --blue-dark: #1D5FA8;
+      --blue-soft: #EAF4FF;
+      --ink: #14283B;
+      --muted: #62788D;
+      --line: #D8E7F5;
+      --bg: #F3F8FE;
+      --white: #FFFFFF;
+      --shadow: 0 18px 50px rgba(31, 80, 130, .09);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 85% 0%, #DCEFFF 0, rgba(220,239,255,0) 34%),
+        linear-gradient(180deg, #F8FBFF 0%, var(--bg) 60%, #EEF6FE 100%);
+      min-height: 100vh;
+    }
+    a { color: var(--blue); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 24px 0;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: -.2px; }
+    .gem {
+      width: 30px; height: 30px; border-radius: 9px;
+      background: linear-gradient(145deg, #59A9FF, #1F6FCA);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.45), 0 6px 14px rgba(47,127,209,.22);
+    }
+    .brand small { display: block; font-size: 10px; color: var(--muted); letter-spacing: 1.6px; font-weight: 600; }
+    nav { display: flex; align-items: center; gap: 22px; font-size: 14px; }
+    nav a { color: var(--muted); font-weight: 600; }
+    nav a.active { color: var(--blue); }
+    .hero { padding: 54px 0 24px; }
+    .kicker {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 11px; border-radius: 999px;
+      background: var(--blue-soft); color: var(--blue-dark);
+      font-size: 12px; font-weight: 800;
+    }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: #2DBE7E; box-shadow: 0 0 0 3px rgba(45,190,126,.14); }
+    h1 { margin: 20px 0 12px; font-size: clamp(38px, 6vw, 62px); line-height: 1.05; letter-spacing: -2.4px; }
+    h1 span { color: var(--blue); }
+    .lead { max-width: 690px; margin: 0; color: var(--muted); font-size: 17px; line-height: 1.85; }
+    .meta { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 22px; }
+    .chip {
+      padding: 7px 11px; border-radius: 9px; background: rgba(255,255,255,.7);
+      border: 1px solid var(--line); color: #47647E; font-size: 12px; font-weight: 700;
+    }
+    .downloads { display: grid; grid-template-columns: 1.35fr 1fr 1fr; gap: 14px; margin-top: 34px; }
+    .download-card {
+      position: relative; overflow: hidden;
+      background: var(--white); border: 1px solid var(--line); border-radius: 18px;
+      padding: 22px; box-shadow: var(--shadow);
+      display: flex; flex-direction: column; min-height: 220px;
+    }
+    .download-card.primary {
+      background: linear-gradient(145deg, #2F7FD1, #1B67B8);
+      border-color: transparent; color: #fff;
+    }
+    .download-card.primary .tag, .download-card.primary p { color: rgba(255,255,255,.76); }
+    .tag { font-size: 11px; letter-spacing: 1.4px; font-weight: 800; color: var(--blue); text-transform: uppercase; }
+    .download-card h2 { margin: 12px 0 6px; font-size: 21px; letter-spacing: -.4px; }
+    .download-card p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.65; flex: 1; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      min-height: 42px; padding: 0 16px; margin-top: 18px;
+      border-radius: 10px; font-size: 13px; font-weight: 800;
+      background: var(--blue); color: #fff; border: 0;
+    }
+    .btn:hover { background: var(--blue-dark); text-decoration: none; }
+    .download-card.primary .btn { background: #fff; color: var(--blue-dark); }
+    .download-card.primary .btn:hover { background: #EAF4FF; }
+    .btn.ghost { background: #F4F9FF; color: var(--blue-dark); border: 1px solid var(--line); }
+    .btn.ghost:hover { background: #E8F3FF; }
+    .arrow { font-size: 15px; }
+    .details { display: grid; grid-template-columns: 1.2fr 1fr; gap: 14px; margin-top: 16px; }
+    .panel {
+      background: rgba(255,255,255,.78); border: 1px solid var(--line);
+      border-radius: 16px; padding: 22px;
+    }
+    .panel h3 { margin: 0 0 12px; font-size: 15px; letter-spacing: -.2px; }
+    .req { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 18px; margin: 0; }
+    .req div { border-bottom: 1px dashed #E1ECF7; padding: 8px 0; font-size: 13px; color: var(--muted); }
+    .req b { display: block; color: var(--ink); font-size: 12px; margin-bottom: 2px; }
+    .note { color: var(--muted); font-size: 12.5px; line-height: 1.8; }
+    .note strong { color: #9A5B00; }
+    .links { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 14px; font-size: 13px; }
+    footer { margin: 40px 0 34px; color: #8A9BAC; font-size: 12px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    @media (max-width: 900px) {
+      .downloads { grid-template-columns: 1fr; }
+      .details { grid-template-columns: 1fr; }
+      .download-card { min-height: 0; }
+      nav { gap: 12px; }
+    }
+    @media (max-width: 560px) {
+      .wrap { padding: 0 16px; }
+      header { padding: 18px 0; }
+      nav a:not(.active) { display: none; }
+      .hero { padding-top: 32px; }
+      h1 { letter-spacing: -1.4px; }
+      .req { grid-template-columns: 1fr; }
+      footer { display: block; line-height: 1.8; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="brand" href="./index.html" aria-label="EMCL 首页">
+      <span class="gem"></span>
+      <span>EMCL <small>ENDERMAN MINECRAFT LAUNCHER</small></span>
+    </a>
+    <nav>
+      <a href="./index.html">首页</a>
+      <a class="active" href="./download.html">下载</a>
+      <a href="https://github.com/MC-Enderman7810/EndermanMineCraftLauncher" target="_blank" rel="noopener">GitHub</a>
+      <a href="./privacy.html">隐私</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="kicker"><span class="dot"></span> 正式版 1.26.26.02</div>
+      <h1>下载 <span>EMCL</span></h1>
+      <p class="lead">蓝色主题的 Minecraft Java 版启动器。管理版本、加载器、模组、整合包和服务器，把启动游戏需要的东西放在一个清爽的界面里。</p>
+      <div class="meta">
+        <span class="chip">Windows 10 / 11</span>
+        <span class="chip">x64</span>
+        <span class="chip">免费</span>
+        <span class="chip">Microsoft Store 已上架</span>
+      </div>
+    </section>
+
+    <section class="downloads" aria-label="下载方式">
+      <article class="download-card primary">
+        <div class="tag">推荐</div>
+        <h2>Microsoft Store</h2>
+        <p>由 Microsoft 签名和分发，自动更新，安装最省心。适合大多数 Windows 10 / 11 用户。</p>
+        <a class="btn" href="https://apps.microsoft.com/detail/9PHPTWV56WXB" target="_blank" rel="noopener">打开 Microsoft Store <span class="arrow">↗</span></a>
+      </article>
+
+      <article class="download-card">
+        <div class="tag">Windows 安装版</div>
+        <h2>安装程序</h2>
+        <p>创建开始菜单和桌面快捷方式，带标准卸载程序。当前版本 1.26.26.02。</p>
+        <a class="btn" href="https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/download/v1.26.26.02/EMCL-Setup-1.26.26.02.exe">下载安装程序 <span class="arrow">↓</span></a>
+      </article>
+
+      <article class="download-card">
+        <div class="tag">免安装</div>
+        <h2>便携版</h2>
+        <p>单个 EXE，不写开始菜单。适合放在 U 盘或临时测试环境。</p>
+        <a class="btn ghost" href="https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/download/v1.26.26.02/EMCL-Portable-1.26.26.02.exe">下载便携版 <span class="arrow">↓</span></a>
+      </article>
+    </section>
+
+    <section class="details">
+      <div class="panel">
+        <h3>系统要求</h3>
+        <div class="req">
+          <div><b>系统</b>Windows 10 1809 或更高版本</div>
+          <div><b>架构</b>x64</div>
+          <div><b>内存</b>建议 4 GB 以上</div>
+          <div><b>网络</b>安装版本、模组和 Java 时需要联网</div>
+        </div>
+        <p class="note" style="margin-top:14px">EMCL 不包含、不分发 Minecraft 游戏本体。在线游戏需要拥有 Minecraft: Java Edition 的微软账户。</p>
+      </div>
+      <div class="panel">
+        <h3>下载提示</h3>
+        <p class="note">GitHub 安装版和便携版目前没有代码签名，Windows SmartScreen 可能显示“未知发布者”。点击“更多信息 → 仍要运行”即可。</p>
+        <p class="note">想避免这个提示，请使用 Microsoft Store 版本，由 Store 自动签名和更新。</p>
+        <div class="links">
+          <a href="https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases" target="_blank" rel="noopener">所有版本</a>
+          <a href="./privacy.html">隐私政策</a>
+          <a href="./terms.html">服务条款</a>
+          <a href="mailto:EMCLsupport2026@163.com">支持邮箱</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>© 2026 Ender Game Studios · EMCL</span>
+    <span>与 Mojang Studios、Microsoft 无隶属关系 · <a href="./terms.html">条款</a></span>
+  </footer>
+</div>
+</body>
+</html>

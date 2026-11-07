@@ -15,6 +15,11 @@
     .card { background:#fff; border:1px solid var(--line); border-radius:18px; padding:26px; margin-top:28px; box-shadow:0 12px 36px rgba(31,80,130,.07); }
     a { color:var(--blue); }
     .links { display:flex; gap:18px; flex-wrap:wrap; margin-top:22px; font-size:15px; }
+    .cta { display:flex; gap:10px; flex-wrap:wrap; margin-top:24px; }
+    .btn { display:inline-flex; align-items:center; justify-content:center; min-height:42px; padding:0 18px;
+      border-radius:10px; background:var(--blue); color:#fff; font-size:14px; font-weight:700; }
+    .btn:hover { background:#1D5FA8; text-decoration:none; }
+    .btn.ghost { background:#fff; color:var(--blue); border:1px solid var(--line); }
     footer { margin-top:42px; font-size:13px; color:#8A9BAC; }
   </style>
 </head>
@@ -23,6 +28,10 @@
   <span class="badge">Minecraft Java 服务器与创作工作台</span>
   <h1>EMCL Studio</h1>
   <p>EMCL Studio 是面向 Minecraft Java 服务器团队与内容创作者的本地优先运营工作台。它把服务器实例、玩家权限、备份恢复、崩溃诊断、整合包制作和测试客户端放在同一个桌面应用里。</p>
+  <div class="cta">
+    <a class="btn" href="./download.html">下载 EMCL</a>
+    <a class="btn ghost" href="https://apps.microsoft.com/detail/9PHPTWV56WXB" target="_blank" rel="noopener">Microsoft Store</a>
+  </div>
   <div class="card">
     <h2>我们做什么</h2>
     <p>管理本地 Java 服务端，检查模组与整合包依赖，分析崩溃日志，备份世界，并用测试客户端验证环境。启动器不是独立产品，而是工作台中的测试模块。</p>
