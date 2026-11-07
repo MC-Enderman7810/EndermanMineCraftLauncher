@@ -1,6 +1,17 @@
 {
   "announcements": [
     {
+      "id": "web-1794076790206-a0a07",
+      "title": "test",
+      "body": "text",
+      "date": "2026-11-07",
+      "tag": "公告",
+      "kind": "announcement",
+      "pinned": false,
+      "enabled": true,
+      "url": ""
+    },
+    {
       "id": "2026-10-31-emcl-1.26.26.06",
       "title": "EMCL 1.26.26.06 已发布",
       "body": "发布版加入 7 种界面语言。\n\n默认使用已通过 Mojang allowlist 的自有 appID 登录；顶栏新增官网入口，错误提示可直接发送到支持邮箱。\n\n版本号更新为 1.26.26.06。",
