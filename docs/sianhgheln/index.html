@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>商弦特供版 · EMCL</title>
+  <meta name="description" content="EMCL 商弦特供版，按商弦市旗红、深蓝、浅蓝配色制作，内置商弦官网与市歌入口。">
+  <style>
+    :root {
+      --red: #EE1111;
+      --blue: #003399;
+      --light-blue: #3399CC;
+      --ink: #14243A;
+      --muted: #60758C;
+      --line: #D8E4F2;
+      --paper: #F4F8FD;
+      --white: #fff;
+      --shadow: 0 18px 50px rgba(0, 31, 77, .12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+    }
+    a { color: var(--blue); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 18px; padding: 20px 0;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; color: var(--ink); }
+    .flag {
+      width: 34px; height: 22px; border-radius: 3px;
+      background: url("../assets/sianh-flag.png") center/cover no-repeat;
+      box-shadow: 0 0 0 1px rgba(0, 51, 153, .15), 0 4px 10px rgba(0, 31, 77, .18);
+      flex: none;
+    }
+    .brand small { display: block; font-size: 10px; letter-spacing: 1.5px; color: var(--muted); font-weight: 600; }
+    nav { display: flex; align-items: center; gap: 20px; font-size: 13px; font-weight: 600; }
+    nav a { color: var(--muted); }
+    nav a:hover { color: var(--blue); }
+    .hero {
+      position: relative; overflow: hidden;
+      margin-top: 12px; border-radius: 22px;
+      padding: 44px 40px 38px;
+      color: #fff;
+      background:
+        linear-gradient(100deg, rgba(0, 31, 77, .96) 0%, rgba(0, 51, 153, .88) 48%, rgba(238, 17, 17, .60) 100%),
+        url("../assets/sianh-hero.png") center/cover no-repeat;
+      box-shadow: 0 22px 55px rgba(0, 31, 77, .25);
+      border: 1px solid rgba(255, 255, 255, .18);
+    }
+    .hero::after {
+      content: "";
+      position: absolute; right: -60px; top: -80px; width: 300px; height: 300px;
+      border-radius: 70px; transform: rotate(18deg);
+      background: linear-gradient(145deg, rgba(51, 153, 204, .28), rgba(238, 17, 17, .10));
+      border: 1px solid rgba(255, 255, 255, .18);
+    }
+    .badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 5px 10px; border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, .30);
+      background: rgba(255, 255, 255, .10);
+      font-size: 11px; font-weight: 800; letter-spacing: 1.2px;
+    }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--red); box-shadow: 0 0 0 3px rgba(238, 17, 17, .22); }
+    h1 { position: relative; z-index: 1; margin: 18px 0 10px; font-size: clamp(38px, 6vw, 62px); line-height: 1.02; letter-spacing: -2px; }
+    h1 span { color: #8ED2F5; }
+    .lead { position: relative; z-index: 1; max-width: 660px; margin: 0; font-size: 16px; line-height: 1.8; color: rgba(255, 255, 255, .82); }
+    .hero-meta { position: relative; z-index: 1; display: flex; gap: 8px; flex-wrap: wrap; margin-top: 22px; }
+    .pill { padding: 6px 10px; border-radius: 8px; background: rgba(255, 255, 255, .12); border: 1px solid rgba(255, 255, 255, .18); font-size: 12px; font-weight: 700; }
+    .download {
+      position: relative; z-index: 1;
+      display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap;
+      margin-top: 30px; padding: 18px 20px;
+      border: 1px solid rgba(255, 255, 255, .22); border-radius: 14px;
+      background: rgba(0, 24, 58, .38);
+      backdrop-filter: blur(8px);
+    }
+    .download b { display: block; font-size: 15px; }
+    .download small { display: block; margin-top: 4px; font-size: 11px; color: rgba(255, 255, 255, .65); }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      min-height: 44px; padding: 0 18px; border-radius: 10px;
+      background: #fff; color: var(--blue); font-size: 14px; font-weight: 800;
+      border: 0; white-space: nowrap;
+    }
+    .btn:hover { background: #EAF4FF; text-decoration: none; }
+    .btn.red { background: var(--red); color: #fff; }
+    .btn.red:hover { background: #C90D0D; }
+    .grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px; margin-top: 20px; }
+    .card {
+      background: #fff; border: 1px solid var(--line); border-radius: 16px;
+      padding: 22px; box-shadow: var(--shadow);
+    }
+    .card h2 { margin: 0 0 12px; font-size: 17px; letter-spacing: -.2px; }
+    .card p { color: var(--muted); line-height: 1.8; font-size: 13px; }
+    .list { margin: 0; padding: 0; list-style: none; }
+    .list li { display: flex; gap: 9px; padding: 8px 0; border-bottom: 1px dashed #E3ECF6; font-size: 13px; color: var(--muted); }
+    .list li:last-child { border-bottom: 0; }
+    .list b { color: var(--ink); }
+    .check { color: var(--blue); font-weight: 900; }
+    .server { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+    .server div { background: #F5F9FE; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-size: 12px; color: var(--muted); }
+    .server b { display: block; color: var(--ink); font-size: 13px; margin-top: 2px; }
+    .song {
+      background:
+        linear-gradient(110deg, rgba(0, 31, 77, .94), rgba(0, 51, 153, .82), rgba(238, 17, 17, .55)),
+        url("../assets/sianh-hero.png") center 55% / cover no-repeat;
+      color: #fff; border: 0;
+    }
+    .song h2 { color: #fff; }
+    .song p { color: rgba(255, 255, 255, .78); }
+    .song .btn { margin-top: 8px; }
+    .notice { margin-top: 18px; color: #75899E; font-size: 12px; line-height: 1.8; }
+    .notice strong { color: #A34A00; }
+    footer {
+      display: flex; justify-content: space-between; gap: 18px; flex-wrap: wrap;
+      margin: 30px 0 34px; color: #8A9BAC; font-size: 12px;
+    }
+    footer a { color: #72879C; }
+    @media (max-width: 800px) {
+      .grid { grid-template-columns: 1fr; }
+      .hero { padding: 30px 22px 26px; }
+      .server { grid-template-columns: 1fr; }
+      nav a:not(:first-child) { display: none; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="brand" href="../index.html">
+      <span class="flag" aria-hidden="true"></span>
+      <span>Sianh Gheln<small>EMCL 商弦特供版</small></span>
+    </a>
+    <nav>
+      <a href="../index.html">EMCL 官网</a>
+      <a href="https://guc1010.top" target="_blank" rel="noopener">商弦官网</a>
+      <a href="https://www.bilibili.com/video/BV1RQ16YbEBz/" target="_blank" rel="noopener">市歌</a>
+      <a href="../download.html">标准版下载</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="badge"><span class="dot"></span> SIANGHELN · COMMUNITY EDITION</div>
+      <h1>商弦<span>特供版</span></h1>
+      <p class="lead">为商弦社区定制的 EMCL。按商弦市旗的红、深蓝、浅蓝三色制作，内置商弦官网、服务器地址和市歌入口，数据和标准版完全独立。</p>
+      <div class="hero-meta">
+        <span class="pill">Windows 10 / 11 x64</span>
+        <span class="pill">版本 1.26.26.08</span>
+        <span class="pill">便携版</span>
+        <span class="pill">独立数据目录</span>
+      </div>
+      <div class="download">
+        <div>
+          <b>EMCL 商弦特供版</b>
+          <small>EMCL-SianhGheln-1.26.26.08.exe · 约 83 MB</small>
+        </div>
+        <a class="btn red" href="https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/download/v1.26.26.08-sianh/EMCL-SianhGheln-1.26.26.08.exe">下载特供版 ↓</a>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h2>这个版本有什么不同</h2>
+        <ul class="list">
+          <li><span class="check">✓</span><span><b>市旗配色</b>：红色 #EE1111、深蓝 #003399、浅蓝 #3399CC。</span></li>
+          <li><span class="check">✓</span><span><b>Sianh Gheln 品牌</b>：顶栏、侧栏和主页使用商弦市旗与标题。</span></li>
+          <li><span class="check">✓</span><span><b>商弦入口</b>：顶栏直接打开商弦官网和市歌。</span></li>
+          <li><span class="check">✓</span><span><b>独立数据</b>：使用 <code>%APPDATA%\emcl-launcher-sianh</code>，不会覆盖标准版。</span></li>
+          <li><span class="check">✓</span><span><b>标准功能</b>：版本、模组、整合包、服务器、MCSManager 和自有 appID 登录。</span></li>
+          <li><span class="check">✓</span><span><b>皮肤库</b>：仅正面预览、SkinMC 社区推荐、本地皮肤上传、披风切换。</span></li>
+          <li><span class="check">✓</span><span><b>模型与衣层</b>：Steve / Alex 选择，帽子、外套、袖子、裤腿显示开关。</span></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>商弦服务器</h2>
+        <div class="server">
+          <div>Java 版 IP<b>mc.guc1010.top</b></div>
+          <div>官网<b><a href="https://guc1010.top" target="_blank" rel="noopener">guc1010.top</a></b></div>
+          <div>版本<b>1.21.4 - 26.1.2</b></div>
+          <div>QQ 群<b><a href="https://jq.qq.com/?_wv=1027&k=ZnrIquUd" target="_blank" rel="noopener">点击加入</a></b></div>
+        </div>
+        <p class="notice">商弦：共创梦想城市 · SianhGheln: Build a dream city together</p>
+      </div>
+    </section>
+
+    <section class="card song" style="margin-top:16px">
+      <h2>商弦市歌 · 力量源泉</h2>
+      <p>词曲：臤徘斯 · 2024-04-26 定为商弦市官方颂歌。特供版顶栏「市歌」按钮会打开官方演唱版。</p>
+      <a class="btn" href="https://www.bilibili.com/video/BV1RQ16YbEBz/" target="_blank" rel="noopener">播放市歌（B 站）</a>
+      <a class="btn" href="https://guc1010.top/wiki/doku.php/%E5%95%86%E5%BC%A6:%E5%95%86%E5%BC%A6%E5%B8%82%E6%AD%8C" target="_blank" rel="noopener" style="margin-left:8px">查看歌词与官方页面</a>
+    </section>
+
+    <section class="grid" style="grid-template-columns:1fr 1fr">
+      <div class="card">
+        <h2>安装说明</h2>
+        <p>下载后直接运行，不需要安装。首次启动会创建独立数据目录，不会影响已经安装的 EMCL 标准版。</p>
+        <p>未签名 EXE 可能触发 Windows SmartScreen：点击「更多信息 → 仍要运行」即可。</p>
+        <p><b>自动更新</b>：启动器会从 <code>https://www.emcl.life/sianhgheln/update.json</code> 检查商弦特供版更新，不会读取标准版更新清单。</p>
+        <p class="notice">需要拥有 Minecraft: Java Edition 的微软账户才能在线游戏。EMCL 不包含游戏本体。</p>
+      </div>
+      <div class="card">
+        <h2>校验与来源</h2>
+        <p><b>SHA256</b><br><code style="word-break:break-all;font-size:11px">2D6DF713E36114FA8C8F9FFC8AC07A3EAC36B70B88098664DDE9DA57B07FA685</code></p>
+        <p><b>下载来源</b><br><a href="https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/tag/v1.26.26.08-sianh" target="_blank" rel="noopener">GitHub Release · v1.26.26.08-sianh</a></p>
+        <p class="notice">商弦市旗、市歌与商弦截图版权归商弦团队；市歌词曲作者为臤徘斯；相关内容按 CC BY-SA 4.0 使用。</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>© 2026 EMCL · 商弦特供版</span>
+    <span>与 Mojang Studios、Microsoft 无隶属关系 · <a href="../terms.html">条款</a> · <a href="../privacy.html">隐私</a></span>
+  </footer>
+</div>
+</body>
+</html>
