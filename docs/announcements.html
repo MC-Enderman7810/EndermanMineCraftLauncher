@@ -1,0 +1,81 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>公告 · EMCL</title>
+  <meta name="description" content="EMCL 官方公告、版本更新和开发者消息。">
+  <style>
+    :root { --blue:#2F7FD1; --deep:#0B2B52; --ink:#14243A; --muted:#60758C; --line:#D8E4F2; --paper:#F4F8FD; }
+    * { box-sizing:border-box; }
+    body { margin:0; color:var(--ink); background:var(--paper); font-family:"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif; }
+    a { color:var(--blue); text-decoration:none; } a:hover { text-decoration:underline; }
+    .wrap { max-width:960px; margin:0 auto; padding:0 24px; }
+    header { display:flex; align-items:center; justify-content:space-between; gap:18px; padding:20px 0; }
+    .brand { display:flex; align-items:center; gap:10px; font-weight:800; }
+    .gem { width:32px; height:32px; border-radius:9px; background:linear-gradient(145deg,#67D5FF,#2F7FD1 58%,#8B5CF6); }
+    nav { display:flex; gap:18px; align-items:center; font-size:13px; font-weight:700; }
+    nav a { color:var(--muted); }
+    h1 { font-size:clamp(36px,6vw,56px); margin:26px 0 8px; letter-spacing:-1.5px; }
+    .lead { color:var(--muted); line-height:1.8; margin:0 0 26px; }
+    .item { background:#fff; border:1px solid var(--line); border-radius:14px; padding:20px 22px; margin-bottom:12px; box-shadow:0 8px 26px rgba(31,80,130,.05); }
+    .meta { display:flex; gap:8px; align-items:center; flex-wrap:wrap; font-size:11px; color:var(--muted); }
+    .tag { display:inline-flex; padding:3px 7px; border-radius:5px; background:#EAF3FF; color:#175EA8; font-weight:800; }
+    .item h2 { font-size:17px; margin:8px 0 6px; }
+    .body { font-size:13px; color:#3C5168; line-height:1.85; white-space:pre-wrap; }
+    .item a.more { display:inline-block; margin-top:10px; font-size:12px; font-weight:700; }
+    .empty { color:var(--muted); padding:30px; text-align:center; border:1px dashed var(--line); border-radius:14px; background:#fff; }
+    footer { padding:26px 0 36px; color:var(--muted); font-size:11px; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="brand" href="./index.html"><span class="gem"></span><span>EMCL</span></a>
+    <nav>
+      <a href="./index.html">首页</a>
+      <a href="./download.html">下载</a>
+      <a href="./custom.html">定制版本</a>
+      <a href="./sianhgheln/">商弦特供版</a>
+    </nav>
+  </header>
+  <main>
+    <h1>公告</h1>
+    <p class="lead">EMCL 版本更新、维护通知和开发者消息。此页面直接从 emcl.life 读取，国内网络无需访问 GitHub。</p>
+    <div id="list"><div class="empty">正在读取公告…</div></div>
+  </main>
+  <footer>© 2026 EMCL Studio · 与 Mojang Studios、Microsoft 无隶属关系</footer>
+</div>
+<script>
+(function () {
+  var list = document.getElementById('list');
+  fetch('./announcements.json?t=' + Date.now(), { cache: 'no-store' })
+    .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function (data) {
+      var items = Array.isArray(data) ? data : (data && data.announcements) || [];
+      if (!items.length) { list.innerHTML = '<div class="empty">暂无公告</div>'; return; }
+      list.innerHTML = items.map(function (item) {
+        var date = item.date || '';
+        var tag = item.tag || (item.kind === 'update' ? '更新' : '公告');
+        var title = item.title || '公告';
+        var body = item.body || '';
+        var url = item.url || '';
+        return '<article class="item">' +
+          '<div class="meta"><span class="tag">' + esc(tag) + '</span><span>' + esc(date) + '</span></div>' +
+          '<h2>' + esc(title) + '</h2>' +
+          '<div class="body">' + esc(body) + '</div>' +
+          (url ? '<a class="more" href="' + esc(url) + '" target="_blank" rel="noopener">查看详情 ↗</a>' : '') +
+          '</article>';
+      }).join('');
+    })
+    .catch(function (e) { list.innerHTML = '<div class="empty">读取失败：' + esc(e.message) + '</div>'; });
+  function esc(v) {
+    return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+})();
+</script>
+</body>
+</html>
+
