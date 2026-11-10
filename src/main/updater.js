@@ -48,6 +48,9 @@ function officialUrl(value) {
     const url = new URL(String(value || ''));
     if (url.protocol !== 'https:') return '';
     const host = url.hostname.toLowerCase();
+    if ((host === 'www.emcl.life' || host === 'emcl.life') && url.protocol === 'https:') {
+      return url.toString();
+    }
     if (host === 'github.com' && url.pathname.toLowerCase().startsWith('/mc-enderman7810/')) {
       return url.toString();
     }
