@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>历史版本 · EMCL</title>
+  <meta name="description" content="EMCL 历史版本下载存档。旧版本不再维护，仅用于回退和兼容性测试。">
+  <style>
+    :root { --blue:#2F7FD1; --deep:#0B2B52; --ink:#14243A; --muted:#60758C; --line:#D8E4F2; --paper:#F4F8FD; --warn:#A05A00; --warn-bg:#FFF6E6; }
+    * { box-sizing:border-box; }
+    body { margin:0; color:var(--ink); background:var(--paper); font-family:"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif; }
+    a { color:var(--blue); text-decoration:none; } a:hover { text-decoration:underline; }
+    .wrap { max-width:1080px; margin:0 auto; padding:0 24px; }
+    header { display:flex; align-items:center; justify-content:space-between; gap:18px; padding:20px 0; }
+    .brand { display:flex; align-items:center; gap:10px; font-weight:800; color:var(--ink); }
+    .gem { width:32px; height:32px; border-radius:9px; background:linear-gradient(145deg,#67D5FF,#2F7FD1 58%,#8B5CF6); }
+    .brand small { display:block; font-size:9px; letter-spacing:1.4px; color:var(--muted); font-weight:600; }
+    nav { display:flex; align-items:center; gap:18px; font-size:13px; font-weight:700; }
+    nav a { color:var(--muted); }
+    h1 { font-size:clamp(36px,6vw,54px); margin:28px 0 8px; letter-spacing:-1.5px; }
+    .lead { color:var(--muted); line-height:1.8; margin:0 0 22px; max-width:760px; }
+    .notice { background:var(--warn-bg); border:1px solid #F0D39B; color:var(--warn); border-radius:12px; padding:12px 15px; font-size:12px; line-height:1.8; margin:0 0 18px; }
+    .card { background:#fff; border:1px solid var(--line); border-radius:16px; overflow:hidden; box-shadow:0 12px 34px rgba(0,31,77,.06); }
+    .row { display:grid; grid-template-columns: 1.1fr .8fr .7fr 1.5fr auto; gap:12px; align-items:center; padding:15px 18px; border-top:1px solid #EDF3FA; }
+    .row:first-child { border-top:0; background:#F8FBFF; color:var(--muted); font-size:11px; font-weight:800; letter-spacing:.3px; }
+    .version { font-weight:800; font-size:14px; }
+    .meta { color:var(--muted); font-size:12px; }
+    .sha { font-family:Consolas,monospace; font-size:10px; color:var(--muted); word-break:break-all; line-height:1.5; }
+    .btn { display:inline-flex; align-items:center; justify-content:center; min-height:34px; padding:0 12px; border-radius:8px; font-size:12px; font-weight:800; background:var(--blue); color:#fff; white-space:nowrap; }
+    .btn:hover { background:#1D5FA8; text-decoration:none; }
+    .btn.ghost { background:#fff; color:var(--blue); border:1px solid var(--line); }
+    .current { background:#F2FBF6; }
+    .current .version { color:#1D7A4C; }
+    .tag { display:inline-flex; padding:2px 6px; border-radius:4px; font-size:9px; font-weight:800; background:#EAF3FF; color:#175EA8; margin-left:4px; vertical-align:1px; }
+    .tag.old { background:#F1F4F8; color:#7C8FA3; }
+    .actions { display:flex; gap:10px; flex-wrap:wrap; margin:22px 0 30px; }
+    footer { padding:24px 0 36px; color:var(--muted); font-size:11px; line-height:1.8; }
+    @media(max-width:800px){ .row { grid-template-columns:1fr 1fr; } .row:first-child { display:none; } .sha { grid-column:1/-1; } nav { display:none; } }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="brand" href="./index.html"><span class="gem"></span><span>EMCL <small>ENDERMAN MINECRAFT LAUNCHER</small></span></a>
+    <nav>
+      <a href="./index.html">首页</a>
+      <a href="./download.html">下载</a>
+      <a href="./history.html">历史版本</a>
+      <a href="./announcements.html">公告</a>
+      <a href="./custom.html">定制版本</a>
+      <a href="./sianhgheln/">商弦特供版</a>
+    </nav>
+  </header>
+
+  <main>
+    <h1>历史版本</h1>
+    <p class="lead">这里保留部分旧版便携包，方便回退或做兼容性测试。默认建议使用最新版；旧版本不再接收更新和修复。</p>
+    <div class="notice">历史版本可能包含旧版登录、皮肤或服务器行为，且不再保证与最新服务端/公告兼容。下载后请核对 SHA256；旧安装版未全部保留，如需特定版本安装包可联系支持邮箱。</div>
+
+    <div class="card" aria-label="版本列表">
+      <div class="row">
+        <div>版本</div><div>日期</div><div>类型</div><div>SHA256</div><div>下载</div>
+      </div>
+
+      <div class="row current">
+        <div class="version">1.26.26.09 <span class="tag">最新</span></div>
+        <div class="meta">2026-11-10</div>
+        <div class="meta">便携版</div>
+        <div class="sha">DB859001DC942C82D5DE2CD84EE915A3C958A06EDFA4BEF9C496374A1C7B38EC</div>
+        <a class="btn" href="./downloads/EMCL-Portable-1.26.26.09.exe">下载</a>
+      </div>
+
+      <div class="row">
+        <div class="version">1.26.26.08 <span class="tag old">存档</span></div>
+        <div class="meta">2026-11-08</div>
+        <div class="meta">便携版</div>
+        <div class="sha">91C7DE530B3030CE6ED0140453D2199FD3013B0CE645004AF6F9AED7C7C57EE1</div>
+        <a class="btn ghost" href="./downloads/history/EMCL-Portable-1.26.26.08.exe">下载</a>
+      </div>
+
+      <div class="row">
+        <div class="version">1.26.26.06 <span class="tag old">存档</span></div>
+        <div class="meta">2026-10-31</div>
+        <div class="meta">便携版</div>
+        <div class="sha">8B8194589A7CB07CD77104A48C2BD01989FA3FE13BF2DCAC82DB231F21DF3304</div>
+        <a class="btn ghost" href="./downloads/history/EMCL-Portable-1.26.26.06.exe">下载</a>
+      </div>
+
+      <div class="row">
+        <div class="version">1.26.26.02 <span class="tag old">存档</span></div>
+        <div class="meta">2026-10-31</div>
+        <div class="meta">便携版</div>
+        <div class="sha">A89D6F09F79473CB7CDC15880CF5185F6711BD07BEC51B9B0D7A0419E45905F5</div>
+        <a class="btn ghost" href="./downloads/history/EMCL-Portable-1.26.26.02.exe">下载</a>
+      </div>
+
+      <div class="row">
+        <div class="version">1.26.26.01 <span class="tag old">存档</span></div>
+        <div class="meta">2026-10-25</div>
+        <div class="meta">便携版</div>
+        <div class="sha">557F1B43A2F43EEE0EFFD1369BCF52CA46AF36A5BB57D8090B4E5730C2A1F0E5</div>
+        <a class="btn ghost" href="./downloads/history/EMCL-Portable-1.26.26.01.exe">下载</a>
+      </div>
+    </div>
+
+    <div class="actions">
+      <a class="btn" href="./download.html">返回最新版下载</a>
+      <a class="btn ghost" href="./announcements.html">查看更新公告</a>
+      <a class="btn ghost" href="mailto:EMCLsupport2026@163.com?subject=EMCL%20%E5%8E%86%E5%8F%B2%E7%89%88%E6%9C%AC%E9%9C%80%E6%B1%82">找不到需要的版本？</a>
+    </div>
+  </main>
+
+  <footer>© 2026 EMCL Studio · 与 Mojang Studios、Microsoft 无隶属关系 · 历史版本仅作存档，不提供安全更新</footer>
+</div>
+</body>
+</html>
