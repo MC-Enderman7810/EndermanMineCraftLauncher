@@ -1,11 +1,10 @@
 {
-  "version": "1.26.26.06",
+  "version": "1.26.26.08",
   "releaseDate": "2026-10-31",
   "notes": [
-    "发布版加入 7 种界面语言",
-    "默认使用已通过 Mojang allowlist 的自有 appID 登录",
-    "顶栏新增官网入口，错误提示可发送到支持邮箱",
-    "更新清单和公告使用 emcl.life"
+    "皮肤库新增帽子、外套、袖子、裤腿显示开关",
+    "发布版包含皮肤库：正面预览、SkinMC 推荐、本地上传和披风切换",
+    "更新清单与公告使用 emcl.life"
   ],
   "url": "https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases",
   "downloadUrl": "https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/latest"

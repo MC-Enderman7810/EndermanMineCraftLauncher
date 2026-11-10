@@ -57,6 +57,8 @@ const state = {
   skinData: null,
   skinLoading: false,
   skinError: '',
+  skinVariant: 'steve',
+  skinLayers: { hat: true, jacket: true, sleeves: true, pants: true },
   appVersion: '',
   update: null,
   updateChecking: false,
@@ -81,6 +83,7 @@ const PAGE_META = {
   resources: { title: '下载', subtitle: '游戏版本 · 模组 · 光影 · 资源包 · 数据包' },
   modpacks: { title: '整合包', subtitle: '导入 PCL2 / Modrinth / CurseForge 整合包' },
   accounts: { title: '账户', subtitle: '离线 · 微软 · 第三方验证' },
+  skins: { title: '皮肤库', subtitle: '正面预览 · 推荐皮肤 · 披风' },
   servers: { title: '服务器', subtitle: '本地 Java 服务端与远程 RCON 管理' },
   settings: { title: '设置', subtitle: '目录、Java、内存与主题' },
   logs: { title: '日志', subtitle: '启动输出与错误现场' }
@@ -92,6 +95,7 @@ const NAVS = [
   { id: 'modpacks', label: '整合包', icon: 'box' },
   { id: 'servers', label: '服务器', icon: 'server' },
   { id: 'accounts', label: '账户', icon: 'user' },
+  { id: 'skins', label: '皮肤', icon: 'user' },
   { id: 'settings', label: '设置', icon: 'settings' },
   { id: 'logs', label: '日志', icon: 'terminal' }
 ];
@@ -340,6 +344,7 @@ function render() {
     resources: pageResources,
     modpacks: pageModpacks,
     accounts: pageAccounts,
+    skins: pageSkins,
     servers: pageServers,
     settings: pageSettings,
     logs: pageLogs
@@ -1707,6 +1712,188 @@ function updateSettingsCard() {
     '</div>';
 }
 
+const SKIN_LIBRARY = [
+  { file: 'skinmc/techy', name: 'Techy', tag: 'SkinMC 社区', url: 'https://skinmc.net/skins/creations/038c1f51-18be-43bc-86b3-b06a9983325c' },
+  { file: 'skinmc/lou', name: 'Lou', tag: 'SkinMC 社区', url: 'https://skinmc.net/skins/creations/895ac586-0d6f-4dc8-a67b-c56627cc3b00' },
+  { file: 'skinmc/chill', name: 'Chill', tag: 'SkinMC 社区', url: 'https://skinmc.net/skins/creations/23be4e02-dffc-4a76-b916-74d865c13217' },
+  { file: 'skinmc/villager', name: 'Villager', tag: 'SkinMC 社区', url: 'https://skinmc.net/skins/creations/8e05a800-3a75-4f5f-bd16-3912f7feccd4' },
+  { file: 'skinmc/enderman', name: 'Enderman', tag: 'SkinMC 社区', url: 'https://skinmc.net/skins/creations/c24ce180-0997-4756-a40d-52f3d4df7b00' },
+  { file: 'skinmc/butler', name: 'Butler', tag: 'SkinMC 社区', url: 'https://skinmc.net/skins/creations/e91f8350-2b9e-42c4-b41f-8b0b64a4edca' },
+  { file: 'skinmc/soul', name: 'Soul', tag: 'SkinMC 社区', url: 'https://skinmc.net/skins/creations/34f0f09b-a990-43f0-925d-31a2259244ad' },
+  { file: 'skinmc/jarvin', name: 'Jarvin', tag: 'SkinMC 社区', url: 'https://skinmc.net/skins/creations/8cc2e2a5-596b-47bb-a7dd-70f7ca64895a' }
+];
+
+function pageSkins() {
+  const s = state.skinData;
+  const account = currentAccount();
+  const current = s && s.ok && !s.isDefault
+    ? '<div class="skin-current">' +
+        '<canvas id="skinCurrentCanvas" class="skin-front-canvas" width="160" height="330"></canvas>' +
+        '<div class="skin-current-info"><div class="card-title">' + esc(s.name || (currentAccount() && currentAccount().name) || '未登录') + '</div>' +
+        '<div class="card-subtitle">' + (s.model === 'slim' ? 'Slim' : 'Classic') + ' · ' +
+          (s.source === 'microsoft' ? '微软账户' : s.source === 'thirdparty' ? '第三方验证' : '本地账户') + '</div>' +
+        '<div class="row" style="margin-top:10px"><button class="btn btn-ghost btn-sm" data-action="skin-refresh">刷新皮肤</button>' +
+        '<button class="btn btn-ghost btn-sm" data-action="skin-upload">上传本地皮肤</button></div>' +
+        '<div class="skin-layer-controls">' +
+          [['hat', '帽子'], ['jacket', '外套'], ['sleeves', '袖子'], ['pants', '裤腿']].map(([key, label]) =>
+            '<label class="skin-layer"><input type="checkbox" data-skin-layer="' + key + '"' +
+              (state.skinLayers[key] !== false ? ' checked' : '') + '><span>' + label + '</span></label>').join('') +
+        '</div></div></div>'
+    : emptyState(account ? '正在读取当前账户的皮肤，或当前账户没有皮肤。' : '登录账户后可以预览、使用推荐皮肤和切换披风。', 'user');
+
+  const capes = s && Array.isArray(s.capes) ? s.capes : [];
+  const capeList = capes.length
+    ? capes.map((c) => '<div class="cape-row">' +
+        (c.url ? '<img src="' + esc(c.url) + '" alt="" />' : '<div class="cape-placeholder"></div>') +
+        '<div class="cape-info"><div class="setting-title">' + esc(c.alias || '披风') + '</div>' +
+        '<div class="setting-desc">' + (c.active ? '当前使用' : '可用') + '</div></div>' +
+        (c.active ? '<span class="tag tag-green">使用中</span>' : '<button class="btn btn-ghost btn-sm" data-action="skin-cape" data-id="' + esc(c.id) + '">使用</button>') +
+        '</div>').join('')
+    : '<div class="card-subtitle">当前账户没有可用披风，或账户不支持披风。</div>';
+
+  return '<div class="skin-page">' +
+    '<div class="card skin-model-card"><div class="card-head"><h3 class="card-title">模型</h3><span class="small muted">Steve / Alex</span></div>' +
+      '<div class="field" style="margin:0"><select class="select" data-skin-variant>' +
+        '<option value="steve"' + (state.skinVariant !== 'slim' ? ' selected' : '') + '>Steve（Classic）</option>' +
+        '<option value="slim"' + (state.skinVariant === 'slim' ? ' selected' : '') + '>Alex（Slim）</option>' +
+      '</select></div>' +
+      '<div class="card-subtitle">先选择模型，再点推荐皮肤的“使用”或上传本地皮肤。</div></div>' +
+    '<div class="card skin-current-card"><div class="card-head"><h3 class="card-title">当前皮肤</h3>' +
+      '<span class="tag tag-blue">仅正面预览</span></div>' + current +
+      '<div class="skin-note">这里只显示模型正面，不加载 3D 皮肤。推荐皮肤来自 SkinMC 社区，版权归原作者所有；使用前请确认作者许可。</div></div>' +
+    '<div class="card"><div class="card-head"><h3 class="card-title">推荐皮肤</h3>' +
+      '<span class="small muted">' + SKIN_LIBRARY.length + ' 款来自 SkinMC</span></div>' +
+      '<div class="skin-grid">' + SKIN_LIBRARY.map((item) =>
+        '<div class="skin-card">' +
+          '<img src="assets/skins/' + item.file + '-preview.png" alt="' + esc(item.name) + '" />' +
+          '<div class="skin-card-name">' + esc(item.name) + '</div>' +
+          '<div class="skin-card-tag"><a href="' + item.url + '" data-action="open-url" data-url="' + item.url + '">' + item.tag + '</a></div>' +
+          '<button class="btn btn-primary btn-sm" data-action="skin-apply" data-file="' + item.file + '">使用</button>' +
+        '</div>').join('') + '</div></div>' +
+    '<div class="card"><div class="card-head"><h3 class="card-title">披风</h3>' +
+      '<button class="btn btn-ghost btn-sm" data-action="skin-cape-off">隐藏披风</button></div>' +
+      '<div class="cape-list">' + capeList + '</div></div>' +
+    '<input type="file" id="skinFileInput" accept="image/png" style="display:none" />' +
+    '</div>';
+}
+
+async function loadSkinPage(force = false) {
+  if (state.skinLoading) return;
+  state.skinLoading = true;
+  state.skinError = '';
+  render();
+  try {
+    const data = await api.getSkin(force);
+    state.skinData = data;
+    if (data && data.model) state.skinVariant = data.model === 'slim' ? 'slim' : 'steve';
+    if (data && data.ok === false) state.skinError = data.error || '读取皮肤失败';
+  } catch (e) {
+    state.skinError = e.message || '读取皮肤失败';
+  } finally {
+    state.skinLoading = false;
+    render();
+    setTimeout(drawSkinCanvas, 30);
+  }
+}
+
+function drawSkinCanvas() {
+  const canvas = $('skinCurrentCanvas');
+  const src = state.skinData && state.skinData.dataUrl;
+  if (!canvas || !src) return;
+  const img = new Image();
+  img.onload = () => {
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const scale = 10;
+    const part = (sx, sy, sw, sh, dx, dy) => {
+      ctx.drawImage(img, sx, sy, sw, sh, dx, dy, sw * scale, sh * scale);
+    };
+    part(8, 8, 8, 8, 40, 10);
+    part(20, 20, 8, 12, 40, 90);
+    part(36, 52, 4, 12, 0, 90);
+    part(44, 20, 4, 12, 120, 90);
+    part(20, 52, 4, 12, 40, 210);
+    part(4, 20, 4, 12, 80, 210);
+    const layers = state.skinLayers || {};
+    if (layers.hat !== false) part(40, 8, 8, 8, 40, 10);
+    if (layers.jacket !== false) part(20, 36, 8, 12, 40, 90);
+    if (layers.sleeves !== false) {
+      part(52, 52, 4, 12, 0, 90);
+      part(44, 36, 4, 12, 120, 90);
+    }
+    if (layers.pants !== false) {
+      part(4, 52, 4, 12, 40, 210);
+      part(0, 36, 4, 12, 80, 210);
+    }
+  };
+  img.src = src;
+}
+
+async function applyRecommendedSkin(file) {
+  if (!file) return;
+  try {
+    toast('正在准备皮肤…');
+    const res = await fetch('assets/skins/' + file + '.png');
+    if (!res.ok) throw new Error('皮肤资源不存在');
+    const blob = await res.blob();
+    const dataUrl = await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.readAsDataURL(blob);
+    });
+    const out = await api.uploadSkin(dataUrl, state.skinVariant === 'slim' ? 'slim' : 'steve');
+    if (!out.ok) throw new Error(out.error || '应用皮肤失败');
+    state.skinData = out.skin;
+    toast('皮肤已应用', 'success');
+    render();
+    setTimeout(drawSkinCanvas, 30);
+  } catch (e) {
+    toast(e.message || '应用皮肤失败', 'error');
+  }
+}
+
+async function uploadLocalSkin(file) {
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) { toast('皮肤文件不能超过 2 MB', 'error'); return; }
+  try {
+    const dataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error('读取皮肤文件失败'));
+      reader.readAsDataURL(file);
+    });
+    const out = await api.uploadSkin(dataUrl, state.skinVariant === 'slim' ? 'slim' : 'steve');
+    if (!out.ok) throw new Error(out.error || '上传皮肤失败');
+    state.skinData = out.skin;
+    toast('本地皮肤已应用', 'success');
+    render();
+    setTimeout(drawSkinCanvas, 30);
+  } catch (e) {
+    toast(e.message || '上传皮肤失败', 'error');
+  }
+}
+
+async function setCape(capeId) {
+  try {
+    const out = await api.setCape(capeId);
+    if (!out.ok) throw new Error(out.error || '切换披风失败');
+    state.skinData = out.skin;
+    toast('披风已切换', 'success');
+    render();
+  } catch (e) { toast(e.message || '切换披风失败', 'error'); }
+}
+
+async function disableCape() {
+  try {
+    const out = await api.disableCape();
+    if (!out.ok) throw new Error(out.error || '隐藏披风失败');
+    state.skinData = out.skin;
+    toast('已隐藏披风', 'success');
+    render();
+  } catch (e) { toast(e.message || '隐藏披风失败', 'error'); }
+}
+
 function pageSettings() {
   const c = state.config;
   const java = state.java;
@@ -1847,6 +2034,12 @@ async function handleAction(action, el) {
     case 'goto-resources-modpack': state.resourceKind = 'modpack'; setPage('resources'); break;
     case 'copy-error': await copyErrorInfo(); break;
     case 'email-error': await emailErrorInfo(); break;
+    case 'open-url': await api.openExternal(dataset.url); break;
+    case 'skin-refresh': await loadSkinPage(true); break;
+    case 'skin-apply': await applyRecommendedSkin(dataset.file); break;
+    case 'skin-cape': await setCape(dataset.id); break;
+    case 'skin-cape-off': await disableCape(); break;
+    case 'skin-upload': $('skinFileInput') && $('skinFileInput').click(); break;
     case 'save-version-name': await confirmVersionName(); break;
     case 'launch': await doLaunch(); break;
     case 'launch-with-account':
@@ -2125,6 +2318,7 @@ function setPage(page) {
     }
   }
   if (page === 'servers') loadServers();
+  if (page === 'skins') loadSkinPage();
   if (page === 'logs') loadLatestLog().then(render).catch(() => {});
   render();
 }
@@ -3565,6 +3759,19 @@ function bind() {
   });
 
   $('content').addEventListener('change', async (e) => {
+    if (e.target.id === 'skinFileInput') {
+      await uploadLocalSkin(e.target.files && e.target.files[0]);
+      return;
+    }
+    if (e.target.dataset && e.target.dataset.skinVariant) {
+      state.skinVariant = e.target.value === 'slim' ? 'slim' : 'steve';
+      return;
+    }
+    if (e.target.dataset && e.target.dataset.skinLayer) {
+      state.skinLayers[e.target.dataset.skinLayer] = !!e.target.checked;
+      drawSkinCanvas();
+      return;
+    }
     if (e.target.id === 'homeVersion') {
       await selectVersion(e.target.value);
       return;

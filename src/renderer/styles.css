@@ -733,6 +733,41 @@ textarea.input { height: auto; padding: 9px 11px; resize: vertical; line-height:
 .announce-body { font-size: 10.5px; color: var(--text-2); line-height: 1.7; margin-top: 3px; white-space: pre-wrap; }
 .announce-actions { display: flex; justify-content: flex-end; margin-top: 8px; }
 
+/* ---------------- Skin library ---------------- */
+.skin-page { display: flex; flex-direction: column; gap: 12px; }
+.skin-current-card { overflow: hidden; }
+.skin-current { display: flex; align-items: center; gap: 24px; padding: 6px 4px 4px; }
+.skin-front-canvas {
+  width: 160px; height: 330px; flex: none;
+  background: radial-gradient(circle at 50% 22%, #EAF3FF 0%, #F7FAFE 60%, #EFF5FC 100%);
+  border: 1px solid var(--line); border-radius: 14px;
+  image-rendering: pixelated;
+}
+.skin-current-info { min-width: 0; }
+.skin-layer-controls { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+.skin-layer { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-2); cursor: pointer; }
+.skin-layer input { accent-color: var(--accent); }
+.skin-note { margin-top: 8px; color: var(--muted); font-size: 11px; line-height: 1.7; }
+.skin-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 8px; }
+.skin-card {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: #FAFCFF;
+}
+.skin-card img { width: 96px; height: 173px; object-fit: contain; image-rendering: pixelated; }
+.skin-card-name { font-size: 12px; font-weight: 800; }
+.skin-card-tag { font-size: 9.5px; color: var(--muted); margin-bottom: 3px; }
+.skin-card .btn { width: 100%; }
+.cape-list { display: flex; flex-direction: column; gap: 7px; margin-top: 6px; }
+.cape-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: #FAFCFF;
+}
+.cape-row img, .cape-placeholder {
+  width: 54px; height: 36px; object-fit: cover; border-radius: 6px;
+  background: #EDF4FC; border: 1px solid var(--line); flex: none;
+}
+.cape-info { min-width: 0; flex: 1; }
+
 /* ---------------- Responsive ---------------- */
 @media (max-width: 1180px) {
   .grid-4, .stat-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }

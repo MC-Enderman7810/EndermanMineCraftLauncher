@@ -194,4 +194,43 @@ async function changeCape(store, capeId, hide = false) {
   return getSkin(store, true);
 }
 
-module.exports = { getSkin, changeCape };
+async function uploadSkin(store, dataUrl, variant = 'steve') {
+  let account = store.activeAccount();
+  if (!account) throw new Error('请先登录账户');
+  if (account.kind !== 1 || !account.accessToken) throw new Error('只有微软账户支持上传皮肤');
+  const text = String(dataUrl || '');
+  const match = /^data:image\/(?:png|jpeg);base64,(.+)$/i.exec(text);
+  if (!match) throw new Error('皮肤数据格式不正确');
+  const buffer = Buffer.from(match[1], 'base64');
+  if (!buffer.length || buffer.length > 2 * 1024 * 1024) throw new Error('皮肤图片大小不正确');
+  const makeForm = () => {
+    const form = new FormData();
+    form.append('variant', variant === 'slim' ? 'slim' : 'classic');
+    form.append('file', new Blob([buffer], { type: 'image/png' }), 'skin.png');
+    return form;
+  };
+  const request = () => fetch(MC_PROFILE + '/skins', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + account.accessToken,
+      'Accept': 'application/json',
+      'User-Agent': 'EMCL/1.26.25.19'
+    },
+    body: makeForm()
+  });
+  let res = await request();
+  if (res.status === 401) {
+    account = await auth.refreshAccount(store, account);
+    await store.updateAccount(account);
+    res = await request();
+  }
+  if (!res.ok) {
+    let detail = '';
+    try { detail = (await res.text()).slice(0, 300); } catch { /* ignore */ }
+    throw new Error('皮肤上传失败：HTTP ' + res.status + (detail ? '：' + detail : ''));
+  }
+  cache.clear();
+  return getSkin(store, true);
+}
+
+module.exports = { getSkin, changeCape, uploadSkin };

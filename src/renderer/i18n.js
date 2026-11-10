@@ -36,6 +36,8 @@
     '启动游戏': 'Launch game',
     '刷新': 'Refresh',
     '反馈': 'Feedback',
+    '皮肤': 'Skins',
+    '皮肤库': 'Skin library',
     '官网': 'Website',
     '发送到支持邮箱': 'Send to support email',
     '刷新公告和更新': 'Refresh announcements and updates',

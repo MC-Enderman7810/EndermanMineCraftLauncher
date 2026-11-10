@@ -47,6 +47,7 @@ contextBridge.exposeInMainWorld('emcl', {
   removeAccount: (id) => ipcRenderer.invoke('account:remove', id),
   selectAccount: (id) => ipcRenderer.invoke('account:select', id),
   getSkin: (force) => ipcRenderer.invoke('skin:get', force),
+  uploadSkin: (dataUrl, variant) => ipcRenderer.invoke('skin:upload', dataUrl, variant),
   setCape: (capeId) => ipcRenderer.invoke('skin:setCape', capeId),
   disableCape: () => ipcRenderer.invoke('skin:disableCape'),
   recommendMods: (gameVersion, loader) => ipcRenderer.invoke('recommend:list', gameVersion, loader),

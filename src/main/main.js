@@ -791,6 +791,14 @@ function registerIpc() {
       return { ok: false, error: e.message };
     }
   });
+  ipcMain.handle('skin:upload', async (event, dataUrl, variant) => {
+    try {
+      const info = await skin.uploadSkin(store, dataUrl, variant);
+      return { ok: true, skin: info };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+  });
 
   ipcMain.handle('content:search', async (event, kind, query, gameVersion, loader, source) => {
     try {
