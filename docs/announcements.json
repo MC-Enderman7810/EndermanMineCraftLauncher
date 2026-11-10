@@ -1,14 +1,14 @@
 {
   "announcements": [
     {
-      "id": "2026-10-31-emcl-1.26.26.06",
-      "title": "EMCL 1.26.26.06 已发布",
-      "body": "发布版加入 7 种界面语言。\n\n默认使用已通过 Mojang allowlist 的自有 appID 登录；顶栏新增官网入口，错误提示可直接发送到支持邮箱。\n\n版本号更新为 1.26.26.06。",
+      "id": "2026-10-31-emcl-1.26.26.09",
+      "title": "EMCL 1.26.26.09 已发布",
+      "body": "所有版本加入 Steve / Alex 模型选择。安装包改为 emcl.life 直接下载，不再跳转 GitHub。",
       "date": "2026-10-31",
       "tag": "更新",
       "kind": "update",
       "pinned": true,
-      "url": "https://www.emcl.life"
+      "url": "https://www.emcl.life/download.html"
     },
     {
       "id": "2026-10-31-emcl-1.26.26.02",

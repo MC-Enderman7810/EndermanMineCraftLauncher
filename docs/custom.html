@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>定制版本 · EMCL</title>
+  <meta name="description" content="EMCL 定制版本服务：7.5 元一次，可定制名称、图标、配色、背景、官网和服务器入口。商弦特供版是成功案例。">
+  <style>
+    :root { --blue:#2F7FD1; --deep:#0B2B52; --ink:#14243A; --muted:#60758C; --line:#D8E4F2; --paper:#F4F8FD; --white:#fff; --red:#EE1111; }
+    * { box-sizing:border-box; }
+    body { margin:0; color:var(--ink); background:var(--paper); font-family:"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif; }
+    a { color:var(--blue); text-decoration:none; } a:hover { text-decoration:underline; }
+    .wrap { max-width:1080px; margin:0 auto; padding:0 24px; }
+    header { display:flex; align-items:center; justify-content:space-between; gap:18px; padding:20px 0; }
+    .brand { display:flex; align-items:center; gap:10px; font-weight:800; color:var(--ink); }
+    .gem { width:32px; height:32px; border-radius:9px; background:linear-gradient(145deg,#67D5FF,#2F7FD1 58%,#8B5CF6); box-shadow:0 6px 16px rgba(47,127,209,.28); }
+    .brand small { display:block; font-size:9px; letter-spacing:1.4px; color:var(--muted); font-weight:600; }
+    nav { display:flex; align-items:center; gap:18px; font-size:13px; font-weight:700; }
+    nav a { color:var(--muted); } nav a:hover { color:var(--blue); }
+    .hero { position:relative; overflow:hidden; border-radius:22px; padding:46px 40px; color:#fff;
+      background:radial-gradient(900px 420px at 88% -10%,rgba(103,213,255,.45),transparent 60%),
+        radial-gradient(700px 420px at 10% 110%,rgba(139,92,246,.42),transparent 60%),
+        linear-gradient(120deg,#071B33,#0B3F75 55%,#1769A8);
+      box-shadow:0 22px 55px rgba(0,31,77,.22); border:1px solid rgba(255,255,255,.16); }
+    .hero::after { content:""; position:absolute; right:-80px; top:-100px; width:340px; height:340px; border-radius:64px; transform:rotate(16deg); background:linear-gradient(145deg,rgba(103,213,255,.20),rgba(139,92,246,.12)); border:1px solid rgba(255,255,255,.16); }
+    .badge { display:inline-flex; align-items:center; gap:8px; padding:5px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.28); background:rgba(255,255,255,.10); font-size:11px; font-weight:800; letter-spacing:1.2px; }
+    .dot { width:7px; height:7px; border-radius:50%; background:#67D5FF; box-shadow:0 0 0 3px rgba(103,213,255,.2); }
+    h1 { position:relative; z-index:1; margin:18px 0 12px; font-size:clamp(40px,6vw,64px); line-height:1.02; letter-spacing:-2px; }
+    h1 span { color:#8ED2F5; }
+    .lead { position:relative; z-index:1; max-width:650px; margin:0; color:rgba(255,255,255,.84); font-size:16px; line-height:1.8; }
+    .price { position:relative; z-index:1; display:inline-flex; align-items:baseline; gap:8px; margin-top:24px; padding:12px 16px; border-radius:12px; background:rgba(255,255,255,.13); border:1px solid rgba(255,255,255,.22); }
+    .price b { font-size:40px; line-height:1; } .price span { font-size:13px; color:rgba(255,255,255,.75); }
+    .actions { position:relative; z-index:1; display:flex; gap:10px; flex-wrap:wrap; margin-top:24px; }
+    .btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:11px 16px; border-radius:10px; font-size:13px; font-weight:800; background:#fff; color:var(--deep); border:1px solid #fff; }
+    .btn:hover { text-decoration:none; transform:translateY(-1px); }
+    .btn.ghost { background:rgba(255,255,255,.08); color:#fff; border-color:rgba(255,255,255,.3); }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:16px; }
+    .card { background:var(--white); border:1px solid var(--line); border-radius:16px; padding:22px; box-shadow:0 12px 34px rgba(0,31,77,.06); }
+    .card h2 { margin:0 0 8px; font-size:19px; }
+    .card p { margin:0; color:var(--muted); font-size:13px; line-height:1.8; }
+    .list { margin:12px 0 0; padding:0; list-style:none; display:grid; gap:9px; }
+    .list li { display:flex; gap:8px; color:var(--ink); font-size:13px; line-height:1.7; }
+    .check { color:#1D9A6C; font-weight:900; }
+    .case { margin-top:16px; display:grid; grid-template-columns:1.1fr .9fr; gap:0; overflow:hidden; padding:0; }
+    .case-body { padding:26px; }
+    .case-media { min-height:260px; background:url("./assets/sianh-hero.png") center/cover no-repeat; position:relative; }
+    .case-media::after { content:""; position:absolute; inset:0; background:linear-gradient(90deg,rgba(0,31,77,.10),rgba(0,31,77,.55)); }
+    .case-tag { display:inline-flex; padding:4px 8px; border-radius:6px; background:#EAF3FF; color:#175EA8; font-size:10px; font-weight:800; letter-spacing:.5px; }
+    .steps { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:12px; }
+    .step { border:1px solid var(--line); border-radius:12px; padding:14px; background:#FAFCFF; }
+    .step b { display:block; font-size:12px; color:var(--blue); margin-bottom:4px; }
+    .step span { display:block; font-size:12px; color:var(--muted); line-height:1.65; }
+    .notice { font-size:11px; color:var(--muted); line-height:1.8; margin-top:14px; }
+    footer { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:24px 0 34px; color:var(--muted); font-size:11px; }
+    @media(max-width:800px){ .grid,.case { grid-template-columns:1fr; } .steps { grid-template-columns:1fr 1fr; } .hero { padding:34px 24px; } nav { display:none; } }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="brand" href="./index.html"><span class="gem"></span><span>EMCL <small>ENDERMAN MINECRAFT LAUNCHER</small></span></a>
+    <nav>
+      <a href="./index.html">首页</a>
+      <a href="./download.html">下载</a>
+      <a href="./custom.html">定制版本</a>
+      <a href="./sianhgheln/">商弦案例</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="badge"><span class="dot"></span> CUSTOM EDITION</div>
+      <h1>定制你的 <span>EMCL</span></h1>
+      <p class="lead">为服务器、城市或社群制作专属启动器：改名称、图标、配色、背景、官网入口和服务器地址，数据和标准版完全独立。</p>
+      <div class="price"><b>7.5</b><span>元 / 次 · 基础定制</span></div>
+      <div class="actions">
+        <a class="btn" href="mailto:EMCLsupport2026@163.com?subject=EMCL%20%E5%AE%9A%E5%88%B6%E7%89%88%E6%9C%AC%E5%92%A8%E8%AF%A2">邮件咨询定制</a>
+        <a class="btn ghost" href="./sianhgheln/">查看商弦成功案例</a>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h2>7.5 元包含什么</h2>
+        <ul class="list">
+          <li><span class="check">✓</span><span>启动器名称、窗口标题和品牌文字</span></li>
+          <li><span class="check">✓</span><span>应用图标、主题色、侧栏颜色</span></li>
+          <li><span class="check">✓</span><span>主页背景图、旗帜或社群 Logo</span></li>
+          <li><span class="check">✓</span><span>官网链接、服务器 IP、QQ 群入口</span></li>
+          <li><span class="check">✓</span><span>独立数据目录与独立更新清单</span></li>
+          <li><span class="check">✓</span><span>一个便携版 EXE，可直接发群</span></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h2>不包含 / 需要先确认</h2>
+        <p>7.5 元是基础品牌定制，不包含新增大型功能、重写界面、服务器托管或 Minecraft 游戏本体。</p>
+        <ul class="list">
+          <li><span class="check">•</span><span>需要你提供名称、图标/背景素材和链接</span></li>
+          <li><span class="check">•</span><span>素材版权由提供方负责，或使用可商用素材</span></li>
+          <li><span class="check">•</span><span>复杂功能、额外页面按工作量另行报价</span></li>
+          <li><span class="check">•</span><span>不制作盗版、外挂或绕过正版验证的版本</span></li>
+        </ul>
+        <p class="notice">当前为人工接单，制作前会先确认素材和需求；一般 1–3 天交付。</p>
+      </div>
+    </section>
+
+    <section class="card case">
+      <div class="case-body">
+        <span class="case-tag">成功案例</span>
+        <h2 style="margin-top:10px">商弦特供版 · SianhGheln</h2>
+        <p>按商弦市旗的红、深蓝、浅蓝配色制作，加入商弦官网、服务器地址和市歌入口，使用独立数据目录和独立更新检查。</p>
+        <div class="actions" style="margin-top:18px">
+          <a class="btn" style="background:var(--blue);color:#fff;border-color:var(--blue)" href="./sianhgheln/">查看商弦特供版</a>
+          <a class="btn ghost" style="background:#fff;color:var(--deep);border-color:var(--line)" href="./download.html">下载标准版</a>
+        </div>
+        <p class="notice">商弦市旗、市歌与相关素材版权归商弦团队；此案例用于展示定制效果。</p>
+      </div>
+      <div class="case-media" role="img" aria-label="商弦特供版背景"></div>
+    </section>
+
+    <section class="card" style="margin-top:16px">
+      <h2>定制流程</h2>
+      <div class="steps">
+        <div class="step"><b>01 联系</b><span>邮件说明名称、用途和想要的风格。</span></div>
+        <div class="step"><b>02 确认</b><span>确认素材、链接和 7.5 元费用。</span></div>
+        <div class="step"><b>03 制作</b><span>完成品牌替换、打包和自测。</span></div>
+        <div class="step"><b>04 交付</b><span>发便携版 EXE，并提供独立更新页。</span></div>
+      </div>
+      <p class="notice">定制咨询：<a href="mailto:EMCLsupport2026@163.com">EMCLsupport2026@163.com</a> · 也可在商弦群联系维护者。付款前请先确认需求和交付内容。</p>
+    </section>
+  </main>
+
+  <footer>
+    <span>© 2026 EMCL Studio · 定制版本服务</span>
+    <span>与 Mojang Studios、Microsoft 无隶属关系 · <a href="./terms.html">条款</a> · <a href="./privacy.html">隐私</a></span>
+  </footer>
+</div>
+</body>
+</html>

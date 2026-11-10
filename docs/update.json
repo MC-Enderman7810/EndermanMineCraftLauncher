@@ -1,12 +1,11 @@
 {
-  "version": "1.26.26.06",
+  "version": "1.26.26.09",
   "releaseDate": "2026-10-31",
   "notes": [
-    "发布版加入 7 种界面语言",
-    "默认使用已通过 Mojang allowlist 的自有 appID 登录",
-    "顶栏新增官网入口，错误提示可发送到支持邮箱",
-    "更新清单和公告使用 emcl.life"
+    "所有版本加入 Steve / Alex 模型选择",
+    "安装包改为 emcl.life 直接下载",
+    "皮肤库、衣层开关和商弦特供版同步更新"
   ],
-  "url": "https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases",
-  "downloadUrl": "https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/latest"
+  "url": "https://www.emcl.life/download.html",
+  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.09.exe"
 }

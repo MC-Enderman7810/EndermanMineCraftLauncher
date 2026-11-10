@@ -1,10 +1,10 @@
 {
   "announcements": [
     {
-      "id": "2026-10-31-sianh-1.26.26.08",
+      "id": "2026-10-31-sianh-1.26.26.09",
       "date": "2026-10-31",
-      "title": "商弦特供版 1.26.26.08 已发布",
-      "body": "皮肤库、Steve/Alex 模型和衣层开关已加入商弦特供版。启动器会从 emcl.life/sianhgheln 检查商弦特供版更新。",
+      "title": "商弦特供版 1.26.26.09 已发布",
+      "body": "商弦特供版加入 Steve/Alex 模型选择和皮肤库更新，安装包改为 emcl.life 直接下载，更新从 emcl.life/sianhgheln 检查。",
       "pinned": true,
       "url": "https://www.emcl.life/sianhgheln/",
       "tag": "更新",

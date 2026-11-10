@@ -1,14 +1,13 @@
 {
-  "version": "1.26.26.08",
+  "version": "1.26.26.09",
   "releaseDate": "2026-10-31",
   "notes": [
-    "皮肤库：仅正面预览，推荐皮肤来自 SkinMC 社区",
     "新增 Steve / Alex 模型选择",
-    "新增帽子、外套、袖子、裤腿显示开关",
-    "支持上传本地皮肤与切换披风",
-    "保留商弦主题、官网和市歌入口"
+    "皮肤库：仅正面预览、SkinMC 社区推荐、本地上传、披风切换",
+    "帽子、外套、袖子、裤腿显示开关",
+    "商弦特供版独立更新检查"
   ],
   "url": "https://www.emcl.life/sianhgheln/",
-  "downloadUrl": "https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/download/v1.26.26.08-sianh/EMCL-SianhGheln-1.26.26.08.exe",
-  "sha256": "2D6DF713E36114FA8C8F9FFC8AC07A3EAC36B70B88098664DDE9DA57B07FA685"
+  "downloadUrl": "https://www.emcl.life/downloads/EMCL-SianhGheln-1.26.26.09.exe",
+  "sha256": "A1FE148CF86A25A12AE96B6DF76ED29A4E95AF6AD1ED75CEEF9B58857210644B"
 }
