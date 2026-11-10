@@ -93,15 +93,18 @@
         <div class="kv"><span>更新方式</span><b>开发者版启动器检查更新</b></div>
         <div class="kv"><span>更新清单</span><b><a href="update.json">update.json</a></b></div>
         <div class="actions">
-          <a class="btn" href="update.json">查看更新清单</a>
+          <a class="btn" href="../downloads/dev/EMCL-Dev-Portable-1.26.25.22.exe">下载开发者版</a>
+          <a class="btn ghost" href="update.json">查看更新清单</a>
           <a class="btn ghost" href="../download.html">稳定版下载</a>
         </div>
-        <p class="note">开发者版二进制不在公开网站分发；请通过内部构建渠道获取。启动器会读取此目录的 <code>update.json</code> 检查新版本。</p>
+        <p class="note">开发者版下载仅在本页通过密码后显示。启动器会读取此目录的 <code>update.json</code> 检查新版本。</p>
+        <p class="note">SHA256：<code style="word-break:break-all">4155B65561F0636F330E0EA0D32D3964268A36C6548BEF995FCBC574472DE2E8</code></p>
       </div>
 
       <div class="card">
         <h2>最新更新</h2>
         <ul class="log">
+          <li><b>2026-10-31 · 1.26.25.22kfz</b>所有版本加入 Steve / Alex 模型选择，开发者版提供直链下载。</li>
           <li><b>2026-10-31 · 1.26.25.20kfz</b>重启皮肤库：仅正面预览、8 款原创推荐皮肤、本地皮肤上传和披风切换。</li>
           <li><b>2026-10-31 · 1.26.25.15kfz</b>开发者更新通道接入 emcl.life；新增“刷新公告和更新”，移除皮肤页面、3D 皮肤和披风入口。</li>
           <li><b>2026-10-25 · 1.26.25.15kfz</b>Mojang appID 通过 allowlist，开发者版切换到自有 Azure appID。</li>
@@ -124,7 +127,7 @@
 
 <script>
   (function () {
-    var PASSWORD_HASH = '3cf8825da8ff0a73366013acda02684c394d0008dcbbcf2978f24419a5482a36';
+    var PASSWORD_HASH = '60eadcd61fd6f3b954705267676239a7d26c428e9a0c5894a06ec47cbad7e242';
     var SESSION_KEY = 'emcl_dev_access_v1';
     var gate = document.getElementById('gate');
     var app = document.getElementById('devApp');
