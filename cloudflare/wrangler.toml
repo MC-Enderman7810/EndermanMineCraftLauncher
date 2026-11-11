@@ -1,0 +1,20 @@
+name = "emcl-api"
+main = "worker.js"
+compatibility_date = "2026-11-10"
+account_id = "13b96213a90492c9f731acbf0d86ce93"
+workers_dev = true
+routes = [
+  { pattern = "api.emcl.life", custom_domain = true }
+]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "emcl_feedback"
+database_id = "5b3fccf8-9a89-445e-a9a2-1ced79e29165"
+
+[[kv_namespaces]]
+binding = "KV"
+id = "08d29b818a57437a90fb6eefa3347763"
+
+[vars]
+ALLOWED_ORIGIN = "https://www.emcl.life"

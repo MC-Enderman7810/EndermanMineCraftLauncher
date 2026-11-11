@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>反馈 · EMCL</title>
+  <meta name="description" content="提交 EMCL 发布版或商弦特供版的问题与建议，需填写邮箱以便回复。">
+  <style>
+    :root { --blue:#2F7FD1; --deep:#0B2B52; --ink:#14243A; --muted:#60758C; --line:#D8E4F2; --paper:#F4F8FD; --green:#1D9A6C; --red:#B33A3A; }
+    * { box-sizing:border-box; }
+    body { margin:0; color:var(--ink); background:var(--paper); font-family:"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif; }
+    a { color:var(--blue); text-decoration:none; }
+    .wrap { max-width:860px; margin:0 auto; padding:0 24px; }
+    header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:20px 0; }
+    .brand { display:flex; align-items:center; gap:10px; font-weight:800; }
+    .gem { width:32px; height:32px; border-radius:9px; background:linear-gradient(145deg,#67D5FF,#2F7FD1 58%,#8B5CF6); }
+    nav { display:flex; gap:16px; font-size:13px; font-weight:700; } nav a { color:var(--muted); }
+    h1 { font-size:clamp(34px,6vw,50px); margin:26px 0 8px; letter-spacing:-1.2px; }
+    .lead { color:var(--muted); line-height:1.8; margin:0 0 20px; }
+    .card { background:#fff; border:1px solid var(--line); border-radius:16px; padding:24px; box-shadow:0 12px 34px rgba(0,31,77,.06); }
+    .row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .field { margin-bottom:14px; }
+    label { display:block; font-size:12px; font-weight:800; margin-bottom:6px; }
+    .req { color:var(--red); }
+    input,select,textarea { width:100%; border:1px solid var(--line); border-radius:9px; padding:10px 12px; font:inherit; font-size:13px; color:var(--ink); background:#FBFDFF; outline:none; }
+    input:focus,select:focus,textarea:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(47,127,209,.12); }
+    textarea { min-height:150px; resize:vertical; line-height:1.7; }
+    .hint { font-size:11px; color:var(--muted); line-height:1.7; margin-top:5px; }
+    .btn { display:inline-flex; align-items:center; justify-content:center; min-height:44px; padding:0 20px; border-radius:10px; border:0; background:var(--blue); color:#fff; font-size:14px; font-weight:800; cursor:pointer; }
+    .btn:hover { background:#1D5FA8; }
+    .btn[disabled] { opacity:.6; cursor:wait; }
+    .status { margin-top:14px; font-size:13px; line-height:1.8; display:none; padding:11px 13px; border-radius:9px; }
+    .status.ok { display:block; background:#EDFBF4; color:#176B4A; }
+    .status.err { display:block; background:#FFF1F1; color:#9B2C2C; }
+    .note { font-size:11px; color:var(--muted); line-height:1.8; margin-top:16px; }
+    footer { padding:24px 0 36px; color:var(--muted); font-size:11px; }
+    @media(max-width:700px){ .row { grid-template-columns:1fr; } nav { display:none; } }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="brand" href="./index.html"><span class="gem"></span><span>EMCL</span></a>
+    <nav>
+      <a href="./index.html">首页</a>
+      <a href="./download.html">下载</a>
+      <a href="./history.html">历史版本</a>
+      <a href="./announcements.html">公告</a>
+      <a href="./custom.html">定制版本</a>
+    </nav>
+  </header>
+
+  <main>
+    <h1>反馈</h1>
+    <p class="lead">发布版和商弦特供版共用这个反馈入口。请留下邮箱，方便我们回复；不会公开你的邮箱。</p>
+
+    <form class="card" id="feedbackForm">
+      <div class="row">
+        <div class="field">
+          <label for="app">版本 <span class="req">*</span></label>
+          <select id="app">
+            <option value="EMCL 发布版">EMCL 发布版</option>
+            <option value="商弦特供版">商弦特供版</option>
+            <option value="开发者版">开发者版</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="version">版本号</label>
+          <input id="version" placeholder="例如 1.26.26.09" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="name">称呼</label>
+          <input id="name" maxlength="80" placeholder="怎么称呼你（可选）" />
+        </div>
+        <div class="field">
+          <label for="email">邮箱 <span class="req">*</span></label>
+          <input id="email" type="email" required maxlength="200" placeholder="用于回复，不会公开" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="type">问题类型</label>
+        <select id="type">
+          <option>启动失败</option>
+          <option>安装失败</option>
+          <option>模组 / 光影问题</option>
+          <option>界面问题</option>
+          <option>皮肤 / 披风问题</option>
+          <option>功能建议</option>
+          <option>其他</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="message">问题或建议 <span class="req">*</span></label>
+        <textarea id="message" required maxlength="5000" placeholder="请写清楚复现步骤、现象和期望结果。"></textarea>
+        <div class="hint">不要填写账户密码、Token 或支付信息。</div>
+      </div>
+
+      <button class="btn" id="submitBtn" type="submit">提交反馈</button>
+      <div class="status" id="status" role="status"></div>
+      <p class="note">提交后会进入 EMCL 反馈收件箱。需要附带日志时，请先把日志复制到内容里；不要上传账户凭据。</p>
+    </form>
+  </main>
+
+  <footer>© 2026 EMCL Studio · 与 Mojang Studios、Microsoft 无隶属关系</footer>
+</div>
+
+<script>
+(function () {
+  var form = document.getElementById('feedbackForm');
+  var btn = document.getElementById('submitBtn');
+  var status = document.getElementById('status');
+  var params = new URLSearchParams(location.search);
+  if (params.get('app')) {
+    var app = params.get('app');
+    var opt = Array.from(document.getElementById('app').options).find(function (o) { return o.value === app; });
+    if (opt) document.getElementById('app').value = app;
+  }
+  if (params.get('version')) document.getElementById('version').value = params.get('version');
+  if (params.get('type')) {
+    var type = document.getElementById('type');
+    var t = Array.from(type.options).find(function (o) { return o.value === params.get('type'); });
+    if (t) type.value = t.value;
+  }
+
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var email = document.getElementById('email').value.trim();
+    var message = document.getElementById('message').value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      status.className = 'status err'; status.textContent = '请填写有效邮箱。'; return;
+    }
+    if (!message) {
+      status.className = 'status err'; status.textContent = '请填写问题或建议。'; return;
+    }
+    btn.disabled = true; btn.textContent = '提交中…';
+    status.className = 'status'; status.textContent = '';
+    try {
+      var res = await fetch('https://api.emcl.life/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          app: document.getElementById('app').value,
+          version: document.getElementById('version').value.trim(),
+          name: document.getElementById('name').value.trim(),
+          email: email,
+          type: document.getElementById('type').value,
+          message: message
+        })
+      });
+      var data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || '提交失败');
+      status.className = 'status ok';
+      status.textContent = '反馈已提交，编号：' + data.id + '。我们会通过邮箱回复。';
+      form.reset();
+    } catch (err) {
+      status.className = 'status err';
+      status.textContent = err.message || '提交失败，请稍后再试。';
+    } finally {
+      btn.disabled = false; btn.textContent = '提交反馈';
+    }
+  });
+})();
+</script>
+</body>
+</html>
