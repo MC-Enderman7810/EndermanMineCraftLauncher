@@ -15,6 +15,10 @@ export default {
     }
 
     try {
+      if (url.pathname === '/com1' || url.pathname === '/com1/') {
+        return Response.redirect('https://www.emcl.life/remote.html', 302);
+      }
+
       if (url.pathname === '/api/health') {
         return json({ ok: true, service: 'emcl-api', time: Date.now() }, cors);
       }
