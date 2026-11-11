@@ -110,6 +110,30 @@
     .feature-row li.guide-item::before { display: none; }
     .feature-row li.guide-item a { font-size: 11px; font-weight: 800; }
 
+    .special {
+      position: relative; overflow: hidden;
+      display: flex; align-items: center; justify-content: space-between; gap: 24px;
+      margin: 6px 0 30px; padding: 24px 28px; border-radius: 16px;
+      background: linear-gradient(120deg, #123D68 0%, #1F6FCA 58%, #3E9FE0 100%);
+      color: #fff; box-shadow: 0 18px 44px rgba(31,111,202,.22);
+    }
+    .special::after {
+      content: ""; position: absolute; width: 240px; height: 240px; right: -60px; bottom: -110px;
+      border-radius: 50%; background: rgba(255,255,255,.10);
+    }
+    .special-copy { position: relative; z-index: 1; }
+    .special-kicker { font-size: 10px; font-weight: 900; letter-spacing: 1.5px; color: #CDE8FF; }
+    .special h2 { margin: 8px 0 6px; font-size: clamp(22px, 3vw, 30px); letter-spacing: -.8px; color: #fff; }
+    .special p { margin: 0; max-width: 620px; color: rgba(255,255,255,.80); font-size: 12px; line-height: 1.8; }
+    .special .actions { margin-top: 14px; }
+    .special .btn { background: #fff; color: var(--blue-dark); }
+    .special .btn:hover { background: #EAF4FF; }
+    .special .btn.ghost { background: transparent; color: #fff; border-color: rgba(255,255,255,.42); }
+    .special .btn.ghost:hover { background: rgba(255,255,255,.12); }
+    .special-meta { margin-top: 10px; color: rgba(255,255,255,.62); font-size: 10px; }
+    .special-mark { position: relative; z-index: 1; text-align: right; font-size: 28px; font-weight: 900; letter-spacing: -1px; line-height: 1.1; white-space: nowrap; }
+    .special-mark small { display: block; margin-top: 4px; color: rgba(255,255,255,.65); font-size: 9px; font-weight: 700; letter-spacing: 1.8px; }
+
     .versions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 18px; }
     .version-card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
     .version-card .label { font-size: 9px; font-weight: 900; letter-spacing: 1.2px; color: var(--blue); }
@@ -151,6 +175,8 @@
       .feature-row { grid-template-columns: 32px minmax(0,1fr); }
       .feature-row ul { grid-column: 2; }
       .versions, .steps { grid-template-columns: 1fr; }
+      .special { display: block; padding: 20px; }
+      .special-mark { margin-top: 14px; text-align: left; }
       .custom { grid-template-columns: 1fr; }
       .download { display: block; }
       .download .actions { margin-top: 14px; }
@@ -179,6 +205,7 @@
       <a href="./download.html">下载</a>
       <a href="./announcements.html">公告</a>
       <a href="./feedback/">反馈</a>
+      <a href="./sianhgheln/">商弦</a>
       <a href="./custom.html">定制</a>
       <a href="https://github.com/MC-Enderman7810/EndermanMineCraftLauncher" target="_blank" rel="noopener">GitHub</a>
     </nav>
@@ -214,6 +241,20 @@
         <a class="index-row" href="#f7"><i>07</i><b>日志与设置</b><span>Java / 内存 / 目录</span></a>
         <a class="index-row" href="#f8"><i>08</i><b>公告与更新</b><span>三通道 / 反馈</span></a>
       </aside>
+    </section>
+
+    <section class="special" aria-label="商弦特供版">
+      <div class="special-copy">
+        <div class="special-kicker">SIANH GHELN · 特供版本</div>
+        <h2>商弦特供版</h2>
+        <p>给商弦玩家准备的独立版本：商弦主题入口、独立更新通道、独立下载。功能和正式版同步，但保留商弦自己的外观与服务器入口。</p>
+        <div class="actions">
+          <a class="btn" href="./downloads/EMCL-SianhGheln-1.26.26.10.exe">下载商弦特供版</a>
+          <a class="btn ghost" href="./sianhgheln/">查看商弦页面</a>
+        </div>
+        <div class="special-meta">版本 1.26.26.10 · 更新源 emcl.life/sianhgheln/update.json</div>
+      </div>
+      <div class="special-mark" aria-hidden="true">商弦<small>SIANH GHELN</small></div>
     </section>
 
     <section class="section" id="features">
