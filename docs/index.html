@@ -296,14 +296,18 @@
     }
     @media (max-width: 620px) {
       .wrap { width: calc(100% - 32px); }
-      header { grid-template-columns: minmax(0, 1fr) auto; row-gap: 7px; }
-      .brand { min-width: 0; }
+      header {
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas: "brand controls" "nav nav";
+        row-gap: 7px;
+      }
+      .brand { grid-area: brand; min-width: 0; }
       .brand small { display: none; }
-      .site-controls { gap: 5px; }
+      .site-controls { grid-area: controls; gap: 5px; }
       .lang-select { max-width: 112px; font-size: 10px; }
       .theme-toggle { width: 30px; height: 30px; }
       nav {
-        display: flex; grid-column: 1 / -1; justify-content: flex-start;
+        display: flex; grid-area: nav; justify-content: flex-start;
         gap: 14px; overflow-x: auto; padding: 2px 0 4px;
         scrollbar-width: none;
       }
