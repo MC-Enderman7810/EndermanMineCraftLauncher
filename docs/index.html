@@ -106,6 +106,9 @@
     .feature-row ul { margin: 0; padding: 0; list-style: none; }
     .feature-row li { position: relative; padding: 4px 0 4px 14px; color: #4C657B; font-size: 11px; line-height: 1.65; }
     .feature-row li::before { content: ""; position: absolute; left: 0; top: 11px; width: 4px; height: 4px; border-radius: 50%; background: #9DC7EE; }
+    .feature-row li.guide-item { padding: 8px 0 0; }
+    .feature-row li.guide-item::before { display: none; }
+    .feature-row li.guide-item a { font-size: 11px; font-weight: 800; }
 
     .versions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 18px; }
     .version-card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
@@ -172,6 +175,7 @@
     </a>
     <nav>
       <a href="#features">功能</a>
+      <a href="./guides/index.html">说明</a>
       <a href="./download.html">下载</a>
       <a href="./announcements.html">公告</a>
       <a href="./feedback/">反馈</a>
@@ -229,6 +233,7 @@
             <li>版本隔离，各自保留模组和配置</li>
             <li>自动检测 Java，可手动指定路径</li>
             <li>启动前显示内存和版本信息</li>
+          <li class="guide-item"><a href="./guides/install.html">查看完整使用说明 →</a></li>
           </ul>
         </article>
 
@@ -243,6 +248,7 @@
             <li>按版本和加载器筛选资源</li>
             <li>下载前显示文件名和来源</li>
             <li>资源放入独立目录，便于排查</li>
+          <li class="guide-item"><a href="./guides/resources.html">查看完整使用说明 →</a></li>
           </ul>
         </article>
 
@@ -257,6 +263,7 @@
             <li>整合包独立目录和独立设置</li>
             <li>导入后可继续添加或移除模组</li>
             <li>适合服务器整合包和活动包</li>
+          <li class="guide-item"><a href="./guides/modpacks.html">查看完整使用说明 →</a></li>
           </ul>
         </article>
 
@@ -271,6 +278,7 @@
             <li>正版账户使用 Microsoft OAuth</li>
             <li>离线档案自定义用户名</li>
             <li>账户信息保存在本地</li>
+          <li class="guide-item"><a href="./guides/accounts.html">查看完整使用说明 →</a></li>
           </ul>
         </article>
 
@@ -285,6 +293,7 @@
             <li>8 款推荐皮肤</li>
             <li>本地皮肤上传</li>
             <li>披风列表与切换</li>
+          <li class="guide-item"><a href="./guides/skins.html">查看完整使用说明 →</a></li>
           </ul>
         </article>
 
@@ -299,6 +308,7 @@
             <li>一键启动 / 停止本地服务端</li>
             <li>RCON 远程命令</li>
             <li>服务端目录与配置集中管理</li>
+          <li class="guide-item"><a href="./guides/servers.html">查看完整使用说明 →</a></li>
           </ul>
         </article>
 
@@ -313,6 +323,7 @@
             <li>日志页保留启动输出</li>
             <li>Java 路径和内存上限可调</li>
             <li>游戏目录可自定义</li>
+          <li class="guide-item"><a href="./guides/settings.html">查看完整使用说明 →</a></li>
           </ul>
         </article>
 
@@ -327,6 +338,7 @@
             <li>正式版 / 商弦版 / 开发者版独立更新</li>
             <li>更新前显示版本说明</li>
             <li>反馈附带应用名和版本号</li>
+          <li class="guide-item"><a href="./guides/updates.html">查看完整使用说明 →</a></li>
           </ul>
         </article>
       </div>
