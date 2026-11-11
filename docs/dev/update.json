@@ -1,10 +1,10 @@
 {
-  "version": "1.26.25.22kfz",
+  "version": "1.26.25.23kfz",
   "releaseDate": "2026-10-31",
   "notes": [
-    "皮肤库新增 Steve / Alex 模型选择",
-    "所有上传和推荐皮肤均可选择模型",
-    "帽子、外套、袖子、裤腿显示开关"
+    "发布版和商弦特供版反馈按钮接入网站反馈页",
+    "开发者反馈收件箱和公告发布已上线",
+    "同步最新安装包直链和模型/衣层功能"
   ],
   "url": "https://www.emcl.life/dev/",
   "downloadUrl": "https://www.emcl.life/dev/"

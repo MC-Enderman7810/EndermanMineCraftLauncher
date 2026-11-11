@@ -1,6 +1,6 @@
 {
   "name": "emcl-launcher",
-  "version": "1.26.26.09",
+  "version": "1.26.26.10",
   "description": "EMCL - a blue PCL2-style Minecraft Java launcher for Windows",
   "main": "src/main/main.js",
   "author": "EMCL",

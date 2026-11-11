@@ -1,11 +1,11 @@
 {
-  "version": "1.26.26.09",
+  "version": "1.26.26.10",
   "releaseDate": "2026-10-31",
   "notes": [
-    "所有版本加入 Steve / Alex 模型选择",
-    "安装包改为 emcl.life 直接下载",
-    "皮肤库、衣层开关和商弦特供版同步更新"
+    "发布版和商弦特供版的反馈按钮改为打开 emcl.life 网页反馈",
+    "反馈表单强制填写邮箱，进入开发者反馈收件箱",
+    "同步最新皮肤、模型和衣层功能"
   ],
   "url": "https://www.emcl.life/download.html",
-  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.09.exe"
+  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.10.exe"
 }

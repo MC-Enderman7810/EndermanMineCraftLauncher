@@ -3572,25 +3572,13 @@ function buildFeedbackReport() {
 }
 
 function openFeedbackModal() {
-  const previewLines = (state.latestLog || '').split(/\r?\n/).filter(Boolean).length;
-  openModal({
-    title: '提交错误 / 反馈',
-    desc: '生成一份带环境信息和日志的报告。可以直接复制，或打开 GitHub 预填 Issue 后提交。',
-    className: 'feedback-modal',
-    body: '<div class="field"><label>问题类型</label><select class="select" id="feedbackType">' +
-      '<option>启动失败</option><option>安装失败</option><option>模组 / 光影问题</option>' +
-      '<option>界面问题</option><option>其他</option></select></div>' +
-      '<div class="field"><label>标题</label><input class="input" id="feedbackTitle" maxlength="100" placeholder="例如：启动 Forge 1.20.1 时报错" /></div>' +
-      '<div class="field"><label>复现步骤 / 问题描述</label><textarea class="input" id="feedbackDetail" rows="5" placeholder="1. 打开...&#10;2. 点击...&#10;3. 出现..."></textarea></div>' +
-      '<label class="check-line"><input type="checkbox" id="feedbackIncludeLog" checked />附加最近启动日志（约 ' +
-      (previewLines || 0) + ' 行，自动截断）</label>' +
-      '<div class="card-subtitle" style="margin-top:8px">报告不包含账户 Token；只包含版本、Java、系统、当前游戏版本和日志尾部。</div>',
-    actions: [
-      { label: '取消', kind: 'ghost', action: 'close-modal' },
-      { label: '复制报告', kind: 'ghost', action: 'copy-feedback' },
-      { label: '打开 GitHub 提交', kind: 'primary', action: 'submit-feedback' }
-    ]
-  });
+  const version = (state.appVersion || (typeof displayVersion === 'function' ? displayVersion() : '')).replace(/^v/, '');
+  const url = 'https://www.emcl.life/feedback/?app=' + encodeURIComponent('EMCL 发布版') +
+    '&version=' + encodeURIComponent(version);
+  api.openExternal(url).then((res) => {
+    if (res && res.ok === false) toast(res.error || '打开反馈页面失败', 'error');
+    else toast('已打开网页反馈，请填写邮箱后提交', 'success');
+  }).catch((e) => toast(e.message || '打开反馈页面失败', 'error'));
 }
 
 async function copyFeedbackReport() {
