@@ -71,6 +71,14 @@
     .btn:hover { background: var(--blue-dark); text-decoration: none; }
     .btn.ghost { background: #fff; color: var(--blue-dark); border-color: var(--line); }
     .btn.ghost:hover { background: var(--blue-soft); }
+    .btn.sianh-btn {
+      background: linear-gradient(135deg, #C61A32 0%, #9B1B3A 18%, #123D68 52%, #2F7FD1 78%, #8FCBFF 100%);
+      border-color: rgba(255,255,255,.22);
+      box-shadow: 0 7px 18px rgba(18,61,104,.22);
+      color: #fff;
+      text-shadow: 0 1px 2px rgba(0,0,0,.28);
+    }
+    .btn.sianh-btn:hover { filter: brightness(1.08); background: linear-gradient(135deg, #D21D37 0%, #A61E40 18%, #16446F 52%, #3389DD 78%, #9AD2FF 100%); }
     .btn.store { background: #0F2B46; }
     .btn.store:hover { background: #173D61; }
 
@@ -221,13 +229,6 @@
     </nav>
   </header>
 
-  <a class="sianh-strip" href="./sianhgheln/">
-    <span class="strip-label">特供版</span>
-    <b>商弦特供版 1.26.26.10 已发布</b>
-    <span class="strip-note">独立主题 · 独立更新 · 商弦入口</span>
-    <span class="strip-action">查看商弦版 →</span>
-  </a>
-
   <main>
     <section class="hero">
       <div>
@@ -236,6 +237,7 @@
         <p class="lead">EMCL 把安装游戏、下载资源、登录账户、管理模组与整合包、换皮肤、开本地服务器和检查更新放在同一个界面里。下面按功能说明，不按主题堆图。</p>
         <div class="actions">
           <a class="btn" href="./download.html">下载 EMCL <span>↓</span></a>
+          <a class="btn sianh-btn" href="./sianhgheln/">商弦特供版 <span>→</span></a>
           <a class="btn store" href="https://apps.microsoft.com/detail/9PHPTWV56WXB" target="_blank" rel="noopener">Microsoft Store</a>
           <a class="btn ghost" href="#features">查看功能清单</a>
         </div>
@@ -258,20 +260,6 @@
         <a class="index-row" href="#f7"><i>07</i><b>日志与设置</b><span>Java / 内存 / 目录</span></a>
         <a class="index-row" href="#f8"><i>08</i><b>公告与更新</b><span>三通道 / 反馈</span></a>
       </aside>
-    </section>
-
-    <section class="special" aria-label="商弦特供版">
-      <div class="special-copy">
-        <div class="special-kicker">SIANH GHELN · 特供版本</div>
-        <h2>商弦特供版</h2>
-        <p>给商弦玩家准备的独立版本：商弦主题入口、独立更新通道、独立下载。功能和正式版同步，但保留商弦自己的外观与服务器入口。</p>
-        <div class="actions">
-          <a class="btn" href="./downloads/EMCL-SianhGheln-1.26.26.10.exe">下载商弦特供版</a>
-          <a class="btn ghost" href="./sianhgheln/">查看商弦页面</a>
-        </div>
-        <div class="special-meta">版本 1.26.26.10 · 更新源 emcl.life/sianhgheln/update.json</div>
-      </div>
-      <div class="special-mark" aria-hidden="true">商弦<small>SIANH GHELN</small></div>
     </section>
 
     <section class="section" id="features">
