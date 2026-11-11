@@ -24,6 +24,7 @@
     html { scroll-behavior: smooth; }
     body {
       margin: 0;
+      overflow-x: hidden;
       font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
       color: var(--ink);
       background:
@@ -55,7 +56,7 @@
     nav a { color: var(--muted); font-weight: 650; }
     nav a:hover { color: var(--blue-dark); text-decoration: none; }
     .hero {
-      display: grid; grid-template-columns: minmax(0, 1.06fr) minmax(360px, .94fr);
+      display: grid; grid-template-columns: minmax(0, 1.06fr) minmax(320px, .94fr);
       gap: 46px; align-items: center; padding: 52px 0 34px;
     }
     .kicker {
@@ -89,7 +90,7 @@
       background: rgba(255,255,255,.68); color: #47647E; font-size: 11px; font-weight: 750;
     }
 
-    .hero-art { position: relative; min-height: 380px; }
+    .hero-art { position: relative; min-width: 0; min-height: 380px; }
     .orb {
       position: absolute; border-radius: 50%; filter: blur(1px);
       background: radial-gradient(circle at 30% 25%, #8CC8FF, #2F7FD1 70%);
@@ -98,7 +99,7 @@
     .orb.one { width: 210px; height: 210px; right: -24px; top: -16px; }
     .orb.two { width: 110px; height: 110px; left: -16px; bottom: 30px; opacity: .10; }
     .app {
-      position: relative; z-index: 1; margin: 12px 12px 0 0;
+      position: relative; z-index: 1; width: 100%; max-width: 100%; margin: 12px 0 0 0;
       background: #fff; border: 1px solid var(--line); border-radius: 18px;
       box-shadow: 0 28px 80px rgba(22, 66, 110, .17);
       overflow: hidden; transform: rotate(-1.2deg);
@@ -114,7 +115,7 @@
     .app-side { background: linear-gradient(180deg, #1E63AC, #174D86); padding: 14px 9px; }
     .side-item { height: 30px; border-radius: 7px; background: rgba(255,255,255,.12); margin-bottom: 8px; }
     .side-item.active { background: #fff; }
-    .app-main { padding: 18px; background: linear-gradient(180deg, #F8FCFF, #EEF7FF); }
+    .app-main { min-width: 0; padding: 18px; background: linear-gradient(180deg, #F8FCFF, #EEF7FF); }
     .app-heading { display: flex; align-items: center; justify-content: space-between; }
     .app-heading b { font-size: 13px; }
     .online { font-size: 9px; color: #238A55; background: #E5F8EE; border-radius: 999px; padding: 4px 7px; font-weight: 800; }
