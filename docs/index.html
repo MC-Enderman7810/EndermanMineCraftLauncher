@@ -296,8 +296,20 @@
     }
     @media (max-width: 620px) {
       .wrap { width: calc(100% - 32px); }
-      nav { display: none; }
-      h1 { letter-spacing: -1.6px; }
+      header { grid-template-columns: minmax(0, 1fr) auto; row-gap: 7px; }
+      .brand { min-width: 0; }
+      .brand small { display: none; }
+      .site-controls { gap: 5px; }
+      .lang-select { max-width: 112px; font-size: 10px; }
+      .theme-toggle { width: 30px; height: 30px; }
+      nav {
+        display: flex; grid-column: 1 / -1; justify-content: flex-start;
+        gap: 14px; overflow-x: auto; padding: 2px 0 4px;
+        scrollbar-width: none;
+      }
+      nav::-webkit-scrollbar { display: none; }
+      nav a { white-space: nowrap; font-size: 12px; }
+      h1 { letter-spacing: -1.6px; font-size: 34px; }
       .section-head { display: block; }
       .section-head p { margin-top: 8px; }
       .feature-row { gap: 12px; }
