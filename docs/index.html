@@ -3,62 +3,383 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>EMCL Studio</title>
+  <title>EMCL - Enderman MineCraft Launcher</title>
+  <meta name="description" content="EMCL 是蓝色主题的 Minecraft Java 版启动器。支持微软/离线登录、Forge/Fabric/NeoForge、模组、光影、整合包、服务器、皮肤披风和自动更新。">
   <style>
-    :root { color-scheme: light; --blue:#2F7FD1; --ink:#172B3F; --muted:#63788C; --line:#DCE8F4; }
+    :root {
+      color-scheme: light;
+      --blue: #2F7FD1;
+      --blue-dark: #1D5FA8;
+      --blue-deep: #123D68;
+      --blue-soft: #EAF4FF;
+      --ink: #14283B;
+      --muted: #62788D;
+      --line: #D8E7F5;
+      --bg: #F3F8FE;
+      --white: #FFFFFF;
+      --green: #2DBE7E;
+      --shadow: 0 20px 60px rgba(31, 80, 130, .10);
+    }
     * { box-sizing: border-box; }
-    body { margin:0; font-family: "Segoe UI", "Microsoft YaHei", sans-serif; color:var(--ink); background:#F3F8FE; }
-    main { max-width: 780px; margin: 0 auto; padding: 72px 24px 56px; }
-    .badge { display:inline-block; padding:5px 10px; border-radius:999px; background:#E8F3FF; color:var(--blue); font-size:13px; font-weight:700; }
-    h1 { font-size: 42px; margin: 18px 0 10px; letter-spacing:-1px; }
-    p { line-height: 1.9; color:var(--muted); font-size: 16px; }
-    .card { background:#fff; border:1px solid var(--line); border-radius:18px; padding:26px; margin-top:28px; box-shadow:0 12px 36px rgba(31,80,130,.07); }
-    a { color:var(--blue); }
-    .links { display:flex; gap:18px; flex-wrap:wrap; margin-top:22px; font-size:15px; }
-    .cta { display:flex; gap:10px; flex-wrap:wrap; margin-top:24px; }
-    .btn { display:inline-flex; align-items:center; justify-content:center; min-height:42px; padding:0 18px;
-      border-radius:10px; background:var(--blue); color:#fff; font-size:14px; font-weight:700; }
-    .btn:hover { background:#1D5FA8; text-decoration:none; }
-    .btn.ghost { background:#fff; color:var(--blue); border:1px solid var(--line); }
-    footer { margin-top:42px; font-size:13px; color:#8A9BAC; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 86% 4%, #DCEFFF 0, rgba(220,239,255,0) 31%),
+        radial-gradient(circle at 4% 28%, #E8F5FF 0, rgba(232,245,255,0) 26%),
+        linear-gradient(180deg, #F9FCFF 0%, var(--bg) 58%, #EEF6FE 100%);
+      min-height: 100vh;
+    }
+    a { color: var(--blue); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .wrap { width: min(1160px, calc(100% - 48px)); margin: 0 auto; }
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 18px; padding: 24px 0;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; color: var(--ink); font-weight: 900; letter-spacing: -.4px; }
+    .brand:hover { text-decoration: none; }
+    .gem {
+      width: 32px; height: 32px; border-radius: 9px; position: relative;
+      background: linear-gradient(145deg, #65B4FF, #1F6FCA);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.55), 0 7px 16px rgba(47,127,209,.24);
+    }
+    .gem::after {
+      content: ""; position: absolute; inset: 8px 9px auto 8px; height: 7px;
+      border-radius: 3px; background: rgba(255,255,255,.55); transform: skewX(-18deg);
+    }
+    .brand small { display: block; font-size: 9px; color: var(--muted); letter-spacing: 1.5px; font-weight: 700; }
+    nav { display: flex; align-items: center; gap: 21px; font-size: 14px; }
+    nav a { color: var(--muted); font-weight: 650; }
+    nav a:hover { color: var(--blue-dark); text-decoration: none; }
+    .hero {
+      display: grid; grid-template-columns: minmax(0, 1.06fr) minmax(360px, .94fr);
+      gap: 46px; align-items: center; padding: 52px 0 34px;
+    }
+    .kicker {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 11px; border-radius: 999px;
+      background: var(--blue-soft); color: var(--blue-dark);
+      font-size: 12px; font-weight: 800;
+    }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 3px rgba(45,190,126,.14); }
+    h1 {
+      margin: 20px 0 14px; font-size: clamp(42px, 6vw, 70px);
+      line-height: 1.02; letter-spacing: -3.2px; font-weight: 900;
+    }
+    h1 span { color: var(--blue); }
+    .lead { margin: 0; max-width: 640px; color: var(--muted); font-size: 16px; line-height: 1.9; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 24px; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      min-height: 44px; padding: 0 18px; border-radius: 10px;
+      background: var(--blue); color: #fff; border: 1px solid transparent;
+      font-size: 13px; font-weight: 800; cursor: pointer;
+    }
+    .btn:hover { background: var(--blue-dark); text-decoration: none; }
+    .btn.ghost { background: rgba(255,255,255,.76); color: var(--blue-dark); border-color: var(--line); }
+    .btn.ghost:hover { background: #fff; }
+    .btn.store { background: #0F2B46; }
+    .btn.store:hover { background: #173D61; }
+    .meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 20px; }
+    .chip {
+      padding: 7px 10px; border-radius: 8px; border: 1px solid var(--line);
+      background: rgba(255,255,255,.68); color: #47647E; font-size: 11px; font-weight: 750;
+    }
+
+    .hero-art { position: relative; min-height: 380px; }
+    .orb {
+      position: absolute; border-radius: 50%; filter: blur(1px);
+      background: radial-gradient(circle at 30% 25%, #8CC8FF, #2F7FD1 70%);
+      opacity: .16;
+    }
+    .orb.one { width: 210px; height: 210px; right: -24px; top: -16px; }
+    .orb.two { width: 110px; height: 110px; left: -16px; bottom: 30px; opacity: .10; }
+    .app {
+      position: relative; z-index: 1; margin: 12px 12px 0 0;
+      background: #fff; border: 1px solid var(--line); border-radius: 18px;
+      box-shadow: 0 28px 80px rgba(22, 66, 110, .17);
+      overflow: hidden; transform: rotate(-1.2deg);
+    }
+    .app-bar {
+      display: flex; align-items: center; gap: 7px;
+      height: 34px; padding: 0 12px; background: #F4F9FF; border-bottom: 1px solid #E5EFF9;
+    }
+    .app-bar i { width: 8px; height: 8px; border-radius: 50%; background: #C7D9EA; display: block; }
+    .app-bar i:first-child { background: #6FAFEA; }
+    .app-bar span { margin-left: auto; font-size: 10px; color: #8196AA; font-weight: 700; }
+    .app-body { display: grid; grid-template-columns: 58px 1fr; min-height: 330px; }
+    .app-side { background: linear-gradient(180deg, #1E63AC, #174D86); padding: 14px 9px; }
+    .side-item { height: 30px; border-radius: 7px; background: rgba(255,255,255,.12); margin-bottom: 8px; }
+    .side-item.active { background: #fff; }
+    .app-main { padding: 18px; background: linear-gradient(180deg, #F8FCFF, #EEF7FF); }
+    .app-heading { display: flex; align-items: center; justify-content: space-between; }
+    .app-heading b { font-size: 13px; }
+    .online { font-size: 9px; color: #238A55; background: #E5F8EE; border-radius: 999px; padding: 4px 7px; font-weight: 800; }
+    .play-card {
+      margin-top: 14px; border-radius: 12px; padding: 14px;
+      background: linear-gradient(135deg, #2F7FD1, #1B67B8); color: #fff;
+    }
+    .play-card small { font-size: 9px; opacity: .72; letter-spacing: 1px; }
+    .play-card b { display: block; margin: 5px 0 10px; font-size: 17px; }
+    .play-btn { display: inline-flex; align-items: center; justify-content: center; width: 100%; height: 32px; border-radius: 7px; background: #fff; color: #1D5FA8; font-size: 11px; font-weight: 900; }
+    .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 9px 0; border-bottom: 1px solid #E4EFF9; font-size: 10px; }
+    .row:last-child { border-bottom: 0; }
+    .row span { color: #6A8095; }
+    .row b { font-size: 10px; }
+    .tag { font-size: 8px; padding: 3px 6px; border-radius: 5px; background: #EAF4FF; color: #2F7FD1; font-weight: 800; }
+    .art-note {
+      position: absolute; z-index: 2; right: -4px; bottom: 0; padding: 9px 12px;
+      background: rgba(255,255,255,.92); border: 1px solid var(--line); border-radius: 10px;
+      box-shadow: 0 12px 30px rgba(22,66,110,.12); font-size: 10px; color: #53708A; font-weight: 700;
+    }
+
+    .stats {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+      background: var(--line); border: 1px solid var(--line); border-radius: 14px;
+      overflow: hidden; margin: 8px 0 54px;
+    }
+    .stat { background: rgba(255,255,255,.78); padding: 17px 18px; }
+    .stat b { display: block; font-size: 17px; letter-spacing: -.4px; }
+    .stat span { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; }
+    .section { padding: 8px 0 54px; }
+    .section-head { display: flex; align-items: end; justify-content: space-between; gap: 18px; margin-bottom: 20px; }
+    .section-head h2 { margin: 0; font-size: clamp(25px, 3vw, 34px); letter-spacing: -1.1px; }
+    .section-head p { margin: 0; max-width: 480px; color: var(--muted); font-size: 13px; line-height: 1.7; }
+    .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .feature {
+      background: rgba(255,255,255,.78); border: 1px solid var(--line);
+      border-radius: 14px; padding: 20px; min-height: 168px;
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+    .feature:hover { transform: translateY(-3px); border-color: #B9D8F5; box-shadow: var(--shadow); }
+    .icon {
+      width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center;
+      background: var(--blue-soft); color: var(--blue-dark); font-size: 15px; font-weight: 900;
+    }
+    .feature h3 { margin: 13px 0 7px; font-size: 15px; letter-spacing: -.2px; }
+    .feature p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.75; }
+
+    .flow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; counter-reset: step; }
+    .step { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 20px; position: relative; }
+    .step::before {
+      counter-increment: step; content: "0" counter(step);
+      font-size: 11px; font-weight: 900; color: var(--blue); letter-spacing: 1px;
+    }
+    .step h3 { margin: 10px 0 6px; font-size: 15px; }
+    .step p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.75; }
+
+    .custom {
+      display: grid; grid-template-columns: 1.2fr .8fr; gap: 18px;
+      background: linear-gradient(135deg, #FFFFFF, #F1F9FF);
+      border: 1px solid #BBD9F2; border-radius: 20px; padding: 28px;
+      box-shadow: var(--shadow);
+    }
+    .custom h2 { margin: 12px 0 8px; font-size: clamp(25px, 3vw, 34px); letter-spacing: -1px; }
+    .custom p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.8; }
+    .price { font-size: 36px; font-weight: 900; letter-spacing: -1.6px; color: var(--blue-dark); line-height: 1; }
+    .price small { font-size: 12px; color: var(--muted); letter-spacing: 0; font-weight: 600; }
+    .case {
+      margin-top: 14px; padding: 12px; border-radius: 10px;
+      background: rgba(255,255,255,.72); border: 1px solid var(--line); font-size: 12px; color: #506B83;
+    }
+    .case b { color: var(--ink); }
+
+    .updates { display: grid; grid-template-columns: 1.1fr .9fr; gap: 12px; }
+    .panel { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 22px; }
+    .panel h3 { margin: 0 0 12px; font-size: 16px; letter-spacing: -.2px; }
+    .update-row { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid #EDF4FB; font-size: 12px; }
+    .update-row b { font-size: 12px; }
+    .update-row span { color: var(--muted); }
+    .quick-links { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .quick {
+      display: flex; align-items: center; justify-content: space-between;
+      min-height: 38px; padding: 0 11px; border-radius: 8px;
+      background: #F5FAFF; border: 1px solid #E4EFF9; color: #365773;
+      font-size: 11px; font-weight: 750;
+    }
+    .quick:hover { background: #EAF4FF; text-decoration: none; }
+    footer { padding: 36px 0 42px; color: #8A9BAC; font-size: 12px; }
+    .footer-inner { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; border-top: 1px solid var(--line); padding-top: 20px; }
+    .footer-links { display: flex; gap: 16px; flex-wrap: wrap; }
+    .footer-links a { color: #6C8298; }
+
+    @media (max-width: 960px) {
+      .hero { grid-template-columns: 1fr; gap: 16px; padding-top: 36px; }
+      .hero-art { max-width: 620px; }
+      .features { grid-template-columns: 1fr 1fr; }
+      .custom { grid-template-columns: 1fr; }
+      .updates { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .wrap { width: calc(100% - 32px); }
+      header { padding: 18px 0; }
+      nav { display: none; }
+      h1 { letter-spacing: -2px; }
+      .stats { grid-template-columns: 1fr 1fr; margin-bottom: 40px; }
+      .features, .flow { grid-template-columns: 1fr; }
+      .section-head { display: block; }
+      .section-head p { margin-top: 8px; }
+      .quick-links { grid-template-columns: 1fr; }
+      .custom { padding: 20px; }
+    }
   </style>
 </head>
 <body>
-<main>
-  <span class="badge">Minecraft Java 服务器与创作工作台</span>
-  <h1>EMCL Studio</h1>
-  <p>EMCL Studio 是面向 Minecraft Java 服务器团队与内容创作者的本地优先运营工作台。它把服务器实例、玩家权限、备份恢复、崩溃诊断、整合包制作和测试客户端放在同一个桌面应用里。</p>
-  <div class="cta">
-    <a class="btn" href="./download.html">下载 EMCL</a>
-    <a class="btn ghost" href="https://apps.microsoft.com/detail/9PHPTWV56WXB" target="_blank" rel="noopener">Microsoft Store</a>
-  </div>
-  <div class="card" style="border-color:#BBD9F2;background:linear-gradient(135deg,#FFFFFF,#F3F9FF)">
-    <span class="badge">定制版本</span>
-    <h2 style="margin:12px 0 6px">让你的服务器拥有专属启动器</h2>
-    <p style="margin:0">改名称、图标、配色、背景、官网和服务器入口，独立数据目录和独立更新。基础定制 <b style="color:#175EA8">7.5 元 / 次</b>。</p>
-    <p style="margin:8px 0 0;font-size:14px">成功案例：商弦特供版 · SianhGheln，按商弦市旗和市歌入口制作。</p>
-    <div class="cta" style="margin-top:16px">
-      <a class="btn" href="./custom.html">查看定制说明</a>
-      <a class="btn ghost" href="./sianhgheln/">查看商弦案例</a>
-    </div>
-  </div>
-  <div class="card">
-    <h2>我们做什么</h2>
-    <p>管理本地 Java 服务端，检查模组与整合包依赖，分析崩溃日志，备份世界，并用测试客户端验证环境。启动器不是独立产品，而是工作台中的测试模块。</p>
-    <h2>我们不做什么</h2>
-    <p>不托管、不销售、不分发 Minecraft 游戏本体；不提供盗版验证绕过；不售卖账户、披风或激活码；与 Mojang Studios、Microsoft 无隶属关系。</p>
-    <div class="links">
+<div class="wrap">
+  <header>
+    <a class="brand" href="./index.html">
+      <span class="gem"></span>
+      <span>EMCL <small>ENDERMAN MINECRAFT LAUNCHER</small></span>
+    </a>
+    <nav>
+      <a href="./download.html">下载</a>
+      <a href="./history.html">历史版本</a>
       <a href="./announcements.html">公告</a>
       <a href="./feedback/">反馈</a>
-      <a href="./history.html">历史版本</a>
-      <a href="./custom.html">定制版本 · 7.5 元/次</a>
-      <a href="./privacy.html">隐私政策</a>
-      <a href="./terms.html">服务条款</a>
+      <a href="./custom.html">定制版本</a>
       <a href="./sianhgheln/">商弦特供版</a>
-      <a href="https://github.com/MC-Enderman7810/EndermanMineCraftLauncher">GitHub</a>
+      <a href="https://github.com/MC-Enderman7810/EndermanMineCraftLauncher" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div>
+        <div class="kicker"><span class="dot"></span> Windows 10 / 11 · 正式版 1.26.26.10</div>
+        <h1>Minecraft Java<br><span>从这里开始。</span></h1>
+        <p class="lead">EMCL 是一个蓝色主题的 Minecraft Java 启动器。安装游戏、管理模组与整合包、切换光影和皮肤、连接服务器，都在同一个界面里完成。</p>
+        <div class="actions">
+          <a class="btn" href="./download.html">下载 EMCL <span>↓</span></a>
+          <a class="btn store" href="https://apps.microsoft.com/detail/9PHPTWV56WXB" target="_blank" rel="noopener">Microsoft Store</a>
+          <a class="btn ghost" href="./history.html">历史版本</a>
+        </div>
+        <div class="meta">
+          <span class="chip">微软 / 离线登录</span>
+          <span class="chip">Forge · Fabric · NeoForge</span>
+          <span class="chip">自动更新</span>
+          <span class="chip">免费使用</span>
+        </div>
+      </div>
+
+      <div class="hero-art" aria-hidden="true">
+        <span class="orb one"></span><span class="orb two"></span>
+        <div class="app">
+          <div class="app-bar"><i></i><i></i><i></i><span>EMCL · 1.26.26.10</span></div>
+          <div class="app-body">
+            <div class="app-side"><div class="side-item active"></div><div class="side-item"></div><div class="side-item"></div><div class="side-item"></div></div>
+            <div class="app-main">
+              <div class="app-heading"><b>开始游戏</b><span class="online">正版登录</span></div>
+              <div class="play-card">
+                <small>SELECTED VERSION</small>
+                <b>1.21.1 · Fabric</b>
+                <div class="play-btn">启动游戏</div>
+              </div>
+              <div class="row"><span>模组</span><b>48 个已启用 <span class="tag">MODS</span></b></div>
+              <div class="row"><span>光影</span><b>6 个 <span class="tag">SHADER</span></b></div>
+              <div class="row"><span>服务器</span><b>3 个收藏</b></div>
+              <div class="row"><span>皮肤</span><b>Steve / Alex</b></div>
+            </div>
+          </div>
+        </div>
+        <div class="art-note">蓝色主题 · 轻量 · 自动更新</div>
+      </div>
+    </section>
+
+    <div class="stats">
+      <div class="stat"><b>1.26.26.10</b><span>当前稳定版</span></div>
+      <div class="stat"><b>Win 10 / 11</b><span>x64 安装版与便携版</span></div>
+      <div class="stat"><b>微软 / 离线</b><span>两种登录方式</span></div>
+      <div class="stat"><b>自动更新</b><span>公告与版本检查</span></div>
     </div>
-  </div>
-  <footer>© 2026 EMCL Studio · 支持邮箱：EMCLsupport2026@163.com · <a href="./sianhgheln/">商弦特供版</a> · <a href="./dev/">开发者模式</a></footer>
-</main>
+
+    <section class="section">
+      <div class="section-head">
+        <h2>该有的，都在这里。</h2>
+        <p>不是简单的版本启动器。EMCL 把安装、模组、光影、皮肤和服务器整理成一套顺手的工作流。</p>
+      </div>
+      <div class="features">
+        <article class="feature"><div class="icon">↓</div><h3>一键安装游戏</h3><p>选择版本、加载器与安装目录，自动补齐资源与运行库，不需要手动整理文件夹。</p></article>
+        <article class="feature"><div class="icon">M</div><h3>模组与整合包</h3><p>浏览 Modrinth、CurseForge 资源，检查依赖与冲突，导入整合包并直接启动。</p></article>
+        <article class="feature"><div class="icon">S</div><h3>光影与资源包</h3><p>单独管理光影、资源包和配置，切换版本时保留你的画面设置。</p></article>
+        <article class="feature"><div class="icon">P</div><h3>皮肤与披风</h3><p>Steve / Alex 模型、衣层预览、本地皮肤上传和披风切换，支持正版档案同步。</p></article>
+        <article class="feature"><div class="icon">◉</div><h3>服务器收藏</h3><p>保存常用服务器地址，显示延迟与在线状态，一键加入喜欢的服务器。</p></article>
+        <article class="feature"><div class="icon">↻</div><h3>公告与自动更新</h3><p>启动时检查新版本和公告；正式版、商弦特供版和开发者版使用独立更新通道。</p></article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <h2>三步，进入世界。</h2>
+        <p>不用折腾启动脚本和 Java 参数。装好 EMCL，剩下的交给它。</p>
+      </div>
+      <div class="flow">
+        <div class="step"><h3>登录账号</h3><p>使用 Microsoft 账号登录，或创建离线档案。皮肤和披风会随账号同步。</p></div>
+        <div class="step"><h3>选择版本</h3><p>原版、Forge、Fabric、NeoForge 或整合包。缺失的文件会自动下载。</p></div>
+        <div class="step"><h3>开始游戏</h3><p>调整内存和 Java，点下启动。模组、光影和服务器设置都会保留。</p></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="custom">
+        <div>
+          <span class="kicker">定制版本</span>
+          <h2>让你的服务器拥有专属启动器</h2>
+          <p>改名称、图标、配色、背景、官网和服务器入口，独立数据目录与独立更新。适合服务器团队、整合包作者和社区活动。</p>
+          <div class="case"><b>成功案例：商弦特供版 · SianhGheln</b><br>按商弦市旗配色与市歌入口制作，拥有独立更新通道。</div>
+          <div class="actions" style="margin-top:16px">
+            <a class="btn" href="./custom.html">查看定制说明</a>
+            <a class="btn ghost" href="./sianhgheln/">查看商弦案例</a>
+          </div>
+        </div>
+        <div>
+          <div class="price">7.5 <small>元 / 次</small></div>
+          <p style="margin-top:9px">基础定制包含名称、图标、配色、背景、官网入口和独立更新。复杂功能单独沟通。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="updates">
+        <div class="panel">
+          <h3>最新动态</h3>
+          <div class="update-row"><b>1.26.26.10 已发布</b><span>发布版 · 商弦版</span></div>
+          <p style="margin:0;color:var(--muted);font-size:12px;line-height:1.8">反馈按钮接入网页反馈，反馈会进入开发者收件箱。皮肤库、模型与衣层功能同步更新。</p>
+          <div class="actions" style="margin-top:14px">
+            <a class="btn ghost" href="./download.html">下载最新版</a>
+            <a class="btn ghost" href="./announcements.html">查看全部公告</a>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>快速入口</h3>
+          <div class="quick-links">
+            <a class="quick" href="./download.html"><span>下载启动器</span><span>↓</span></a>
+            <a class="quick" href="./feedback/"><span>提交反馈</span><span>→</span></a>
+            <a class="quick" href="./history.html"><span>历史版本</span><span>→</span></a>
+            <a class="quick" href="./custom.html"><span>定制版本</span><span>→</span></a>
+            <a class="quick" href="./privacy.html"><span>隐私政策</span><span>→</span></a>
+            <a class="quick" href="./terms.html"><span>服务条款</span><span>→</span></a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <div>© 2026 EMCL Studio · 支持邮箱：EMCLsupport2026@163.com</div>
+      <div class="footer-links">
+        <a href="./announcements.html">公告</a>
+        <a href="./feedback/">反馈</a>
+        <a href="./dev/">开发者模式</a>
+        <a href="./privacy.html">隐私政策</a>
+        <a href="./terms.html">服务条款</a>
+        <a href="https://github.com/MC-Enderman7810/EndermanMineCraftLauncher" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </footer>
+</div>
 </body>
 </html>
