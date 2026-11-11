@@ -121,6 +121,51 @@
       </ul>
       <p class="note">如需修改访问密码，更新本页中的密码哈希即可。静态页面的密码保护只能阻止普通访问，不能替代服务器端鉴权。</p>
     </section>
+
+    <section class="card" id="adminPanel" style="margin-top:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <div>
+          <h2 style="margin:0">反馈收件箱</h2>
+          <p class="note" style="margin:4px 0 0">发布版、商弦特供版和开发者版提交的反馈都会进入这里。</p>
+        </div>
+        <div class="actions" style="margin:0">
+          <button class="btn ghost" id="refreshFeedback" type="button">刷新反馈</button>
+          <button class="btn ghost" id="refreshAnnouncements" type="button">刷新公告</button>
+        </div>
+      </div>
+      <div id="adminStatus" class="note" style="margin-top:8px"></div>
+      <div id="feedbackList" style="margin-top:12px"></div>
+    </section>
+
+    <section class="card" style="margin-top:14px">
+      <h2>发布公告</h2>
+      <p class="note">发布后，启动器和 emcl.life/announcements.html 会从同一份公告数据读取。</p>
+      <form id="announceForm" style="margin-top:12px">
+        <div class="grid" style="gap:12px">
+          <label style="display:block;font-size:11px;font-weight:800">标题
+            <input id="annTitle" required maxlength="160" style="width:100%;margin-top:5px;padding:9px;border:1px solid #D8E4F2;border-radius:8px" placeholder="EMCL 1.26.26.10 已发布" />
+          </label>
+          <label style="display:block;font-size:11px;font-weight:800">标签
+            <select id="annTag" style="width:100%;margin-top:5px;padding:9px;border:1px solid #D8E4F2;border-radius:8px">
+              <option>更新</option><option>公告</option><option>维护</option><option>活动</option>
+            </select>
+          </label>
+        </div>
+        <label style="display:block;font-size:11px;font-weight:800;margin-top:10px">正文
+          <textarea id="annBody" required maxlength="8000" rows="5" style="width:100%;margin-top:5px;padding:9px;border:1px solid #D8E4F2;border-radius:8px;resize:vertical" placeholder="写清楚更新内容、影响范围和时间。"></textarea>
+        </label>
+        <div class="grid" style="gap:12px;margin-top:10px">
+          <label style="display:block;font-size:11px;font-weight:800">日期
+            <input id="annDate" type="date" style="width:100%;margin-top:5px;padding:9px;border:1px solid #D8E4F2;border-radius:8px" />
+          </label>
+          <label style="display:block;font-size:11px;font-weight:800">链接（可选）
+            <input id="annUrl" maxlength="500" style="width:100%;margin-top:5px;padding:9px;border:1px solid #D8E4F2;border-radius:8px" placeholder="https://www.emcl.life/" />
+          </label>
+        </div>
+        <button class="btn" id="publishAnnouncement" type="submit" style="margin-top:12px">发布公告</button>
+      </form>
+      <div id="announcementsList" style="margin-top:12px"></div>
+    </section>
   </main>
   <footer>© 2026 Ender Game Studios · EMCL Developer Channel</footer>
 </div>
@@ -166,6 +211,170 @@
         error.textContent = '当前环境不支持密码校验，请使用 HTTPS 访问';
       }
     }
+
+    var API = 'https://api.emcl.life';
+    var adminToken = sessionStorage.getItem('emcl_admin_token') || '';
+    var adminStatus = document.getElementById('adminStatus');
+    var feedbackList = document.getElementById('feedbackList');
+    var announcementsList = document.getElementById('announcementsList');
+
+    function esc(value) {
+      return String(value == null ? '' : value).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+
+    function setAdminStatus(text, isError) {
+      if (!adminStatus) return;
+      adminStatus.textContent = text || '';
+      adminStatus.style.color = isError ? '#B33A3A' : '#60758C';
+    }
+
+    async function adminLogin(password) {
+      setAdminStatus('正在验证开发者权限…');
+      try {
+        var res = await fetch(API + '/api/login', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: password })
+        });
+        var data = await res.json();
+        if (!res.ok || !data.ok) throw new Error(data.error || '登录失败');
+        adminToken = data.token;
+        sessionStorage.setItem('emcl_admin_token', adminToken);
+        setAdminStatus('已登录，可以管理反馈和公告。');
+        await loadFeedback();
+        await loadAnnouncements();
+      } catch (e) {
+        setAdminStatus(e.message || '开发者接口登录失败', true);
+      }
+    }
+
+    async function initAdmin() {
+      if (adminToken) {
+        setAdminStatus('正在加载反馈…');
+        await loadFeedback();
+        await loadAnnouncements();
+      } else if (input && input.value) {
+        await adminLogin(input.value);
+      } else {
+        setAdminStatus('请刷新页面并重新输入开发者密码，以加载反馈收件箱。', true);
+      }
+    }
+
+    async function apiFetch(path, options) {
+      var opts = options || {};
+      opts.headers = Object.assign({}, opts.headers || {}, { Authorization: 'Bearer ' + adminToken });
+      var res = await fetch(API + path, opts);
+      if (res.status === 401) {
+        adminToken = '';
+        sessionStorage.removeItem('emcl_admin_token');
+        throw new Error('登录已过期，请刷新页面重新输入密码');
+      }
+      var data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || '请求失败');
+      return data;
+    }
+
+    async function loadFeedback() {
+      if (!feedbackList) return;
+      try {
+        var data = await apiFetch('/api/feedback');
+        if (!data.feedback.length) {
+          feedbackList.innerHTML = '<p class="note">还没有反馈。</p>';
+          return;
+        }
+        feedbackList.innerHTML = data.feedback.map(function (item) {
+          var date = item.created_at ? new Date(item.created_at).toLocaleString('zh-CN') : '';
+          return '<div class="feedback-item" style="border:1px solid #D8E4F2;border-radius:10px;padding:12px;margin-bottom:8px">' +
+            '<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">' +
+            '<b>' + esc(item.type || '反馈') + ' · ' + esc(item.app || 'EMCL') + ' ' + esc(item.version || '') + '</b>' +
+            '<span style="font-size:11px;color:#60758C">' + esc(date) + '</span></div>' +
+            '<div style="font-size:12px;color:#3C5168;line-height:1.7;margin:6px 0">' + esc(item.message || '') + '</div>' +
+            '<div style="font-size:11px;color:#60758C">' + esc(item.name || '匿名') + ' · <a href="mailto:' + esc(item.email) + '">' + esc(item.email) + '</a></div>' +
+            '<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">' +
+            '<button class="btn ghost btn-sm" type="button" data-fb-status="read" data-fb-id="' + esc(item.id) + '">标记已读</button>' +
+            '<button class="btn ghost btn-sm" type="button" data-fb-status="closed" data-fb-id="' + esc(item.id) + '">标记已处理</button>' +
+            '<button class="btn ghost btn-sm" type="button" data-fb-delete="' + esc(item.id) + '">删除</button>' +
+            '<span style="font-size:10px;color:#60758C;align-self:center">状态：' + esc(item.status || 'new') + '</span></div>' +
+            '</div>';
+        }).join('');
+      } catch (e) {
+        setAdminStatus(e.message || '读取反馈失败', true);
+      }
+    }
+
+    async function loadAnnouncements() {
+      if (!announcementsList) return;
+      try {
+        var res = await fetch(API + '/api/announcements', { cache: 'no-store' });
+        var data = await res.json();
+        var items = (data && data.announcements) || [];
+        announcementsList.innerHTML = items.length
+          ? items.slice(0, 10).map(function (item) {
+            return '<div style="padding:7px 0;border-top:1px solid #EDF3FA;font-size:12px">' +
+              '<b>' + esc(item.title) + '</b> <span style="color:#60758C">' + esc(item.date) + ' · ' + esc(item.tag) + '</span></div>';
+          }).join('')
+          : '<p class="note">还没有公告。</p>';
+      } catch (e) {
+        setAdminStatus(e.message || '读取公告失败', true);
+      }
+    }
+
+    async function publishAnnouncement() {
+      var title = document.getElementById('annTitle').value.trim();
+      var body = document.getElementById('annBody').value.trim();
+      var date = document.getElementById('annDate').value;
+      var tag = document.getElementById('annTag').value;
+      var url = document.getElementById('annUrl').value.trim();
+      if (!title || !body) { setAdminStatus('标题和正文不能为空', true); return; }
+      setAdminStatus('正在发布公告…');
+      try {
+        await apiFetch('/api/announcements', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: title, body: body, date: date, tag: tag, url: url })
+        });
+        document.getElementById('annTitle').value = '';
+        document.getElementById('annBody').value = '';
+        document.getElementById('annUrl').value = '';
+        setAdminStatus('公告已发布。');
+        await loadAnnouncements();
+      } catch (e) {
+        setAdminStatus(e.message || '发布公告失败', true);
+      }
+    }
+
+    if (feedbackList) {
+      feedbackList.addEventListener('click', async function (e) {
+        var id = e.target.getAttribute('data-fb-id');
+        var status = e.target.getAttribute('data-fb-status');
+        var del = e.target.getAttribute('data-fb-delete');
+        try {
+          if (id && status) {
+            await apiFetch('/api/feedback/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: status }) });
+            await loadFeedback();
+          } else if (del) {
+            if (!confirm('确定删除这条反馈？')) return;
+            await apiFetch('/api/feedback/' + del, { method: 'DELETE' });
+            await loadFeedback();
+          }
+        } catch (err) { setAdminStatus(err.message || '操作失败', true); }
+      });
+    }
+    var refreshFeedback = document.getElementById('refreshFeedback');
+    if (refreshFeedback) refreshFeedback.addEventListener('click', loadFeedback);
+    var refreshAnnouncements = document.getElementById('refreshAnnouncements');
+    if (refreshAnnouncements) refreshAnnouncements.addEventListener('click', loadAnnouncements);
+    var announceForm = document.getElementById('announceForm');
+    if (announceForm) announceForm.addEventListener('submit', function (e) { e.preventDefault(); publishAnnouncement(); });
+    var annDate = document.getElementById('annDate');
+    if (annDate && !annDate.value) annDate.value = new Date().toISOString().slice(0, 10);
+
+    var oldUnlock = unlock;
+    unlock = function () {
+      oldUnlock();
+      initAdmin();
+    };
+    if (!app.hidden) initAdmin();
 
     document.getElementById('gateSubmit').addEventListener('click', submit);
     input.addEventListener('keydown', function (e) {

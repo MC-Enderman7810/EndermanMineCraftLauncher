@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
@@ -49,8 +49,12 @@
 <script>
 (function () {
   var list = document.getElementById('list');
-  fetch('./announcements.json?t=' + Date.now(), { cache: 'no-store' })
+  fetch('https://api.emcl.life/api/announcements?t=' + Date.now(), { cache: 'no-store' })
     .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .catch(function () {
+      return fetch('./announcements.json?t=' + Date.now(), { cache: 'no-store' })
+        .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
+    })
     .then(function (data) {
       var items = Array.isArray(data) ? data : (data && data.announcements) || [];
       if (!items.length) { list.innerHTML = '<div class="empty">暂无公告</div>'; return; }
