@@ -1,11 +1,12 @@
 {
-  "version": "1.26.25.23kfz",
-  "releaseDate": "2026-10-31",
+  "version": "1.26.25.24kfz",
+  "releaseDate": "2026-11-12",
   "notes": [
-    "发布版和商弦特供版反馈按钮接入网站反馈页",
-    "开发者反馈收件箱和公告发布已上线",
-    "同步最新安装包直链和模型/衣层功能"
+    "开发者版强制更新：首次打开或更新后需要输入开发者密码",
+    "新增开发者账户功能（暂时隐藏）",
+    "同步正式版 1.26.26.11 的联机服务器列表和修复"
   ],
   "url": "https://www.emcl.life/dev/",
-  "downloadUrl": "https://www.emcl.life/dev/"
+  "downloadUrl": "https://www.emcl.life/downloads/dev/EMCL-Dev-Portable-1.26.25.24.exe",
+  "mandatory": true
 }
