@@ -115,6 +115,15 @@
     .btn.sianh-btn:hover { filter: brightness(1.08); background: linear-gradient(135deg, #D21D37 0%, #A61E40 18%, #16446F 52%, #3389DD 78%, #9AD2FF 100%); }
     .btn.store { background: #0F2B46; }
     .btn.store:hover { background: #173D61; }
+    .store-badge {
+      display: inline-flex; align-items: center; height: 44px;
+      border-radius: 5px; line-height: 0; flex: 0 0 auto;
+    }
+    .store-badge:hover { text-decoration: none; filter: brightness(1.08); }
+    .store-badge img { display: block; width: auto; height: 44px; border-radius: 5px; }
+    .store-badge-en { display: none; }
+    html:not([data-lang="zh-CN"]):not([data-lang="zh-TW"]) .store-badge-zh { display: none; }
+    html:not([data-lang="zh-CN"]):not([data-lang="zh-TW"]) .store-badge-en { display: block; }
 
     .index-card { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 8px 18px 12px; }
     .index-title { display: flex; align-items: center; justify-content: space-between; padding: 12px 0 9px; border-bottom: 1px solid #EDF4FB; }
@@ -358,7 +367,10 @@
         <div class="actions">
           <a class="btn" href="./download.html">下载 EMCL <span>↓</span></a>
           <a class="btn sianh-btn" href="./sianhgheln/">商弦特供版 <span>→</span></a>
-          <a class="btn store" href="https://apps.microsoft.com/detail/9PHPTWV56WXB" target="_blank" rel="noopener">Microsoft Store</a>
+          <a class="store-badge" href="https://apps.microsoft.com/detail/9PHPTWV56WXB" target="_blank" rel="noopener" aria-label="从 Microsoft Store 获取 EMCL">
+            <img class="store-badge-zh" src="./assets/microsoft-store-zh.svg" width="161" height="44" alt="从 Microsoft Store 获取">
+            <img class="store-badge-en" src="./assets/microsoft-store-en.svg" width="161" height="44" alt="Get it from Microsoft Store">
+          </a>
           <a class="btn ghost" href="#features">查看功能清单</a>
         </div>
         <div class="quick-facts">

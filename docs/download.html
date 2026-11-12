@@ -87,6 +87,9 @@
     .download-card.primary .btn { background: #fff; color: var(--blue-dark); }
     .download-card.primary .btn:hover { background: #EAF4FF; }
     .btn.ghost { background: #F4F9FF; color: var(--blue-dark); border: 1px solid var(--line); }
+    .store-badge { display: inline-flex; align-items: center; margin-top: 18px; line-height: 0; }
+    .store-badge:hover { text-decoration: none; filter: brightness(1.08); }
+    .store-badge img { display: block; width: auto; height: 44px; border-radius: 5px; }
     .btn.ghost:hover { background: #E8F3FF; }
     .arrow { font-size: 15px; }
     .details { display: grid; grid-template-columns: 1.2fr 1fr; gap: 14px; margin-top: 16px; }
@@ -156,7 +159,9 @@
         <div class="tag">推荐</div>
         <h2>Microsoft Store</h2>
         <p>由 Microsoft 签名和分发，自动更新，安装最省心。适合大多数 Windows 10 / 11 用户。</p>
-        <a class="btn" href="https://apps.microsoft.com/detail/9PHPTWV56WXB" target="_blank" rel="noopener">打开 Microsoft Store <span class="arrow">↗</span></a>
+        <a class="store-badge" href="https://apps.microsoft.com/detail/9PHPTWV56WXB" target="_blank" rel="noopener" aria-label="从 Microsoft Store 获取 EMCL">
+          <img src="./assets/microsoft-store-zh.svg" width="161" height="44" alt="从 Microsoft Store 获取">
+        </a>
       </article>
 
       <article class="download-card">
