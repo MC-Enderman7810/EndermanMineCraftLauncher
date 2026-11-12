@@ -1,11 +1,11 @@
 {
-  "version": "1.26.26.10",
+  "version": "1.26.26.11",
   "releaseDate": "2026-10-31",
   "notes": [
-    "发布版和商弦特供版的反馈按钮改为打开 emcl.life 网页反馈",
-    "反馈表单强制填写邮箱，进入开发者反馈收件箱",
-    "同步最新皮肤、模型和衣层功能"
+    "新增多人服务器收藏：状态、延迟、MOTD 与一键加入",
+    "加入服务器时自动使用当前游戏版本启动",
+    "保留资源下载、整合包、皮肤和反馈功能"
   ],
   "url": "https://www.emcl.life/download.html",
-  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.10.exe"
+  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.11.exe"
 }

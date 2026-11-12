@@ -82,6 +82,7 @@ class Store {
       lastVersionId: '',
       lastAccountId: '',
       versionNames: {},
+      multiplayerServers: [],
       firstRun: true
     };
   }
@@ -103,6 +104,7 @@ class Store {
     out.msClientId = APPROVED_MS_CLIENT_ID;
     out.msAuthority = 'entra';
     if (!Array.isArray(out.seenAnnouncements)) out.seenAnnouncements = [];
+    if (!Array.isArray(out.multiplayerServers)) out.multiplayerServers = [];
     return out;
   }
 

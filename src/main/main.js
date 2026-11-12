@@ -28,6 +28,7 @@ const recommend = require('./recommend');
 const { ServerManager } = require('./servers');
 const modcheck = require('./modcheck');
 const mcsm = require('./mcsm');
+const serverping = require('./serverping');
 
 app.setName(isDev ? 'EMCL 开发者版本' : 'EMCL');
 app.setPath('userData', path.join(app.getPath('appData'),
@@ -432,7 +433,7 @@ function registerIpc() {
     }
   });
 
-  ipcMain.handle('launch:start', async (event, versionId, accountId) => {
+  ipcMain.handle('launch:start', async (event, versionId, accountId, options) => {
     try {
       let account = isDev && accountId ? store.getAccountFull(accountId) : store.activeAccount();
       if (!account) throw new Error('请先添加账户');
@@ -507,7 +508,7 @@ function registerIpc() {
             if (code === 0) {
               refreshInstalled().then((installed) => send('versions:changed', installed)).catch(() => {});
             }
-          });
+          }, options || {});
       } catch (e) {
         restoreLegacyOptions();
         throw e;
@@ -623,6 +624,7 @@ function registerIpc() {
     return { ok: true, activeAccountId: id };
   });
 
+  ipcMain.handle('multiplayer:ping', async (event, host, port) => serverping.ping(host, Number(port) || 25565));
   ipcMain.handle('servers:list', async () => ({ ok: true, servers: await serverManager.list() }));
   ipcMain.handle('servers:pick', async () => serverManager.pickLocal());
   ipcMain.handle('servers:chooseDir', async () => serverManager.chooseDir());

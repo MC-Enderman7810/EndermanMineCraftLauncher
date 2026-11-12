@@ -169,6 +169,9 @@ async function buildLaunch(store, versionId, account, options = {}) {
     // 2.0 默认使用 854x480 的固定渲染区域，窗口被放大后会出现黑边。
     game.push('--width', '1600', '--height', '900');
   }
+  if (options.server && options.server.host) {
+    game.push('--server', String(options.server.host), '--port', String(options.server.port || 25565));
+  }
   const mainClass = version.mainClass || 'net.minecraft.client.main.Main';
   const args = [...jvm, mainClass, ...game];
 
@@ -186,7 +189,7 @@ async function buildLaunch(store, versionId, account, options = {}) {
 async function launchGame(store, versionId, account, onLog, onExit, options = {}) {
   if (!account) throw new Error('请先登录一个账户');
   if (!account.name) throw new Error('账户信息不完整');
-  const built = await buildLaunch(store, versionId, account);
+  const built = await buildLaunch(store, versionId, account, options);
   await ensureDir(path.dirname(built.logFile));
   const out = fs.createWriteStream(built.logFile, { flags: 'a' });
   const write = (level, text) => {

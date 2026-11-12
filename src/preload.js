@@ -32,7 +32,7 @@ contextBridge.exposeInMainWorld('emcl', {
   repairVersion: (versionId) => ipcRenderer.invoke('versions:repair', versionId),
   installLoader: (type, mcVersion) => ipcRenderer.invoke('loader:install', type, mcVersion),
 
-  launch: (versionId, accountId) => ipcRenderer.invoke('launch:start', versionId, accountId),
+  launch: (versionId, accountId, options) => ipcRenderer.invoke('launch:start', versionId, accountId, options),
   killGame: () => ipcRenderer.invoke('launch:kill'),
   launchCommand: (versionId) => ipcRenderer.invoke('launch:command', versionId),
 
@@ -75,6 +75,7 @@ contextBridge.exposeInMainWorld('emcl', {
   saveLocalAnnouncement: (item) => ipcRenderer.invoke('announcements:local:save', item),
   deleteLocalAnnouncement: (id) => ipcRenderer.invoke('announcements:local:delete', id),
 
+  pingServer: (host, port) => ipcRenderer.invoke('multiplayer:ping', host, port),
   serverList: () => ipcRenderer.invoke('servers:list'),
   serverPick: () => ipcRenderer.invoke('servers:pick'),
   serverChooseDir: () => ipcRenderer.invoke('servers:chooseDir'),

@@ -29,6 +29,7 @@ const state = {
   resourceVersionId: '',
   resourceWorld: '',
   servers: [],
+  multiplayerPings: {},
   serverId: '',
   serverLogs: [],
   pendingLocal: null,
@@ -82,6 +83,7 @@ const PAGE_META = {
   versions: { title: '版本管理', subtitle: '下载、安装加载器、导入游戏' },
   resources: { title: '下载', subtitle: '游戏版本 · 模组 · 光影 · 资源包 · 数据包' },
   modpacks: { title: '整合包', subtitle: '导入 PCL2 / Modrinth / CurseForge 整合包' },
+  multiplayer: { title: '联机', subtitle: '收藏服务器 · 状态与延迟 · 一键加入' },
   accounts: { title: '账户', subtitle: '离线 · 微软 · 第三方验证' },
   skins: { title: '皮肤库', subtitle: '正面预览 · 推荐皮肤 · 披风' },
   servers: { title: '服务器', subtitle: '本地 Java 服务端与远程 RCON 管理' },
@@ -93,7 +95,8 @@ const NAVS = [
   { id: 'home', label: '主页', icon: 'home' },
   { id: 'resources', label: '下载', icon: 'download' },
   { id: 'modpacks', label: '整合包', icon: 'box' },
-  { id: 'servers', label: '服务器', icon: 'server' },
+  { id: 'multiplayer', label: '联机', icon: 'server' },
+  { id: 'servers', label: '服务端', icon: 'server' },
   { id: 'accounts', label: '账户', icon: 'user' },
   { id: 'skins', label: '皮肤', icon: 'user' },
   { id: 'settings', label: '设置', icon: 'settings' },
@@ -343,6 +346,7 @@ function render() {
     versions: pageVersions,
     resources: pageResources,
     modpacks: pageModpacks,
+    multiplayer: pageMultiplayer,
     accounts: pageAccounts,
     skins: pageSkins,
     servers: pageServers,
@@ -607,6 +611,7 @@ function pageHome() {
       quick('游戏版本', '下载游戏、安装加载器、导入文件夹', 'layers', 'resources', 'versions') +
       quick('资源下载', '模组 · 光影 · 资源包 · 数据包', 'download', 'resources', 'resources') +
       quick('整合包', '导入 PCL2 / Modrinth 整合包', 'box', 'modpacks') +
+      quick('联機服务器', '收藏 · 状态 · 一键加入', 'server', 'multiplayer') +
       quick('账户与设置', '登录方式、Java 与主题', 'user', 'accounts') +
     '</div>' +
     homeAnnouncements() +
@@ -957,6 +962,66 @@ function pageModpacks() {
 }
 
 /* ---------------- Servers ---------------- */
+
+function parseServerAddress(value) {
+  let text = String(value || '').trim();
+  if (!text) return null;
+  let host = text;
+  let port = 25565;
+  if (host.startsWith('[')) {
+    const end = host.indexOf(']');
+    if (end > 0) {
+      const rest = host.slice(end + 1);
+      host = host.slice(1, end);
+      if (rest.startsWith(':')) port = Number(rest.slice(1)) || 25565;
+    }
+  } else {
+    const match = host.match(/^(.*):(\d+)$/);
+    if (match) {
+      host = match[1];
+      port = Number(match[2]) || 25565;
+    }
+  }
+  host = host.trim();
+  if (!host) return null;
+  return { host, port };
+}
+
+function pageMultiplayer() {
+  const list = Array.isArray(state.config.multiplayerServers) ? state.config.multiplayerServers : [];
+  const rows = list.length ? list.map((item) => {
+    const ping = state.multiplayerPings[item.id];
+    const busy = state.multiplayerBusy === item.id;
+    const status = !ping ? { text: '未检测', color: 'gray' } : (ping.ok
+      ? { text: '在线', color: 'green' }
+      : { text: '离线', color: 'red' });
+    const detail = ping && ping.ok
+      ? (ping.version ? ping.version + ' · ' : '') + ping.online + '/' + ping.max + (ping.latency ? ' · ' + ping.latency + ' ms' : '')
+      : (ping && ping.error ? ping.error : item.host + ':' + item.port);
+    return '<div class="server-row">' +
+      '<div class="server-icon">' + icon('server', 18) + '</div>' +
+      '<div style="min-width:0;flex:1">' +
+        '<div class="server-name">' + esc(item.name || item.host) + ' ' + tag(status.text, status.color) + '</div>' +
+        '<div class="server-meta">' + esc(item.host + ':' + item.port) + ' · ' + esc(detail) + '</div>' +
+        (ping && ping.ok && ping.motd ? '<div class="server-meta" style="margin-top:3px;white-space:normal;line-height:1.45">' + esc(ping.motd.replace(/§./g, '').slice(0, 180)) + '</div>' : '') +
+      '</div>' +
+      '<button class="btn btn-ghost btn-sm" data-action="mp-ping" data-id="' + esc(item.id) + '"' + (busy ? ' disabled' : '') + '>' + (busy ? '检测中…' : '刷新') + '</button>' +
+      '<button class="btn btn-primary btn-sm" data-action="mp-join" data-id="' + esc(item.id) + '">加入</button>' +
+      '<button class="btn btn-ghost btn-sm" data-action="mp-remove" data-id="' + esc(item.id) + '">删除</button>' +
+    '</div>';
+  }).join('') : emptyState('还没有收藏服务器。\n在下面添加一个地址，然后点「刷新」检测状态。', 'server');
+  return '<div class="card"><div class="card-head"><h3 class="card-title">我的服务器</h3><div class="spacer"></div>' +
+    '<button class="btn btn-ghost btn-sm" data-action="mp-ping-all">刷新全部</button></div>' +
+    '<div class="server-list">' + rows + '</div></div>' +
+    '<div class="card" style="margin-top:12px"><div class="card-head"><h3 class="card-title">添加服务器</h3></div>' +
+    '<div class="row" style="gap:8px;flex-wrap:wrap;align-items:flex-end">' +
+      '<div class="field" style="margin:0;min-width:160px;flex:1"><label>名称</label><input class="input" id="mpName" placeholder="例如：Hypixel"></div>' +
+      '<div class="field" style="margin:0;min-width:240px;flex:2"><label>地址</label><input class="input" id="mpAddress" placeholder="play.example.com:25565"></div>' +
+      '<button class="btn btn-primary" data-action="mp-add">添加</button>' +
+    '</div>' +
+    '<div class="card-subtitle" style="margin-top:8px">支持 host:port；不填端口默认 25565。加入时会用当前选中的游戏版本启动并传入 --server。</div>' +
+  '</div>';
+}
 
 function pageServers() {
   const selected = state.servers.find((s) => s.id === state.serverId) || state.servers[0];
@@ -2091,6 +2156,18 @@ async function handleAction(action, el) {
     }
     case 'repair-version': await repairVersion(dataset.id); break;
     case 'auto-repair-all': await autoRepairAll(); break;
+    case 'mp-ping': await pingMultiplayer(dataset.id); break;
+    case 'mp-ping-all': await pingAllMultiplayer(); break;
+    case 'mp-add': await addMultiplayer(); break;
+    case 'mp-remove':
+      if (!confirm('从收藏列表删除这个服务器？')) break;
+      await removeMultiplayer(dataset.id);
+      break;
+    case 'mp-join': {
+      const item = (state.config.multiplayerServers || []).find((s) => s.id === dataset.id);
+      if (item) await doLaunch(null, null, { server: { host: item.host, port: item.port } });
+      break;
+    }
     case 'launch-version': await doLaunch(dataset.id); break;
     case 'select-version': await selectVersion(dataset.id); break;
     case 'rename-version':
@@ -2195,7 +2272,7 @@ async function handleAction(action, el) {
       state.pendingMismatch = [];
       state.skipModCheckOnce = true;
       closeModal();
-      if (pending) await doLaunch(pending.id, pending.accountId);
+      if (pending) await doLaunch(pending.id, pending.accountId, pending.options);
       break;
     }
     case 'disable-mismatched-mods': {
@@ -2208,7 +2285,7 @@ async function handleAction(action, el) {
       closeModal();
       if (!res.ok) { toast(res.error || '禁用失败', 'error'); break; }
       toast('已禁用 ' + res.disabled.length + ' 个不匹配模组', 'success');
-      await doLaunch(pending.id, pending.accountId);
+      await doLaunch(pending.id, pending.accountId, pending.options);
       break;
     }
     case 'fill-server-command': {
@@ -2931,7 +3008,67 @@ function openLaunchAccountPicker(versionId) {
   });
 }
 
-async function doLaunch(versionId, accountId) {
+async function pingMultiplayer(id) {
+  const item = (state.config.multiplayerServers || []).find((s) => s.id === id);
+  if (!item) return;
+  state.multiplayerBusy = id;
+  render();
+  try {
+    state.multiplayerPings[id] = await api.pingServer(item.host, item.port);
+  } catch (e) {
+    state.multiplayerPings[id] = { ok: false, error: e.message || '检测失败' };
+  } finally {
+    state.multiplayerBusy = '';
+    render();
+  }
+}
+
+async function pingAllMultiplayer() {
+  const list = state.config.multiplayerServers || [];
+  if (!list.length) return;
+  state.multiplayerBusy = 'all';
+  render();
+  await Promise.all(list.map(async (item) => {
+    try {
+      state.multiplayerPings[item.id] = await api.pingServer(item.host, item.port);
+    } catch (e) {
+      state.multiplayerPings[item.id] = { ok: false, error: e.message || '检测失败' };
+    }
+  }));
+  state.multiplayerBusy = '';
+  render();
+}
+
+async function addMultiplayer() {
+  const nameEl = document.getElementById('mpName');
+  const addressEl = document.getElementById('mpAddress');
+  const parsed = parseServerAddress(addressEl ? addressEl.value : '');
+  if (!parsed) {
+    toast('请输入服务器地址，例如 play.example.com:25565', 'error');
+    return;
+  }
+  const name = (nameEl && nameEl.value.trim()) || parsed.host;
+  const list = Array.isArray(state.config.multiplayerServers) ? state.config.multiplayerServers.slice() : [];
+  if (list.some((s) => s.host === parsed.host && Number(s.port) === parsed.port)) {
+    toast('这个服务器已经在列表里了', 'error');
+    return;
+  }
+  const item = { id: 'mp-' + Date.now().toString(36), name, host: parsed.host, port: parsed.port };
+  list.push(item);
+  const res = await api.patchConfig({ multiplayerServers: list });
+  state.config = res.config || Object.assign({}, state.config, { multiplayerServers: list });
+  await pingMultiplayer(item.id);
+}
+
+async function removeMultiplayer(id) {
+  const list = (state.config.multiplayerServers || []).filter((s) => s.id !== id);
+  const res = await api.patchConfig({ multiplayerServers: list });
+  state.config = res.config || Object.assign({}, state.config, { multiplayerServers: list });
+  delete state.multiplayerPings[id];
+  render();
+}
+
+async function doLaunch(versionId, accountId, options) {
   if (state.launching || state.gameRunning) return;
   const id = versionId || currentVersionId();
   if (!id) {
@@ -2939,7 +3076,7 @@ async function doLaunch(versionId, accountId) {
     setPage('versions');
     return;
   }
-  if (!accountId && state.accounts.length > 1) {
+  if (!accountId && state.accounts.length > 1 && !(options && options.server)) {
     openLaunchAccountPicker(id);
     return;
   }
@@ -2949,7 +3086,7 @@ async function doLaunch(versionId, accountId) {
       const mismatched = (compat && compat.mismatched) || [];
       const conflicts = (compat && compat.conflicts) || [];
       if (mismatched.length || conflicts.length) {
-        state.pendingLaunch = { id, accountId };
+        state.pendingLaunch = { id, accountId, options };
         state.pendingMismatch = mismatched.slice();
         const rows = mismatched.slice(0, 20).map((f) =>
           '<div class="content-row"><span class="content-name">' + esc(f) + '</span></div>').join('') +
@@ -2978,7 +3115,7 @@ async function doLaunch(versionId, accountId) {
   state.logLines = [];
   render();
   try {
-    const res = await api.launch(id, accountId);
+    const res = await api.launch(id, accountId, options);
     if (!res.ok) {
       toast(res.error || '启动失败', 'error');
       state.launching = false;
