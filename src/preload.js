@@ -67,6 +67,7 @@ contextBridge.exposeInMainWorld('emcl', {
   listTasks: () => ipcRenderer.invoke('tasks:list'),
   clearTasks: () => ipcRenderer.invoke('tasks:clear'),
   latestLog: () => ipcRenderer.invoke('logs:latest'),
+  clearLogs: () => ipcRenderer.invoke('logs:clear'),
 
   checkUpdates: (force) => ipcRenderer.invoke('updates:check', force),
   listAnnouncements: (force) => ipcRenderer.invoke('updates:announcements', force),

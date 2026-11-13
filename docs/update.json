@@ -1,11 +1,10 @@
 {
-  "version": "1.26.26.11",
+  "version": "1.26.26.12",
   "releaseDate": "2026-10-31",
   "notes": [
-    "新增多人服务器收藏：状态、延迟、MOTD 与一键加入",
-    "加入服务器时自动使用当前游戏版本启动",
-    "保留资源下载、整合包、皮肤和反馈功能"
+    "新增日志页「清空日志」，可一次清理所有启动日志",
+    "保留联机服务器列表与现有功能"
   ],
   "url": "https://www.emcl.life/download.html",
-  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.11.exe"
+  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.12.exe"
 }

@@ -212,6 +212,25 @@ class Store {
       return '';
     }
   }
+
+  clearLogs() {
+    let removed = 0;
+    let failed = 0;
+    try {
+      const files = fs.readdirSync(this.logsDir).filter((n) => n.endsWith('.log'));
+      for (const name of files) {
+        try {
+          fs.rmSync(path.join(this.logsDir, name), { force: true });
+          removed++;
+        } catch {
+          failed++;
+        }
+      }
+    } catch {
+      return { ok: false, error: '无法读取日志目录' };
+    }
+    return { ok: true, removed, failed, dir: this.logsDir };
+  }
 }
 
 module.exports = { Store, DEFAULT_MS_CLIENT_ID };

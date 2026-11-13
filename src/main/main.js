@@ -930,6 +930,7 @@ function registerIpc() {
   });
 
   ipcMain.handle('logs:latest', async () => store.readLatestLog());
+  ipcMain.handle('logs:clear', async () => store.clearLogs());
 
   ipcMain.handle('announcements:local:list', async () => {
     return { ok: true, items: await store.loadLocalAnnouncements() };

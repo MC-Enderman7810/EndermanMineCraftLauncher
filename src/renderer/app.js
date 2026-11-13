@@ -2066,6 +2066,7 @@ function pageLogs() {
     '<div class="card-subtitle">' + esc(state.launchLogFile || '尚未启动游戏') + '</div></div><div class="spacer"></div>' +
     '<button class="btn btn-ghost" data-action="copy-log">' + icon('copy') + '复制全部</button>' +
     '<button class="btn btn-ghost" data-action="open-logs">' + icon('folder') + '打开日志目录</button>' +
+    '<button class="btn btn-ghost" data-action="clear-log">' + icon('trash') + '清空日志</button>' +
     '<button class="btn btn-soft" data-action="open-feedback">' + icon('info') + '提交错误</button>' +
     '<button class="btn btn-primary" data-action="refresh-log">' + icon('refresh') + '刷新</button></div>' +
     '<div class="log-box" id="logBox">' + (lines.length ? lines.map((l) =>
@@ -2345,6 +2346,18 @@ async function handleAction(action, el) {
     case 'set-theme': await setTheme(dataset.color); break;
     case 'open-logs': await openLogs(); break;
     case 'copy-log': await copyLog(); break;
+    case 'clear-log':
+      if (!confirm('清空所有启动日志？此操作不会删除游戏文件。')) break;
+      try {
+        const res = await api.clearLogs();
+        if (!res.ok) { toast(res.error || '清空日志失败', 'error'); break; }
+        state.logLines = [];
+        state.latestLog = '';
+        state.launchLogFile = '';
+        render();
+        toast('日志已清空' + (res.failed ? '（' + res.failed + ' 个文件正被占用）' : ''), res.failed ? 'error' : 'success');
+      } catch (e) { toast(e.message || '清空日志失败', 'error'); }
+      break;
     case 'refresh-log': await loadLatestLog(); render(); break;
     case 'check-update': await checkForUpdates(true); break;
     case 'refresh-all': await refreshAll(); break;
