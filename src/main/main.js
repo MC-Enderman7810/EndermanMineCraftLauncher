@@ -41,6 +41,7 @@ let currentGame = null;
 let manifestCache = null;
 let manifestCacheAt = 0;
 let updateTimer = null;
+let autoUpdating = false;
 const tasks = new Map();
 
 function send(channel, payload) {
@@ -986,6 +987,25 @@ function registerIpc() {
       return { ok: false, error: e.message };
     }
   });
+
+  ipcMain.handle('updates:download', async (event, update) => {
+    try {
+      const result = await updater.downloadUpdate(update || {}, (progress) => send('update:progress', progress));
+      send('update:ready', result);
+      return result;
+    } catch (e) {
+      send('update:error', { error: e.message });
+      return { ok: false, error: e.message };
+    }
+  });
+
+  ipcMain.handle('updates:install', async (event, download) => {
+    try {
+      return await updater.installUpdate(download || {});
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+  });
 }
 
 async function autoCheck() {
@@ -996,6 +1016,21 @@ async function autoCheck() {
     ]);
     if (update && update.ok) send('update:status', update);
     if (announcements && announcements.ok) send('announcements:changed', announcements);
+    if (update && update.ok && update.hasUpdate && !update.store &&
+      !currentGame && !autoUpdating && process.env.EMCL_NO_AUTO_UPDATE !== '1' &&
+      store && store.getConfig().autoUpdate !== false) {
+      autoUpdating = true;
+      try {
+        send('update:progress', { percent: 0, text: '正在下载更新 ' + update.latest });
+        const downloaded = await updater.downloadUpdate(update, (progress) => send('update:progress', progress));
+        send('update:ready', downloaded);
+        await updater.installUpdate(downloaded);
+      } catch (error) {
+        send('update:error', { error: error.message || '自动更新失败' });
+      } finally {
+        autoUpdating = false;
+      }
+    }
   } catch (error) {
     console.warn('[EMCL] auto update check failed:', error && error.message ? error.message : error);
   }

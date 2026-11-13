@@ -86,14 +86,20 @@ async function buildLaunch(store, versionId, account, options = {}) {
   if (!version.clientJarPath) {
     throw new Error('该版本缺少客户端 jar，请回到「版本」页点击「补全文件」');
   }
-  const javaInfo = await resolveJava(store, versionId);
+  // The Minecraft version determines the runtime family. A modded version
+  // JSON can carry a misleading javaVersion value (for example 1.8.9 Forge
+  // reporting 21), so do not let it override the base game mapping.
+  const reqMajor = javaMajorForMc(versionId);
+  const javaInfo = await resolveJava(store, versionId, reqMajor, versionId);
   if (!javaInfo.path) {
-    throw new Error('未找到 Java 运行时。请到「设置」检测或下载 Java ' + javaMajorForMc(versionId));
+    throw new Error('未找到 Java 运行时。请到「设置」检测或下载 Java ' + reqMajor);
   }
   if (javaInfo.tooOld) {
-    throw new Error('当前 Java ' + javaInfo.major + ' 低于该版本要求的 ' + javaInfo.required + '，请更换 Java');
+    throw new Error('当前 Java ' + javaInfo.major + ' 低于该版本要求的 ' + javaInfo.required + '，请安装 Java ' + reqMajor);
   }
-  const reqMajor = version.javaVersion ? version.javaVersion.majorVersion : javaMajorForMc(versionId);
+  if (javaInfo.tooNew) {
+    throw new Error('该版本需要 Java ' + reqMajor + '，当前 Java ' + javaInfo.major + ' 过高，请更换 Java ' + reqMajor);
+  }
   if (javaInfo.major && reqMajor && javaInfo.major < reqMajor) {
     throw new Error('Java ' + javaInfo.major + ' 低于该版本要求的 Java ' + reqMajor);
   }

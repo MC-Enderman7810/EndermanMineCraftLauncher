@@ -242,6 +242,7 @@
     var adminToken = sessionStorage.getItem('emcl_admin_token') || '';
     var adminStatus = document.getElementById('adminStatus');
     var feedbackList = document.getElementById('feedbackList');
+    var feedbackItems = [];
     var announcementsList = document.getElementById('announcementsList');
 
     function esc(value) {
@@ -305,6 +306,7 @@
       if (!feedbackList) return;
       try {
         var data = await apiFetch('/api/feedback');
+        feedbackItems = data.feedback || [];
         if (!data.feedback.length) {
           feedbackList.innerHTML = '<p class="note">还没有反馈。</p>';
           return;
@@ -320,6 +322,7 @@
             '<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">' +
             '<button class="btn ghost btn-sm" type="button" data-fb-status="read" data-fb-id="' + esc(item.id) + '">标记已读</button>' +
             '<button class="btn ghost btn-sm" type="button" data-fb-status="closed" data-fb-id="' + esc(item.id) + '">标记已处理</button>' +
+            '<button class="btn ghost btn-sm" type="button" data-fb-copy="' + esc(item.id) + '">复制反馈</button>' +
             '<button class="btn ghost btn-sm" type="button" data-fb-delete="' + esc(item.id) + '">删除</button>' +
             '<span id="fb-status-' + esc(item.id) + '" style="font-size:10px;color:#60758C;align-self:center">状态：' + esc(item.status || 'new') + '</span></div>' +
             '</div>';
@@ -369,6 +372,23 @@
       }
     }
 
+    async function copyText(text) {
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(text);
+          return;
+        }
+      } catch (e) { /* fall back below */ }
+      var area = document.createElement('textarea');
+      area.value = text;
+      area.style.position = 'fixed';
+      area.style.left = '-9999px';
+      document.body.appendChild(area);
+      area.select();
+      document.execCommand('copy');
+      area.remove();
+    }
+
     if (feedbackList) {
       feedbackList.addEventListener('click', async function (e) {
         var button = e.target.closest ? e.target.closest('button') : null;
@@ -376,10 +396,30 @@
         var id = button.getAttribute('data-fb-id');
         var status = button.getAttribute('data-fb-status');
         var del = button.getAttribute('data-fb-delete');
+        var copy = button.getAttribute('data-fb-copy');
         var original = button.textContent;
         button.disabled = true;
         button.textContent = '处理中…';
         try {
+          if (copy) {
+            var item = feedbackItems.filter(function (x) { return x.id === copy; })[0];
+            if (!item) throw new Error('找不到这条反馈');
+            var text = 'EMCL 反馈\n' +
+              '类型：' + (item.type || '') + '\n' +
+              '应用：' + (item.app || '') + '\n' +
+              '版本：' + (item.version || '') + '\n' +
+              '用户：' + (item.name || '匿名') + '\n' +
+              '邮箱：' + (item.email || '') + '\n' +
+              '时间：' + (item.created_at ? new Date(item.created_at).toLocaleString('zh-CN') : '') + '\n' +
+              '状态：' + (item.status || 'new') + '\n\n' +
+              '内容：\n' + (item.message || '') +
+              (item.reply ? '\n\n回复：\n' + item.reply : '');
+            await copyText(text);
+            button.textContent = '已复制 ✓';
+            setAdminStatus('反馈已复制到剪贴板');
+            setTimeout(function () { button.disabled = false; button.textContent = original; }, 1200);
+            return;
+          }
           if (id && status) {
             await apiFetch('/api/feedback/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: status }) });
             var label = status === 'closed' ? '已处理' : '已读';

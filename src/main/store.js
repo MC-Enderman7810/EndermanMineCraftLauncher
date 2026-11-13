@@ -83,6 +83,8 @@ class Store {
       lastAccountId: '',
       versionNames: {},
       multiplayerServers: [],
+      autoUpdate: true,
+      versionJava: {},
       firstRun: true
     };
   }

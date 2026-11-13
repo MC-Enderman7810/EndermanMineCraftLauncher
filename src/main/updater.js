@@ -3,7 +3,9 @@
 const { app, shell } = require('electron');
 const fs = require('fs');
 const path = require('path');
-const { fetchJson } = require('./util');
+const crypto = require('crypto');
+const { spawn } = require('child_process');
+const { fetchJson, downloadFile } = require('./util');
 const { isDev } = require('./channel');
 
 const REPO = 'https://github.com/MC-Enderman7810/EndermanMineCraftLauncher';
@@ -148,6 +150,8 @@ async function checkUpdates(force = false) {
       notes: normalizeNotes(data.notes),
       url: officialUrl(data.url) || REPO,
       downloadUrl: officialUrl(data.downloadUrl) || officialUrl(data.url) || REPO,
+      sha256: String(data.sha256 || '').toLowerCase(),
+      store: !!process.windowsStore,
       checkedAt: now,
       error: ''
     };
@@ -241,6 +245,71 @@ async function openUpdate(url) {
   return true;
 }
 
+function updateFileName(update) {
+  let name = '';
+  try { name = path.basename(new URL(update.downloadUrl).pathname); } catch { /* ignore */ }
+  name = name.replace(/[^\w.\-]+/g, '-');
+  if (!/\.exe$/i.test(name)) name = 'EMCL-Update-' + String(update.latest || 'latest').replace(/[^\w.\-]+/g, '-') + '.exe';
+  return name;
+}
+
+async function downloadUpdate(update, onProgress) {
+  if (!update || !update.hasUpdate) throw new Error('当前没有可下载的更新');
+  if (update.store || process.windowsStore) throw new Error('Microsoft Store 版本请通过 Store 更新');
+  const url = officialUrl(update.downloadUrl);
+  if (!url) throw new Error('更新下载地址不是 EMCL 官方地址，已拒绝');
+  const dir = path.join(app.getPath('temp'), 'emcl-updates');
+  fs.mkdirSync(dir, { recursive: true });
+  const dest = path.join(dir, updateFileName(update));
+  const part = dest + '.part';
+  try { fs.rmSync(part, { force: true }); } catch { /* ignore */ }
+  await downloadFile(url, part, {
+    onProgress: (received, total) => {
+      const percent = total ? Math.max(0, Math.min(100, (Number(received) || 0) / Number(total) * 100)) : 0;
+      if (onProgress) onProgress({ percent, received, total });
+    }
+  });
+  if (update.sha256) {
+    const hash = crypto.createHash('sha256').update(fs.readFileSync(part)).digest('hex');
+    if (hash !== String(update.sha256).toLowerCase()) {
+      try { fs.rmSync(part, { force: true }); } catch { /* ignore */ }
+      throw new Error('更新包校验失败，已删除下载文件');
+    }
+  }
+  try { fs.rmSync(dest, { force: true }); } catch { /* ignore */ }
+  fs.renameSync(part, dest);
+  return { ok: true, path: dest, version: update.latest, size: fs.statSync(dest).size };
+}
+
+async function installUpdate(download) {
+  if (process.windowsStore) throw new Error('Microsoft Store 版本不能自动安装，请通过 Store 更新');
+  const file = download && download.path;
+  if (!file || !fs.existsSync(file)) throw new Error('更新包不存在，请重新下载');
+  const portable = process.env.PORTABLE_EXECUTABLE_FILE || '';
+  if (portable) {
+    const helper = path.join(app.getPath('temp'), 'emcl-update-' + Date.now() + '.ps1');
+    const script = [
+      '$ErrorActionPreference = "SilentlyContinue"',
+      'Wait-Process -Id ' + process.pid + ' -Timeout 30',
+      'Start-Sleep -Milliseconds 700',
+      'Copy-Item -LiteralPath ' + JSON.stringify(file) + ' -Destination ' + JSON.stringify(portable) + ' -Force',
+      'Start-Process -FilePath ' + JSON.stringify(portable),
+      'Remove-Item -LiteralPath ' + JSON.stringify(helper) + ' -Force'
+    ].join('\r\n');
+    fs.writeFileSync(helper, script, 'utf8');
+    spawn('powershell.exe', ['-NoProfile', '-WindowStyle', 'Hidden', '-ExecutionPolicy', 'Bypass', '-File', helper], {
+      detached: true,
+      stdio: 'ignore',
+      windowsHide: true
+    }).unref();
+    setTimeout(() => app.quit(), 500);
+    return { ok: true, mode: 'portable' };
+  }
+  spawn(file, ['/S'], { detached: true, stdio: 'ignore', windowsHide: false }).unref();
+  setTimeout(() => app.quit(), 1200);
+  return { ok: true, mode: 'installer' };
+}
+
 module.exports = {
   REPO,
   UPDATE_URL,
@@ -249,5 +318,7 @@ module.exports = {
   checkUpdates,
   getAnnouncements,
   openUpdate,
+  downloadUpdate,
+  installUpdate,
   currentVersion
 };

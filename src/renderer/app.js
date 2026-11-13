@@ -63,6 +63,10 @@ const state = {
   appVersion: '',
   update: null,
   updateChecking: false,
+  updateProgress: 0,
+  updateProgressText: '',
+  updateReady: false,
+  updateInstalling: false,
   refreshingAll: false,
   announcements: [],
   remoteAnnouncements: [],
@@ -681,6 +685,7 @@ function versionsInstalled() {
       '<div class="version-actions">' +
         '<button class="btn btn-primary btn-sm" data-action="launch-version" data-id="' + esc(v.id) + '">' + icon('play', 14) + '启动</button>' +
         (active ? '' : '<button class="btn btn-soft btn-sm" data-action="select-version" data-id="' + esc(v.id) + '">设为当前</button>') +
+        '<button class="btn btn-ghost btn-sm" data-action="version-java" data-id="' + esc(v.id) + '">Java</button>' +
         '<button class="btn btn-ghost btn-sm" data-action="rename-version" data-id="' + esc(v.id) + '">重命名</button>' +
         (!v.hasClientJar ? '<button class="btn btn-ghost btn-sm" data-action="repair-version" data-id="' + esc(v.id) + '">补全文件</button>' : '') +
         (v.loader === '原版' ? '<button class="btn btn-ghost btn-sm" data-action="loader-modal" data-id="' + esc(v.id) + '">装加载器</button>' : '') +
@@ -2171,6 +2176,14 @@ async function handleAction(action, el) {
     }
     case 'launch-version': await doLaunch(dataset.id); break;
     case 'select-version': await selectVersion(dataset.id); break;
+    case 'version-java': await openVersionJava(dataset.id); break;
+    case 'save-version-java': await saveVersionJava(); break;
+    case 'pick-version-java':
+      if ($('versionJavaPath')) $('versionJavaPath').value = dataset.path || '';
+      break;
+    case 'clear-version-java':
+      if ($('versionJavaPath')) $('versionJavaPath').value = '';
+      break;
     case 'rename-version':
       askVersionName('给版本起名', versionLabel(dataset.id), async (name) => {
         if (name) await setVersionName(dataset.id, name);
@@ -2363,6 +2376,7 @@ async function handleAction(action, el) {
     case 'refresh-all': await refreshAll(); break;
     case 'show-update': showUpdateModal(); break;
     case 'open-update': await openUpdate(); break;
+    case 'start-update': await startUpdate(); break;
     case 'open-repo': await openOfficialRepo(); break;
     case 'mark-notices-read': await markAnnouncementsSeen(); break;
     case 'open-announcement': await openAnnouncement(dataset.id); break;
@@ -2673,12 +2687,38 @@ function showUpdateModal() {
     body: '<div class="card" style="background:#FBFDFF;box-shadow:none;padding:12px">' +
       (notes ? '<ul style="margin:0;padding-left:18px;font-size:11px;line-height:1.9;color:var(--text-2)">' +
         notes + '</ul>' : '<div class="card-subtitle">该版本包含问题修复与体验改进。</div>') +
-      '</div>',
-    actions: [
-      { label: '稍后', kind: 'ghost', action: 'close-modal' },
-      { label: '前往下载', kind: 'primary', action: 'open-update' }
-    ]
+      '</div>' +
+      (u.store ? '' : '<div class="card-subtitle" style="margin-top:8px">启动器会自动下载并静默安装，完成后重新打开。</div>'),
+    actions: u.store
+      ? [{ label: '前往 Microsoft Store', kind: 'primary', action: 'open-update' }]
+      : [{ label: '稍后', kind: 'ghost', action: 'close-modal' },
+        { label: '立即自动更新', kind: 'primary', action: 'start-update' }]
   });
+}
+
+async function startUpdate() {
+  const u = state.update;
+  if (!u) return;
+  if (u.store || state.updateInstalling) {
+    if (u.store) await openUpdate();
+    return;
+  }
+  state.updateInstalling = true;
+  state.updateProgress = 0;
+  state.updateProgressText = '准备下载更新';
+  closeModal();
+  toast('开始下载更新 ' + u.latest);
+  try {
+    const downloaded = await api.downloadUpdate(u);
+    if (!downloaded.ok) throw new Error(downloaded.error || '下载失败');
+    toast('更新下载完成，正在安装', 'success');
+    const installed = await api.installUpdate(downloaded);
+    if (!installed.ok) throw new Error(installed.error || '安装失败');
+  } catch (e) {
+    state.updateInstalling = false;
+    toast(e.message || '自动更新失败', 'error');
+    if (confirm('自动更新失败，是否打开下载页手动更新？')) await openUpdate();
+  }
 }
 
 async function openUpdate() {
@@ -3078,6 +3118,45 @@ async function removeMultiplayer(id) {
   const res = await api.patchConfig({ multiplayerServers: list });
   state.config = res.config || Object.assign({}, state.config, { multiplayerServers: list });
   delete state.multiplayerPings[id];
+  render();
+}
+
+async function openVersionJava(versionId) {
+  state.versionJavaTarget = versionId;
+  let list = [];
+  try { list = await api.detectJava(); } catch { /* ignore */ }
+  const saved = (state.config.versionJava || {})[versionId] || '';
+  const choices = (list || []).map((j) =>
+    '<button class="account-pick" data-action="pick-version-java" data-path="' + esc(j.path) + '">' +
+      '<span class="account-pick-main"><b>Java ' + esc(String(j.major || '?')) + '</b><small>' +
+      esc(j.version || '') + ' · ' + esc(j.path) + '</small></span></button>').join('');
+  openModal({
+    title: '版本 Java',
+    desc: '为 ' + versionId + ' 单独指定 Java。留空则按游戏版本自动选择。',
+    body: '<div class="field"><label>Java 路径（留空 = 自动选择）</label><input class="input" id="versionJavaPath" value="' +
+      esc(saved) + '" placeholder="自动匹配所需 Java 版本" /></div>' +
+      '<div class="row" style="margin:8px 0;gap:6px"><button class="btn btn-ghost btn-sm" data-action="clear-version-java">自动选择</button>' +
+      '<button class="btn btn-ghost btn-sm" data-action="download-java" data-major="8">下载 Java 8</button>' +
+      '<button class="btn btn-ghost btn-sm" data-action="download-java" data-major="17">下载 Java 17</button>' +
+      '<button class="btn btn-ghost btn-sm" data-action="download-java" data-major="21">下载 Java 21</button></div>' +
+      (choices ? '<div class="account-pick-list" style="margin-top:8px">' + choices + '</div>' : '') +
+      '<div class="card-subtitle" style="margin-top:8px">Minecraft 1.8.9 必须使用 Java 8；1.17–1.20.4 通常用 Java 17；1.20.5+ 用 Java 21。</div>',
+    actions: [{ label: '取消', kind: 'ghost', action: 'close-modal' },
+      { label: '保存', kind: 'primary', action: 'save-version-java' }]
+  });
+}
+
+async function saveVersionJava() {
+  const id = state.versionJavaTarget;
+  if (!id) return;
+  const value = $('versionJavaPath') ? $('versionJavaPath').value.trim() : '';
+  const next = Object.assign({}, state.config.versionJava || {});
+  if (value) next[id] = value;
+  else delete next[id];
+  const res = await api.patchConfig({ versionJava: next });
+  state.config = res.config || Object.assign({}, state.config, { versionJava: next });
+  closeModal();
+  toast(value ? '已为版本指定 Java' : '已恢复自动选择 Java', 'success');
   render();
 }
 
@@ -3611,6 +3690,8 @@ async function downloadJava(major) {
   const res = await api.downloadJava(major);
   if (!res.ok) { toast(res.error || '下载失败', 'error'); return; }
   state.java = res.java;
+  const input = $('versionJavaPath') || $('serverJavaPath');
+  if (input && res.java && res.java.path) input.value = res.java.path;
   toast('Java ' + major + ' 已安装', 'success');
   render();
 }
@@ -4104,6 +4185,26 @@ async function patchSetting(key, value) {
       toast('发现新版本 ' + update.latest, 'success');
     }
     render();
+  });
+
+  api.onUpdateProgress((progress) => {
+    if (!progress) return;
+    state.updateProgress = Number(progress.percent) || 0;
+    state.updateProgressText = progress.text || '';
+    if (state.updateProgress === 0 && state.updateProgressText) toast(state.updateProgressText);
+    if (state.updateProgress >= 100) toast('更新包下载完成', 'success');
+  });
+
+  api.onUpdateReady((download) => {
+    if (!download || !download.ok) return;
+    state.updateReady = true;
+    state.updateInstalling = true;
+    toast('更新已下载，正在自动安装并重启', 'success');
+  });
+
+  api.onUpdateError((result) => {
+    if (!result || !result.error) return;
+    toast('自动更新失败：' + result.error, 'error');
   });
 
   api.onAnnouncements((result) => {

@@ -203,24 +203,73 @@ async function ensureJava(store, major, onProgress = () => {}) {
   return info;
 }
 
-async function resolveJava(store, mcVersion) {
-  const required = javaMajorForMc(mcVersion);
-  const configured = store.getConfig().javaPath;
+async function resolveJava(store, mcVersion, requiredOverride, versionId) {
+  const required = Number(requiredOverride) > 0 ? Number(requiredOverride) : javaMajorForMc(mcVersion);
+  const config = store.getConfig();
+  const configured = config.javaPath;
+  const instanceId = String(versionId || mcVersion || '');
+  const instanceJava = instanceId && config.versionJava ? config.versionJava[instanceId] : '';
+  if (instanceJava) {
+    const info = await inspectJava(instanceJava).catch(() => null);
+    if (info && info.ok) {
+      return {
+        ...info,
+        required,
+        source: 'instance',
+        tooOld: info.major < required,
+        tooNew: required <= 8 && info.major > 8
+      };
+    }
+  }
+  const extras = [];
+  // EMCL-managed runtimes and the official launcher runtime folders.
+  const runtimeRoot = path.join(store.root, 'runtime');
+  try {
+    if (fs.existsSync(runtimeRoot)) {
+      for (const name of fs.readdirSync(runtimeRoot)) {
+        extras.push(path.join(runtimeRoot, name, 'bin', 'java.exe'));
+      }
+    }
+  } catch { /* ignore */ }
+  const candidates = await findJavaCandidates(extras);
+
   if (configured) {
     const info = await inspectJava(configured).catch(() => null);
     if (info && info.ok) {
-      return { ...info, required, source: 'manual', tooOld: info.major < required };
+      const index = candidates.findIndex((j) => path.resolve(j.path).toLowerCase() === path.resolve(configured).toLowerCase());
+      if (index >= 0) candidates.splice(index, 1, info);
+      else candidates.push(info);
     }
   }
-  const candidates = await findJavaCandidates();
-  if (candidates.length) {
-    const exact = candidates.find((j) => j.major === required);
-    if (exact) return { ...exact, required, source: 'detected' };
-    const newer = candidates.filter((j) => j.major >= required).sort((a, b) => a.major - b.major)[0];
-    if (newer) return { ...newer, required, source: 'detected' };
-    return { ...candidates[0], required, source: 'detected', tooOld: true };
+
+  if (!candidates.length) {
+    return { path: '', version: '', major: 0, required, source: 'missing' };
   }
-  return { path: '', version: '', major: 0, required, source: 'missing' };
+
+  const pick = (j, source, tooOld) => ({
+    ...j,
+    required,
+    source,
+    tooOld: tooOld === undefined ? j.major < required : tooOld,
+    tooNew: required <= 8 && j.major > 8
+  });
+
+  // Exact major is always preferred, whether it was configured manually or
+  // discovered in PATH / Program Files / the EMCL runtime folder.
+  const exact = candidates.find((j) => j.major === required);
+  if (exact) {
+    const manual = configured && path.resolve(exact.path).toLowerCase() === path.resolve(configured).toLowerCase();
+    return pick(exact, manual ? 'manual' : 'auto');
+  }
+
+  // No exact match: use the lowest installed runtime that is still new enough.
+  const newer = candidates.filter((j) => j.major >= required).sort((a, b) => a.major - b.major)[0];
+  if (newer) return pick(newer, 'auto');
+
+  // Nothing new enough: keep the newest available and mark it too old so the
+  // launch error can tell the user exactly what to install.
+  const newest = candidates.slice().sort((a, b) => b.major - a.major)[0];
+  return pick(newest, 'auto', true);
 }
 
 module.exports = {
