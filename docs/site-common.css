@@ -22,6 +22,7 @@ html[data-theme="dark"] body {
   color: var(--ink);
 }
 
+.btn:active, button:active { transform: translateY(1px) scale(.99); }
 html[data-theme="dark"] a { color: var(--blue); }
 html[data-theme="dark"] nav a { color: var(--muted); }
 html[data-theme="dark"] nav a.active { color: var(--blue); }

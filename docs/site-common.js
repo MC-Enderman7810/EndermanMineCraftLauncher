@@ -32,14 +32,17 @@
     try { localStorage.setItem(key, value); } catch (e) { /* ignore */ }
   }
 
-  var savedTheme = read('emcl-theme', '');
+  var query = new URLSearchParams(location.search);
+  var savedTheme = query.get('theme') || read('emcl-theme', '');
   if (savedTheme !== 'dark' && savedTheme !== 'light') {
     savedTheme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   }
   document.documentElement.dataset.theme = savedTheme;
+  if (query.get('theme')) write('emcl-theme', savedTheme);
 
-  var savedLang = read('emcl-lang', 'zh-CN');
+  var savedLang = query.get('lang') || read('emcl-lang', 'zh-CN');
   if (LANGS.indexOf(savedLang) < 0) savedLang = 'zh-CN';
+  if (query.get('lang')) write('emcl-lang', savedLang);
   document.documentElement.lang = savedLang;
   document.documentElement.dataset.lang = savedLang;
 
