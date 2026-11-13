@@ -1,12 +1,12 @@
 {
-  "version": "1.26.26.10",
+  "version": "1.26.26.11",
   "releaseDate": "2026-10-31",
   "notes": [
-    "反馈按钮改为打开 emcl.life 网页反馈，邮箱必填",
-    "修复网页反馈入口和开发者收件箱",
-    "保留皮肤库、模型与衣层开关"
+    "新增日志页「清空日志」",
+    "同步正式版 1.26.26.11 的联机服务器列表",
+    "保留商弦主题和独立更新"
   ],
   "url": "https://www.emcl.life/sianhgheln/",
-  "downloadUrl": "https://www.emcl.life/downloads/EMCL-SianhGheln-1.26.26.10.exe",
-  "sha256": "ED4BBDD4372F2F1AEDDB548A38622443D508C740F9D4FEB44FB224B964ADB345"
+  "downloadUrl": "https://www.emcl.life/downloads/EMCL-SianhGheln-1.26.26.11.exe",
+  "sha256": "DBE3CB9869074AB6DC0CC5F1985BD69B8FBED26DB5D4B20EA2C947B1AE166152"
 }
