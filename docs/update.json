@@ -1,14 +1,14 @@
 {
-  "version": "1.26.26.15",
+  "version": "1.26.26.16",
   "releaseDate": "2026-10-31",
   "notes": [
-    "修复 1.8.9 等旧版本误判为需要 Java 21",
-    "自动按游戏版本选择 Java 8/17/21/25",
-    "版本列表可单独指定实例 Java",
+    "版本列表新增「设置」，可按实例指定 Java 和版本隔离",
+    "修复 1.8.9 等旧版本被误判为需要 Java 21",
+    "自动匹配 Java 8/17/21/25",
     "自动下载并静默安装更新包",
-    "保留清空日志、联机服务器与商店语言修复"
+    "开发者页面支持复制反馈"
   ],
   "url": "https://www.emcl.life/download.html",
-  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.15.exe",
-  "sha256": "6357C9B3E9AFDAEC32C27E154421AEC7AE61217C1C80C80C213129616170DB2A"
+  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.16.exe",
+  "sha256": "C09F282A76B1F11EDFAEB6A1FAD86CB014EAB15DAAA3F5C77ED84CD5A06EED13"
 }

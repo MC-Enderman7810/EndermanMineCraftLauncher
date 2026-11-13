@@ -518,7 +518,11 @@ async function getWorlds(gameDir, versionId, isolation) {
 }
 
 function instanceDir(config, versionId) {
-  if (config.isolation && versionId) return path.join(config.gameDir, 'versions', versionId);
+  const perVersion = config.versionIsolation || {};
+  const isolated = versionId && Object.prototype.hasOwnProperty.call(perVersion, versionId)
+    ? perVersion[versionId]
+    : config.isolation;
+  if (isolated && versionId) return path.join(config.gameDir, 'versions', versionId);
   return config.gameDir;
 }
 

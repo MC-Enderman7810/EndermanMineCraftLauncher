@@ -34,7 +34,18 @@ async function writeJson(file, value) {
   await ensureDir(path.dirname(file));
   const tmp = file + '.tmp-' + process.pid;
   await fsp.writeFile(tmp, JSON.stringify(value, null, 2), 'utf8');
-  await fsp.rename(tmp, file);
+  try {
+    await fsp.rename(tmp, file);
+  } catch (error) {
+    // MSIX/Store containers can report EXDEV even when both paths share a
+    // virtualized AppData directory. Fall back to copy + unlink.
+    if (error && (error.code === 'EXDEV' || error.code === 'EPERM' || error.code === 'EACCES')) {
+      await fsp.copyFile(tmp, file);
+      await fsp.unlink(tmp).catch(() => {});
+    } else {
+      throw error;
+    }
+  }
 }
 
 async function readText(file, fallback = '') {

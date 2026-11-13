@@ -685,7 +685,7 @@ function versionsInstalled() {
       '<div class="version-actions">' +
         '<button class="btn btn-primary btn-sm" data-action="launch-version" data-id="' + esc(v.id) + '">' + icon('play', 14) + '启动</button>' +
         (active ? '' : '<button class="btn btn-soft btn-sm" data-action="select-version" data-id="' + esc(v.id) + '">设为当前</button>') +
-        '<button class="btn btn-ghost btn-sm" data-action="version-java" data-id="' + esc(v.id) + '">Java</button>' +
+        '<button class="btn btn-ghost btn-sm" data-action="version-java" data-id="' + esc(v.id) + '">设置</button>' +
         '<button class="btn btn-ghost btn-sm" data-action="rename-version" data-id="' + esc(v.id) + '">重命名</button>' +
         (!v.hasClientJar ? '<button class="btn btn-ghost btn-sm" data-action="repair-version" data-id="' + esc(v.id) + '">补全文件</button>' : '') +
         (v.loader === '原版' ? '<button class="btn btn-ghost btn-sm" data-action="loader-modal" data-id="' + esc(v.id) + '">装加载器</button>' : '') +
@@ -3126,21 +3126,25 @@ async function openVersionJava(versionId) {
   let list = [];
   try { list = await api.detectJava(); } catch { /* ignore */ }
   const saved = (state.config.versionJava || {})[versionId] || '';
+  const isoMap = state.config.versionIsolation || {};
+  const isolated = Object.prototype.hasOwnProperty.call(isoMap, versionId) ? !!isoMap[versionId] : !!state.config.isolation;
   const choices = (list || []).map((j) =>
     '<button class="account-pick" data-action="pick-version-java" data-path="' + esc(j.path) + '">' +
       '<span class="account-pick-main"><b>Java ' + esc(String(j.major || '?')) + '</b><small>' +
       esc(j.version || '') + ' · ' + esc(j.path) + '</small></span></button>').join('');
   openModal({
-    title: '版本 Java',
-    desc: '为 ' + versionId + ' 单独指定 Java。留空则按游戏版本自动选择。',
+    title: '版本设置',
+    desc: '为 ' + versionId + ' 单独指定 Java 和版本隔离。',
     body: '<div class="field"><label>Java 路径（留空 = 自动选择）</label><input class="input" id="versionJavaPath" value="' +
       esc(saved) + '" placeholder="自动匹配所需 Java 版本" /></div>' +
+      '<label class="row" style="gap:8px;margin:12px 0;font-size:12px"><input type="checkbox" id="versionIsolation"' +
+      (isolated ? ' checked' : '') + ' /> 为此版本开启版本隔离（独立 mods / saves / config）</label>' +
       '<div class="row" style="margin:8px 0;gap:6px"><button class="btn btn-ghost btn-sm" data-action="clear-version-java">自动选择</button>' +
       '<button class="btn btn-ghost btn-sm" data-action="download-java" data-major="8">下载 Java 8</button>' +
       '<button class="btn btn-ghost btn-sm" data-action="download-java" data-major="17">下载 Java 17</button>' +
       '<button class="btn btn-ghost btn-sm" data-action="download-java" data-major="21">下载 Java 21</button></div>' +
       (choices ? '<div class="account-pick-list" style="margin-top:8px">' + choices + '</div>' : '') +
-      '<div class="card-subtitle" style="margin-top:8px">Minecraft 1.8.9 必须使用 Java 8；1.17–1.20.4 通常用 Java 17；1.20.5+ 用 Java 21。</div>',
+      '<div class="card-subtitle" style="margin-top:8px">1.8.9 必须使用 Java 8；1.17–1.20.4 通常用 Java 17；1.20.5+ 用 Java 21。版本隔离只影响这个实例。</div>',
     actions: [{ label: '取消', kind: 'ghost', action: 'close-modal' },
       { label: '保存', kind: 'primary', action: 'save-version-java' }]
   });
@@ -3150,13 +3154,19 @@ async function saveVersionJava() {
   const id = state.versionJavaTarget;
   if (!id) return;
   const value = $('versionJavaPath') ? $('versionJavaPath').value.trim() : '';
+  const isolation = $('versionIsolation') ? !!$('versionIsolation').checked : false;
   const next = Object.assign({}, state.config.versionJava || {});
+  const nextIsolation = Object.assign({}, state.config.versionIsolation || {});
   if (value) next[id] = value;
   else delete next[id];
-  const res = await api.patchConfig({ versionJava: next });
-  state.config = res.config || Object.assign({}, state.config, { versionJava: next });
+  nextIsolation[id] = isolation;
+  const res = await api.patchConfig({ versionJava: next, versionIsolation: nextIsolation });
+  state.config = res.config || Object.assign({}, state.config, {
+    versionJava: next,
+    versionIsolation: nextIsolation
+  });
   closeModal();
-  toast(value ? '已为版本指定 Java' : '已恢复自动选择 Java', 'success');
+  toast('版本设置已保存', 'success');
   render();
 }
 

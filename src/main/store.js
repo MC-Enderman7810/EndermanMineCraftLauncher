@@ -85,6 +85,7 @@ class Store {
       multiplayerServers: [],
       autoUpdate: true,
       versionJava: {},
+      versionIsolation: {},
       firstRun: true
     };
   }
