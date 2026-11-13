@@ -9,7 +9,7 @@
   <Identity Name="EnderGameStudios.EMCL"
     ProcessorArchitecture="x64"
     Publisher='CN=A14D6601-52B6-48FA-AD8F-75C965406CE4'
-    Version="1.26.30.0" />
+    Version="1.26.31.0" />
   <Properties>
     <DisplayName>EMCL</DisplayName>
     <PublisherDisplayName>Ender Game Studios</PublisherDisplayName>
@@ -17,6 +17,7 @@
     <Logo>assets\StoreLogo.png</Logo>
   </Properties>
   <Resources>
+    <Resource Language="zh-CN" />
     <Resource Language="en-US" />
   </Resources>
   <Dependencies>
@@ -41,3 +42,4 @@
     </Application>
   </Applications>
 </Package>
+
