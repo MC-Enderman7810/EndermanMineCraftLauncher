@@ -37,6 +37,8 @@
     footer { padding:24px 0 36px; color:var(--muted); font-size:11px; line-height:1.8; }
     @media(max-width:800px){ .row { grid-template-columns:1fr 1fr; } .row:first-child { display:none; } .sha { grid-column:1/-1; } nav { display:none; } }
   </style>
+  <link rel="stylesheet" href="./site-common.css">
+  <script>try{var t=localStorage.getItem('emcl-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t;var l=localStorage.getItem('emcl-lang')||'zh-CN';document.documentElement.lang=l;document.documentElement.dataset.lang=l;}catch(e){}</script>
 </head>
 <body>
 <div class="wrap">
@@ -96,5 +98,6 @@
 
   <footer>© 2026 EMCL Studio · 与 Mojang Studios、Microsoft 无隶属关系 · 历史版本仅作存档，不提供安全更新</footer>
 </div>
+  <script src="./site-common.js"></script>
 </body>
 </html>

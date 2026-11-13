@@ -36,6 +36,8 @@
     footer { padding:24px 0 36px; color:var(--muted); font-size:11px; }
     @media(max-width:700px){ .row { grid-template-columns:1fr; } nav { display:none; } }
   </style>
+  <link rel="stylesheet" href="../site-common.css">
+  <script>try{var t=localStorage.getItem('emcl-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t;var l=localStorage.getItem('emcl-lang')||'zh-CN';document.documentElement.lang=l;document.documentElement.dataset.lang=l;}catch(e){}</script>
 </head>
 <body>
 <div class="wrap">
@@ -166,5 +168,6 @@
   });
 })();
 </script>
+  <script src="../site-common.js"></script>
 </body>
 </html>
