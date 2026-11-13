@@ -33,6 +33,8 @@
     .btn { display:inline-flex; align-items:center; justify-content:center; min-height:40px; padding:0 15px;
       border-radius:10px; background:var(--blue); color:#fff; text-decoration:none; font-size:13px; font-weight:800; }
     .btn:hover { background:var(--blue-dark); }
+    .btn:active { transform:translateY(1px) scale(.99); }
+    .btn:disabled { opacity:.55; cursor:wait; }
     .btn.ghost { background:#F4F9FF; color:var(--blue-dark); border:1px solid var(--line); }
     .note { color:var(--muted); font-size:12px; line-height:1.8; margin-top:10px; }
     footer { margin-top:30px; color:#8A9BAC; font-size:12px; }
@@ -319,7 +321,7 @@
             '<button class="btn ghost btn-sm" type="button" data-fb-status="read" data-fb-id="' + esc(item.id) + '">标记已读</button>' +
             '<button class="btn ghost btn-sm" type="button" data-fb-status="closed" data-fb-id="' + esc(item.id) + '">标记已处理</button>' +
             '<button class="btn ghost btn-sm" type="button" data-fb-delete="' + esc(item.id) + '">删除</button>' +
-            '<span style="font-size:10px;color:#60758C;align-self:center">状态：' + esc(item.status || 'new') + '</span></div>' +
+            '<span id="fb-status-' + esc(item.id) + '" style="font-size:10px;color:#60758C;align-self:center">状态：' + esc(item.status || 'new') + '</span></div>' +
             '</div>';
         }).join('');
       } catch (e) {
@@ -369,19 +371,38 @@
 
     if (feedbackList) {
       feedbackList.addEventListener('click', async function (e) {
-        var id = e.target.getAttribute('data-fb-id');
-        var status = e.target.getAttribute('data-fb-status');
-        var del = e.target.getAttribute('data-fb-delete');
+        var button = e.target.closest ? e.target.closest('button') : null;
+        if (!button) return;
+        var id = button.getAttribute('data-fb-id');
+        var status = button.getAttribute('data-fb-status');
+        var del = button.getAttribute('data-fb-delete');
+        var original = button.textContent;
+        button.disabled = true;
+        button.textContent = '处理中…';
         try {
           if (id && status) {
             await apiFetch('/api/feedback/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: status }) });
-            await loadFeedback();
+            var label = status === 'closed' ? '已处理' : '已读';
+            var statusNode = document.getElementById('fb-status-' + id);
+            if (statusNode) statusNode.textContent = '状态：' + status + ' · ' + label;
+            button.textContent = label + ' ✓';
+            setAdminStatus('已标记：' + label);
+            setTimeout(loadFeedback, 700);
           } else if (del) {
-            if (!confirm('确定删除这条反馈？')) return;
+            if (!confirm('确定删除这条反馈？')) {
+              button.disabled = false;
+              button.textContent = original;
+              return;
+            }
             await apiFetch('/api/feedback/' + del, { method: 'DELETE' });
+            setAdminStatus('反馈已删除');
             await loadFeedback();
           }
-        } catch (err) { setAdminStatus(err.message || '操作失败', true); }
+        } catch (err) {
+          button.disabled = false;
+          button.textContent = original;
+          setAdminStatus(err.message || '操作失败', true);
+        }
       });
     }
     var refreshFeedback = document.getElementById('refreshFeedback');
