@@ -97,7 +97,7 @@ html[data-theme="dark"] strong { color: var(--ink); }
 /* Page preference controls. */
 .site-prefs {
   position: fixed;
-  top: 14px;
+  bottom: 18px;
   right: 14px;
   z-index: 9999;
   display: flex;
@@ -133,6 +133,6 @@ html[data-theme="dark"] .site-prefs {
 .site-prefs button:active { transform: translateY(1px) scale(.97); }
 
 @media (max-width: 640px) {
-  .site-prefs { top: 8px; right: 8px; padding: 4px; }
+  .site-prefs { bottom: 10px; right: 8px; padding: 4px; }
   .site-prefs select { max-width: 96px; }
 }
