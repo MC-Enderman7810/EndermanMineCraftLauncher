@@ -9,7 +9,7 @@
   <Identity Name="EnderGameStudios.EMCL"
     ProcessorArchitecture="x64"
     Publisher='CN=A14D6601-52B6-48FA-AD8F-75C965406CE4'
-    Version="1.26.31.0" />
+    Version="1.26.32.0" />
   <Properties>
     <DisplayName>EMCL</DisplayName>
     <PublisherDisplayName>Ender Game Studios</PublisherDisplayName>
@@ -18,7 +18,12 @@
   </Properties>
   <Resources>
     <Resource Language="zh-CN" />
+    <Resource Language="zh-TW" />
     <Resource Language="en-US" />
+    <Resource Language="ja-JP" />
+    <Resource Language="ko-KR" />
+    <Resource Language="fr-FR" />
+    <Resource Language="ru-RU" />
   </Resources>
   <Dependencies>
     <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26100.0" />
@@ -42,4 +47,5 @@
     </Application>
   </Applications>
 </Package>
+
 
