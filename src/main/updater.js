@@ -152,6 +152,7 @@ async function checkUpdates(force = false) {
       downloadUrl: officialUrl(data.downloadUrl) || officialUrl(data.url) || REPO,
       sha256: String(data.sha256 || '').toLowerCase(),
       store: !!process.windowsStore,
+      platform: process.platform,
       checkedAt: now,
       error: ''
     };

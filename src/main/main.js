@@ -5,6 +5,19 @@ const path = require('path');
 const fs = require('fs');
 const fsp = fs.promises;
 
+// Electron 22 (legacy Windows build) ships Node 16 without global fetch.
+if (typeof globalThis.fetch === 'undefined') {
+  try {
+    const undici = require('undici');
+    globalThis.fetch = undici.fetch;
+    globalThis.Headers = undici.Headers;
+    globalThis.Request = undici.Request;
+    globalThis.Response = undici.Response;
+  } catch (error) {
+    console.warn('[EMCL] fetch polyfill unavailable:', error && error.message);
+  }
+}
+
 const { channel, isDev } = require('./channel');
 const { Store } = require('./store');
 const {
@@ -220,9 +233,9 @@ function registerIpc() {
 
   ipcMain.handle('dialog:java', async () => {
     const result = await dialog.showOpenDialog(mainWindow, {
-      title: '选择 java.exe',
+      title: process.platform === 'win32' ? '选择 java.exe' : '选择 java 可执行文件',
       properties: ['openFile'],
-      filters: [{ name: 'Java', extensions: ['exe'] }]
+      filters: [{ name: 'Java', extensions: process.platform === 'win32' ? ['exe'] : ['*'] }]
     });
     if (result.canceled || !result.filePaths.length) return { canceled: true };
     const info = await java.inspectJava(result.filePaths[0]);
@@ -1016,7 +1029,7 @@ async function autoCheck() {
     ]);
     if (update && update.ok) send('update:status', update);
     if (announcements && announcements.ok) send('announcements:changed', announcements);
-    if (update && update.ok && update.hasUpdate && !update.store &&
+    if (update && update.ok && update.hasUpdate && !update.store && process.platform === 'win32' &&
       !currentGame && !autoUpdating && process.env.EMCL_NO_AUTO_UPDATE !== '1' &&
       store && store.getConfig().autoUpdate !== false) {
       autoUpdating = true;

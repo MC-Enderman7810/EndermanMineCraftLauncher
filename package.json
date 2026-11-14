@@ -10,10 +10,14 @@
     "start": "electron .",
     "dist": "electron-builder --win portable --x64",
     "pack": "electron-builder --win dir --x64",
-    "postpack": "node scripts/patch-version.js"
+    "postpack": "node scripts/patch-version.js",
+    "dist:linux": "electron-builder --linux AppImage deb --x64",
+    "dist:mac": "electron-builder --mac zip --x64",
+    "dist:legacy": "electron-builder --win portable --ia32 --config electron-builder.legacy.json"
   },
   "dependencies": {
-    "adm-zip": "^0.5.16"
+    "adm-zip": "^0.5.16",
+    "undici": "^5.28.4"
   },
   "devDependencies": {
     "electron": "^38.0.0",
@@ -55,6 +59,21 @@
       "backgroundColor": "#2F7FD1",
       "showNameOnTiles": true,
       "customManifestPath": "AppxManifest.xml"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "assets/icon.png",
+      "category": "Game"
+    },
+    "mac": {
+      "target": [
+        "zip"
+      ],
+      "icon": "assets/icon.png",
+      "category": "public.app-category.games"
     }
   }
 }

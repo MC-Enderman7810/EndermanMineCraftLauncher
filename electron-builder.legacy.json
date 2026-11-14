@@ -1,0 +1,28 @@
+{
+  "appId": "com.emcl.launcher.legacy",
+  "productName": "EMCL Legacy",
+  "electronVersion": "22.3.27",
+  "directories": {
+    "output": "dist-legacy"
+  },
+  "files": [
+    "src/**/*",
+    "assets/**/*",
+    "package.json",
+    "!**/*.map"
+  ],
+  "asar": true,
+  "npmRebuild": false,
+  "win": {
+    "target": [
+      {
+        "target": "portable",
+        "arch": ["ia32"]
+      }
+    ],
+    "icon": "assets/icon.ico"
+  },
+  "portable": {
+    "artifactName": "EMCL-Legacy-${version}-ia32.exe"
+  }
+}

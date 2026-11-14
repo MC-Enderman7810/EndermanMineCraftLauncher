@@ -110,7 +110,7 @@ async function buildLaunch(store, versionId, account, options = {}) {
   await ensureDir(nativesDir);
   const assetsDir = path.join(config.gameDir, 'assets');
   const librariesDir = path.join(config.gameDir, 'libraries');
-  const classpath = classpathOf(version, config.gameDir).join(';');
+  const classpath = classpathOf(version, config.gameDir).join(path.delimiter);
 
   const vars = {
     auth_player_name: account.name,

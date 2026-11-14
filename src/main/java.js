@@ -48,6 +48,10 @@ function parseMajor(version) {
   return Number.isFinite(n) ? n : 0;
 }
 
+function javaBin() {
+  return process.platform === 'win32' ? 'java.exe' : 'java';
+}
+
 function candidateDirs() {
   const out = [];
   const push = (p) => {
@@ -56,17 +60,33 @@ function candidateDirs() {
   push(process.env.JAVA_HOME);
   push(process.env.JRE_HOME);
   push(process.env.JDK_HOME);
-  const bases = [
-    'C:\\Program Files\\Java',
-    'C:\\Program Files\\Eclipse Adoptium',
-    'C:\\Program Files\\AdoptOpenJDK',
-    'C:\\Program Files\\Microsoft',
-    'C:\\Program Files\\Zulu',
-    'C:\\Program Files\\BellSoft',
-    'C:\\Program Files (x86)\\Java',
-    path.join(process.env.LOCALAPPDATA || '', 'Programs', 'Eclipse Adoptium'),
-    path.join(process.env.APPDATA || '', '.minecraft', 'runtime')
-  ];
+  const bases = process.platform === 'win32'
+    ? [
+      'C:\\Program Files\\Java',
+      'C:\\Program Files\\Eclipse Adoptium',
+      'C:\\Program Files\\AdoptOpenJDK',
+      'C:\\Program Files\\Microsoft',
+      'C:\\Program Files\\Zulu',
+      'C:\\Program Files\\BellSoft',
+      'C:\\Program Files (x86)\\Java',
+      path.join(process.env.LOCALAPPDATA || '', 'Programs', 'Eclipse Adoptium'),
+      path.join(process.env.APPDATA || '', '.minecraft', 'runtime')
+    ]
+    : process.platform === 'darwin'
+      ? [
+        '/Library/Java/JavaVirtualMachines',
+        '/System/Library/Java/JavaVirtualMachines',
+        '/usr/local/opt/openjdk',
+        '/opt/homebrew/opt/openjdk',
+        path.join(process.env.HOME || '', '.minecraft', 'runtime')
+      ]
+      : [
+        '/usr/lib/jvm',
+        '/usr/java',
+        '/opt/java',
+        '/opt/jdk',
+        path.join(process.env.HOME || '', '.minecraft', 'runtime')
+      ];
   for (const base of bases) {
     try {
       if (!fs.existsSync(base)) continue;
@@ -86,21 +106,26 @@ async function findJavaCandidates(extra = []) {
     if (!candidates.includes(resolved)) candidates.push(resolved);
   };
   for (const p of extra) add(p);
-  if (process.env.JAVA_HOME) add(path.join(process.env.JAVA_HOME, 'bin', 'java.exe'));
+  if (process.env.JAVA_HOME) add(path.join(process.env.JAVA_HOME, 'bin', javaBin()));
   // PATH
-  const where = await execFileAsync('where.exe', ['java']);
+  const where = await execFileAsync(process.platform === 'win32' ? 'where.exe' : 'which', ['java']);
   if (where.stdout) {
     for (const line of where.stdout.split(/\r?\n/)) {
-      if (line.trim().toLowerCase().endsWith('java.exe')) add(line.trim());
+      const hit = line.trim();
+      if (hit && (process.platform === 'win32' ? hit.toLowerCase().endsWith('java.exe') : path.basename(hit) === 'java')) {
+        add(hit);
+      }
     }
   }
   for (const dir of candidateDirs()) {
-    add(path.join(dir, 'bin', 'java.exe'));
-    // Microsoft Store runtime nests a jre directory
+    add(path.join(dir, 'bin', javaBin()));
+    // Microsoft Store runtime nests a jre directory; Linux/macOS JDK bundles
+    // often have Contents/Home as another level.
     try {
       for (const sub of fs.readdirSync(dir)) {
-        add(path.join(dir, sub, 'bin', 'java.exe'));
-        add(path.join(dir, sub, 'jre', 'bin', 'java.exe'));
+        add(path.join(dir, sub, 'bin', javaBin()));
+        add(path.join(dir, sub, 'jre', 'bin', javaBin()));
+        add(path.join(dir, sub, 'Contents', 'Home', 'bin', javaBin()));
       }
     } catch { /* ignore */ }
   }
@@ -137,9 +162,12 @@ function javaMajorForMc(mcVersion) {
 }
 
 async function ensureJava(store, major, onProgress = () => {}) {
+  if (process.platform !== 'win32') {
+    throw new Error('Linux / macOS 请先安装 Java ' + major + '，然后在设置中选择 java 可执行文件');
+  }
   const runtimeRoot = path.join(store.root, 'runtime');
   const targetDir = path.join(runtimeRoot, 'jre-' + major);
-  const targetJava = path.join(targetDir, 'bin', 'java.exe');
+  const targetJava = path.join(targetDir, 'bin', javaBin());
   if (await exists(targetJava)) {
     const info = await inspectJava(targetJava);
     if (info.ok) return info;
@@ -184,7 +212,7 @@ async function ensureJava(store, major, onProgress = () => {}) {
     const names = await fsp.readdir(targetDir).catch(() => []);
     for (const name of names) {
       const inner = path.join(targetDir, name);
-      const candidate = path.join(inner, 'bin', 'java.exe');
+      const candidate = path.join(inner, 'bin', javaBin());
       if (await exists(candidate)) {
         const children = await fsp.readdir(inner);
         for (const child of children) {
@@ -195,7 +223,7 @@ async function ensureJava(store, major, onProgress = () => {}) {
       }
     }
   }
-  if (!await exists(targetJava)) throw new Error('Java 运行时解压后找不到 bin/java.exe');
+  if (!await exists(targetJava)) throw new Error('Java 运行时解压后找不到 bin/java');
   const info = await inspectJava(targetJava);
   if (!info.ok) throw new Error('下载的 Java 运行时无法运行');
   onProgress({ percent: 100, message: 'Java ' + info.version + ' 已就绪' });
@@ -227,7 +255,7 @@ async function resolveJava(store, mcVersion, requiredOverride, versionId) {
   try {
     if (fs.existsSync(runtimeRoot)) {
       for (const name of fs.readdirSync(runtimeRoot)) {
-        extras.push(path.join(runtimeRoot, name, 'bin', 'java.exe'));
+        extras.push(path.join(runtimeRoot, name, 'bin', javaBin()));
       }
     }
   } catch { /* ignore */ }

@@ -2680,6 +2680,7 @@ function showUpdateModal() {
     return;
   }
   const notes = (u.notes || []).map((n) => '<li>' + esc(n) + '</li>').join('');
+  const auto = !u.store && u.platform === 'win32';
   openModal({
     title: 'EMCL ' + u.latest + ' 可用',
     desc: '当前版本 ' + (u.current || state.appVersion) +
@@ -2688,19 +2689,19 @@ function showUpdateModal() {
       (notes ? '<ul style="margin:0;padding-left:18px;font-size:11px;line-height:1.9;color:var(--text-2)">' +
         notes + '</ul>' : '<div class="card-subtitle">该版本包含问题修复与体验改进。</div>') +
       '</div>' +
-      (u.store ? '' : '<div class="card-subtitle" style="margin-top:8px">启动器会自动下载并静默安装，完成后重新打开。</div>'),
-    actions: u.store
-      ? [{ label: '前往 Microsoft Store', kind: 'primary', action: 'open-update' }]
-      : [{ label: '稍后', kind: 'ghost', action: 'close-modal' },
+      (auto ? '<div class="card-subtitle" style="margin-top:8px">启动器会自动下载并静默安装，完成后重新打开。</div>' : ''),
+    actions: auto
+      ? [{ label: '稍后', kind: 'ghost', action: 'close-modal' },
         { label: '立即自动更新', kind: 'primary', action: 'start-update' }]
+      : [{ label: u.store ? '前往 Microsoft Store' : '前往下载', kind: 'primary', action: 'open-update' }]
   });
 }
 
 async function startUpdate() {
   const u = state.update;
   if (!u) return;
-  if (u.store || state.updateInstalling) {
-    if (u.store) await openUpdate();
+  if (u.store || (u.platform && u.platform !== 'win32') || state.updateInstalling) {
+    if (u.store || (u.platform && u.platform !== 'win32')) await openUpdate();
     return;
   }
   state.updateInstalling = true;
