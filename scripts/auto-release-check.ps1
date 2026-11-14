@@ -27,24 +27,33 @@ New-Item -ItemType File -Path $lock -Force | Out-Null
 
 try {
   git fetch origin main --quiet
+  git fetch origin update --quiet 2>$null
+  $targetRef = 'origin/main'
+  $updateExists = (git rev-parse --verify origin/update 2>$null)
+  if ($updateExists) {
+    $updateAhead = [int](git rev-list --count origin/main..origin/update 2>$null)
+    if ($updateAhead -gt 0) { $targetRef = 'origin/update' }
+  }
   $local = (git rev-parse HEAD).Trim()
-  $remote = (git rev-parse origin/main).Trim()
-  if ($local -eq $remote) { Write-Log 'No new commits on origin/main.'; exit 0 }
+  $remote = (git rev-parse $targetRef).Trim()
+  if ($local -eq $remote) { Write-Log ('No new commits on ' + $targetRef + '.'); exit 0 }
 
   $dirty = (git status --porcelain)
   if ($dirty) { Write-Log 'Working tree is not clean; auto release skipped.'; exit 0 }
 
-  $latestMessage = (git log -1 --format=%s origin/main)
+  $latestMessage = (git log -1 --format=%s $targetRef)
+  $latestAuthor = (git log -1 --format=%an $targetRef)
+  Write-Log ('Target ' + $targetRef + ' by ' + $latestAuthor)
   if ($latestMessage -match '^Auto release') { Write-Log 'Latest commit is an auto-release commit; skipped.'; exit 0 }
 
-  $changed = @(git diff --name-only HEAD..origin/main)
+  $changed = @(git diff --name-only HEAD..$targetRef)
   $sourceChanges = @($changed | Where-Object { $_ -match '^(src/|package\.json$|package-lock\.json$|build/|electron-builder)' })
   if (-not $sourceChanges.Count) { Write-Log 'No application source changes; skipped.'; exit 0 }
 
   Write-Log ('Changes detected: ' + ($sourceChanges -join ', '))
   if ($DryRun) { Write-Log 'DryRun: would inspect, test and build a release.'; exit 0 }
 
-  git merge --ff-only origin/main --quiet
+  git merge --ff-only $targetRef --quiet
 
   $jsFiles = @()
   $jsFiles += Get-ChildItem (Join-Path $root 'src\main') -Filter *.js -File | Select-Object -ExpandProperty FullName
