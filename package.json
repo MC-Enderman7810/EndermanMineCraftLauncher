@@ -3,7 +3,10 @@
   "version": "1.26.26.16",
   "description": "EMCL - a blue PCL2-style Minecraft Java launcher for Windows",
   "main": "src/main/main.js",
-  "author": "EMCL",
+  "author": {
+    "name": "EMCL",
+    "email": "EMCLsupport2026@163.com"
+  },
   "license": "MIT",
   "private": true,
   "scripts": {
@@ -66,7 +69,8 @@
         "deb"
       ],
       "icon": "assets/icon.png",
-      "category": "Game"
+      "category": "Game",
+      "maintainer": "EMCL <EMCLsupport2026@163.com>"
     },
     "mac": {
       "target": [
