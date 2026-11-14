@@ -70,6 +70,7 @@
     document.documentElement.lang = lang;
     document.documentElement.dataset.lang = lang;
     write('emcl-lang', lang);
+    document.dispatchEvent(new CustomEvent('emcl:language-changed', { detail: { lang: lang } }));
     if (!textNodes.length) collectText();
     var dict = lang === 'zh-CN' ? null : en;
     textNodes.forEach(function (node) {

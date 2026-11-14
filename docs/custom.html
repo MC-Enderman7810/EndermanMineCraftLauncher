@@ -53,7 +53,20 @@
     .notice { font-size:11px; color:var(--muted); line-height:1.8; margin-top:14px; }
     footer { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:24px 0 34px; color:var(--muted); font-size:11px; }
     @media(max-width:800px){ .grid,.case { grid-template-columns:1fr; } .steps { grid-template-columns:1fr 1fr; } .hero { padding:34px 24px; } nav { display:none; } }
-  </style>
+  
+    .price-breakdown { margin-top:16px; }
+    .price-head { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+    .price-head h2 { margin:0; }
+    .price-badge { padding:4px 8px; border-radius:999px; background:var(--blue-soft); color:var(--blue-dark); font-size:10px; font-weight:800; }
+    .price-list { display:flex; gap:9px; flex-wrap:wrap; margin-top:14px; }
+    .price-chip { min-width:112px; padding:11px 13px; border:1px solid var(--line); border-radius:12px; background:var(--white); }
+    .price-chip b { display:block; color:var(--ink); font-size:18px; letter-spacing:-.4px; }
+    .price-chip span { display:block; margin-top:2px; color:var(--muted); font-size:10px; }
+    .price-chip.gold { border-color:#D8B35A; background:linear-gradient(145deg,#FFF9E8,#FFF3C4); }
+    html[data-theme="dark"] .price-chip.gold { background:linear-gradient(145deg,#2C2614,#3A3015); border-color:#7A632B; }
+    .price-joke { margin-top:9px; color:#A66A00; font-size:11px; font-weight:700; }
+    .price-breakdown .notice { margin-top:10px; }
+</style>
   <link rel="stylesheet" href="./site-common.css">
   <script>try{var t=localStorage.getItem('emcl-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t;var l=localStorage.getItem('emcl-lang')||'zh-CN';document.documentElement.lang=l;document.documentElement.dataset.lang=l;}catch(e){}</script>
 </head>
@@ -74,16 +87,23 @@
       <div class="badge"><span class="dot"></span> CUSTOM EDITION</div>
       <h1>定制你的 <span>EMCL</span></h1>
       <p class="lead">为服务器、城市或社群制作专属启动器：改名称、图标、配色、背景、官网入口和服务器地址，数据和标准版完全独立。</p>
-      <div class="price"><b>7.5</b><span>元 / 次 · 基础定制</span></div>
+      <div class="price"><b id="priceMain">7.5</b><span id="priceUnit">元 / 次 · 基础定制</span></div>
       <div class="actions">
         <a class="btn" href="mailto:EMCLsupport2026@163.com?subject=EMCL%20%E5%AE%9A%E5%88%B6%E7%89%88%E6%9C%AC%E5%92%A8%E8%AF%A2">邮件咨询定制</a>
         <a class="btn ghost" href="./sianhgheln/">查看商弦成功案例</a>
       </div>
     </section>
 
+
+    <section class="card price-breakdown" id="priceBreakdown" style="margin-top:16px">
+      <div class="price-head"><h2>定制价格</h2><span class="price-badge">参考汇率</span></div>
+      <div class="price-list" id="priceList"></div>
+      <p class="notice" id="priceNote">汇率仅供参考，实际支付金额以付款时为准。</p>
+    </section>
+
     <section class="grid">
       <div class="card">
-        <h2>7.5 元包含什么</h2>
+        <h2 id="includeTitle">7.5 元包含什么</h2>
         <ul class="list">
           <li><span class="check">✓</span><span>启动器名称、窗口标题和品牌文字</span></li>
           <li><span class="check">✓</span><span>应用图标、主题色、侧栏颜色</span></li>
@@ -95,7 +115,7 @@
       </div>
       <div class="card">
         <h2>不包含 / 需要先确认</h2>
-        <p>7.5 元是基础品牌定制，不包含新增大型功能、重写界面、服务器托管或 Minecraft 游戏本体。</p>
+        <p id="excludeDesc">7.5 元是基础品牌定制，不包含新增大型功能、重写界面、服务器托管或 Minecraft 游戏本体。</p>
         <ul class="list">
           <li><span class="check">•</span><span>需要你提供名称、图标/背景素材和链接</span></li>
           <li><span class="check">•</span><span>素材版权由提供方负责，或使用可商用素材</span></li>
@@ -124,7 +144,7 @@
       <h2>定制流程</h2>
       <div class="steps">
         <div class="step"><b>01 联系</b><span>邮件说明名称、用途和想要的风格。</span></div>
-        <div class="step"><b>02 确认</b><span>确认素材、链接和 7.5 元费用。</span></div>
+        <div class="step"><b>02 确认</b><span id="confirmStep">确认素材、链接和 7.5 元费用。</span></div>
         <div class="step"><b>03 制作</b><span>完成品牌替换、打包和自测。</span></div>
         <div class="step"><b>04 交付</b><span>发便携版 EXE，并提供独立更新页。</span></div>
       </div>
@@ -138,5 +158,6 @@
   </footer>
 </div>
   <script src="./site-common.js"></script>
+  <script src="./custom-currency.js"></script>
 </body>
 </html>

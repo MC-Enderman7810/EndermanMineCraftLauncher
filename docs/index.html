@@ -113,6 +113,19 @@
       text-shadow: 0 1px 2px rgba(0,0,0,.28);
     }
     .btn.sianh-btn:hover { filter: brightness(1.08); background: linear-gradient(135deg, #D21D37 0%, #A61E40 18%, #16446F 52%, #3389DD 78%, #9AD2FF 100%); }
+
+    /* Keep the Sianh identity even when the shared dark theme applies .btn. */
+    html[data-theme="dark"] .btn.sianh-btn,
+    html[data-theme="dark"] .special .btn.sianh-btn {
+      background: linear-gradient(135deg, #C61A32 0%, #9B1B3A 18%, #123D68 52%, #2F7FD1 78%, #8FCBFF 100%) !important;
+      border-color: rgba(255,255,255,.22) !important;
+      color: #fff !important;
+    }
+    html[data-theme="dark"] .btn.sianh-btn:hover,
+    html[data-theme="dark"] .special .btn.sianh-btn:hover {
+      background: linear-gradient(135deg, #D21D37 0%, #A61E40 18%, #16446F 52%, #3389DD 78%, #9AD2FF 100%) !important;
+    }
+
     .btn.store { background: #0F2B46; }
     .btn.store:hover { background: #173D61; }
     .store-badge {
