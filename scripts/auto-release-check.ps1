@@ -32,7 +32,8 @@ try {
   $updateExists = (git rev-parse --verify origin/update 2>$null)
   if ($updateExists) {
     $updateAhead = [int](git rev-list --count origin/main..origin/update 2>$null)
-    if ($updateAhead -gt 0) { $targetRef = 'origin/update' }
+    $updateSource = @(git diff --name-only origin/main..origin/update 2>$null | Where-Object { $_ -match '^(src/|package\.json$|package-lock\.json$|build/|electron-builder)' })
+    if ($updateAhead -gt 0 -and $updateSource.Count -gt 0) { $targetRef = 'origin/update' }
   }
   $local = (git rev-parse HEAD).Trim()
   $remote = (git rev-parse $targetRef).Trim()
