@@ -35,7 +35,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   macos:
-    runs-on: macos-14
+    runs-on: macos-15
     env:
       CSC_IDENTITY_AUTO_DISCOVERY: 'false'
     steps:
@@ -45,10 +45,11 @@ jobs:
           node-version: 20
       - name: Install dependencies
         run: npm install --no-audit --no-fund
-      - name: Build unsigned universal macOS zip
+      - name: Build unsigned macOS zips
         run: |
           node -e "const fs=require('fs');const p='package.json';const d=JSON.parse(fs.readFileSync(p));delete d.build.electronDist;fs.writeFileSync(p,JSON.stringify(d,null,2))"
-          npx electron-builder --mac zip --universal --publish never
+          npx electron-builder --mac zip --x64 --publish never
+          npx electron-builder --mac zip --arm64 --publish never
       - name: Publish release assets
         uses: softprops/action-gh-release@v2
         with:
