@@ -131,6 +131,26 @@
     }
   </style>
   <link rel="stylesheet" href="../site-common.css">
+
+  <style id="sianh-dark-palette">
+    /* Keep the Sianh red / deep blue / light blue identity in dark mode. */
+    html[data-theme="dark"] {
+      --red: #FF4D5F;
+      --blue: #3D7FD6;
+      --light-blue: #8ED2F5;
+      --ink: #E8F2FF;
+      --muted: #9DB2C8;
+      --line: #29445F;
+      --paper: #081522;
+      --white: #0F2234;
+      --shadow: 0 18px 50px rgba(0,0,0,.3);
+    }
+    html[data-theme="dark"] .server div { background:#0F2234; border-color:#29445F; color:#9DB2C8; }
+    html[data-theme="dark"] .card { background:#0F2234; border-color:#29445F; }
+    html[data-theme="dark"] .btn { background: var(--blue); }
+    html[data-theme="dark"] .btn.red { background: var(--red); }
+    html[data-theme="dark"] .btn.red:hover { background:#E43D4F; }
+  </style>
   <script>try{var t=localStorage.getItem('emcl-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t;var l=localStorage.getItem('emcl-lang')||'zh-CN';document.documentElement.lang=l;document.documentElement.dataset.lang=l;}catch(e){}</script>
 </head>
 <body>
