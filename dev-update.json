@@ -1,0 +1,13 @@
+{
+  "version": "1.26.25.27",
+  "releaseDate": "2026-11-15",
+  "branch": "update",
+  "auto": true,
+  "downloadUrl": "https://www.emcl.life/downloads/updates/dev-app-1.26.25.27.asar",
+  "sha256": "61DF5659F043B4C4510CDC122BC834EE86A35D81D1EBB7F8BBE3FDF39D03996E",
+  "notes": [
+    "新增开发者更新中心和每小时检查",
+    "update 分支更新包",
+    "系统识别失败不再兜底 Windows"
+  ]
+}

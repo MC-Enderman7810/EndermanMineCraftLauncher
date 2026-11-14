@@ -11,6 +11,7 @@
   "private": true,
   "scripts": {
     "start": "electron .",
+    "test:feedback": "node --test test/feedback.test.js",
     "dist": "electron-builder --win portable --x64",
     "pack": "electron-builder --win dir --x64",
     "postpack": "node scripts/patch-version.js",

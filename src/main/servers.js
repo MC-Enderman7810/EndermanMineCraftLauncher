@@ -339,6 +339,10 @@ class ServerManager {
   async detectRunning(id) {
     const profile = (await this.load()).find((s) => s.id === id);
     if (!profile || profile.type !== 'local') return { ok: true, running: false, reasons: [] };
+    const managed = this.runtimes.get(id);
+    if (managed && managed.exitCode === null) {
+      return { ok: true, running: true, managed: true, reasons: ['EMCL 正在管理该服务器进程'], pid: managed.pid || 0 };
+    }
     const reasons = [];
     let pid = await this.findJavaProcess(profile.dir);
     let port = 0;

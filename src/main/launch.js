@@ -89,13 +89,14 @@ async function buildLaunch(store, versionId, account, options = {}) {
   // The Minecraft version determines the runtime family. A modded version
   // JSON can carry a misleading javaVersion value (for example 1.8.9 Forge
   // reporting 21), so do not let it override the base game mapping.
-  const reqMajor = javaMajorForMc(versionId);
-  const javaInfo = await resolveJava(store, versionId, reqMajor, versionId);
+  const gameVersion = version.chain && version.chain.length ? version.chain[0].id : versionId;
+  const reqMajor = javaMajorForMc(gameVersion);
+  const javaInfo = await resolveJava(store, gameVersion, reqMajor, versionId);
   if (!javaInfo.path) {
     throw new Error('未找到 Java 运行时。请到「设置」检测或下载 Java ' + reqMajor);
   }
   if (javaInfo.tooOld) {
-    throw new Error('当前 Java ' + javaInfo.major + ' 低于该版本要求的 ' + javaInfo.required + '，请安装 Java ' + reqMajor);
+    throw new Error('此实例需要 Java ' + reqMajor + '，当前选择的是 Java ' + javaInfo.major + '。请在版本设置中更换 Java。');
   }
   if (javaInfo.tooNew) {
     throw new Error('该版本需要 Java ' + reqMajor + '，当前 Java ' + javaInfo.major + ' 过高，请更换 Java ' + reqMajor);
@@ -187,7 +188,7 @@ async function buildLaunch(store, versionId, account, options = {}) {
     command: [javaInfo.path, ...args].map(quote).join(' '),
     args,
     cwd: gameDir,
-    logFile: store.defaultLogFile(),
+    logFile: store.defaultLogFile(versionId),
     requiredJava: reqMajor
   };
 }
@@ -215,16 +216,23 @@ async function launchGame(store, versionId, account, onLog, onExit, options = {}
       _JAVA_OPTIONS: ''
     })
   });
+  let exitReported = false;
+  const reportExit = (code, signal) => {
+    if (exitReported) return;
+    exitReported = true;
+    out.end();
+    if (onExit) onExit(code, signal);
+  };
   child.stdout.on('data', (d) => write('out', d.toString('utf8')));
   child.stderr.on('data', (d) => write('err', d.toString('utf8')));
   child.on('error', (err) => {
     write('err', '进程启动失败：' + err.message);
-    if (onExit) onExit(null, err.message);
+    reportExit(null, err.message);
   });
   child.on('exit', (code, signal) => {
+    if (exitReported) return;
     write('info', '游戏进程结束，退出码 ' + code + (signal ? '，信号 ' + signal : ''));
-    out.end();
-    if (onExit) onExit(code, signal);
+    reportExit(code, signal);
   });
   return {
     pid: child.pid,

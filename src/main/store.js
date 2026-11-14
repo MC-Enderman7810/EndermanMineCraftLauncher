@@ -195,25 +195,33 @@ class Store {
     return safe;
   }
 
-  defaultLogFile() {
+  defaultLogFile(versionId = '') {
     const d = new Date();
     const stamp = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' +
       String(d.getDate()).padStart(2, '0') + '_' + String(d.getHours()).padStart(2, '0') +
       String(d.getMinutes()).padStart(2, '0') + String(d.getSeconds()).padStart(2, '0');
-    return path.join(this.logsDir, 'launch-' + stamp + '.log');
+    const instance = String(versionId || '').replace(/[^\w.\-]/g, '_').slice(0, 80);
+    return path.join(this.logsDir, 'launch-' + (instance ? instance + '__' : '') + stamp + '.log');
   }
 
-  readLatestLog() {
+  readLatestLog(versionId = '') {
     try {
-      const files = fs.readdirSync(this.logsDir)
-        .filter((n) => n.endsWith('.log'))
-        .sort()
-        .reverse();
-      if (!files.length) return '';
-      return fs.readFileSync(path.join(this.logsDir, files[0]), 'utf8');
+      const file = this.latestLogFile(versionId);
+      return file ? fs.readFileSync(file, 'utf8') : '';
     } catch {
       return '';
     }
+  }
+
+  latestLogFile(versionId = '') {
+    try {
+      const instance = String(versionId || '').replace(/[^\w.\-]/g, '_').slice(0, 80);
+      const prefix = instance ? 'launch-' + instance + '__' : 'launch-';
+      const files = fs.readdirSync(this.logsDir)
+        .filter((n) => n.startsWith(prefix) && n.endsWith('.log'))
+        .sort().reverse();
+      return files.length ? path.join(this.logsDir, files[0]) : '';
+    } catch { return ''; }
   }
 
   clearLogs() {

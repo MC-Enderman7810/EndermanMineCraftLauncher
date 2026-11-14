@@ -152,7 +152,7 @@ async function getSkin(store, force = false) {
     source,
     name: account.name,
     uuid: account.uuid,
-    model: info.model || 'steve',
+    model: dataUrl ? (info.model || 'steve') : 'steve',
     skinUrl: info.url || '',
     dataUrl: dataUrl || defaultSkin(),
     isDefault: !dataUrl,

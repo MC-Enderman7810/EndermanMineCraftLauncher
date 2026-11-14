@@ -74,8 +74,12 @@ const state = {
   launchWaiting: false,
   launchProgress: 0,
   launchProgressText: '',
+  launchWaitTimer: null,
+  launchVersionId: '',
+  launchExited: false,
   logLines: [],
   logFilter: 'all',
+  logVersionId: '',
   latestLog: '',
   launchLogFile: '',
   msBusy: false,
@@ -495,7 +499,9 @@ function renderTopbar() {
 function renderLaunchProgress() {
   const box = $('launchProgress');
   if (!box) return;
-  if (!state.launching && !state.launchWaiting) { box.style.display = 'none'; return; }
+  const inline = document.querySelector('.log-inline-progress');
+  if (inline) inline.textContent = '启动进度 ' + Math.round(state.launchProgress || 0) + '% · ' + (state.launchProgressText || '正在启动…');
+  if ((!state.launching && !state.launchWaiting) || state.page === 'logs') { box.style.display = 'none'; return; }
   box.style.display = 'block';
   const pct = Math.max(2, Math.min(100, Number(state.launchProgress) || 0));
   const text = $('launchProgressText');
@@ -1115,7 +1121,7 @@ function pageMultiplayer() {
 function pageServers() {
   const selected = state.servers.find((s) => s.id === state.serverId) || state.servers[0];
   const list = state.servers.length
-    ? state.servers.map((s) => '<div class="server-row ' + (selected && s.id === selected.id ? 'active' : '') + '">' +
+    ? state.servers.map((s) => '<div class="server-row ' + (selected && s.id === selected.id ? 'active' : '') + '" data-server-id="' + esc(s.id) + '">' +
       '<div class="server-icon">' + icon('server', 18) + '</div>' +
       '<div style="min-width:0"><div class="server-name">' + esc(s.name) + ' ' +
       tag(s.running ? '运行中' : '已停止', s.running ? 'green' : 'gray') + '</div>' +
@@ -1148,7 +1154,7 @@ function pageServers() {
     (selected ? '<div class="card" style="margin-top:12px"><div class="card-head"><h3 class="card-title">' +
       esc(selected.name) + ' · 控制台</h3><div class="spacer"></div><span class="small muted" id="serverStatusLine">状态检测中…</span>' +
       '<button class="btn btn-ghost btn-sm" data-action="download-console" data-id="' +
-      esc(selected.id) + '">下载控制台信息</button><span class="small muted">' + esc(selected.type === 'local' ? selected.jar : 'RCON') +
+      esc(selected.id) + '">保存控制台信息</button><span class="small muted">' + esc(selected.type === 'local' ? selected.jar : 'RCON') +
       '</span></div><pre class="server-console" id="serverConsole">' +
       esc(state.serverLogs.join('\n') || '等待服务器输出…') + '</pre>' +
       '<div class="server-command"><input class="input" id="serverCommand" placeholder="输入服务器命令，例如 list / say hello" />' +
@@ -1178,11 +1184,25 @@ async function refreshServerStatus() {
   try {
     const st = await api.serverStatus(id);
     if (state.serverId !== id) return;
+    const server = state.servers.find((item) => item.id === id);
+    if (server) server.running = !!st.running;
+    const row = Array.from(document.querySelectorAll('[data-server-id]'))
+      .find((item) => item.dataset.serverId === id);
+    if (row) {
+      const badge = row.querySelector('.server-name .tag');
+      if (badge) { badge.textContent = st.running ? '运行中' : (st.mode === 'local' ? '已停止' : '未连接'); badge.className = 'tag tag-' + (st.running ? 'green' : 'gray'); }
+      const toggle = row.querySelector('[data-action="start-server"], [data-action="stop-server"]');
+      if (toggle) {
+        toggle.dataset.action = st.running ? 'stop-server' : 'start-server';
+        toggle.textContent = st.running ? '停止' : '启动';
+        toggle.className = 'btn ' + (st.running ? 'btn-danger' : 'btn-primary') + ' btn-sm';
+      }
+    }
     const line = $('serverStatusLine');
     if (line) {
       line.textContent = st.running
         ? '● 运行中' + (st.latency !== undefined ? ' · RCON ' + st.latency + 'ms' : '')
-        : '○ 未连接' + (st.error ? ' · ' + st.error : '');
+        : (st.mode === 'local' ? '○ 未启动' : '○ 未连接') + (st.error ? ' · ' + st.error : '');
       line.style.color = st.running ? '#238A55' : '#B06A2B';
     }
     if (st.mode === 'remote') {
@@ -1594,13 +1614,14 @@ async function sendServerCommand() {
   const input = $('serverCommand');
   if (!input || !state.serverId || !input.value.trim()) return;
   const command = input.value.trim();
-  input.value = '';
   try {
     const res = await api.serverCommand(state.serverId, command);
+    if (!res.ok) { toast(res.error || '发送失败', 'error'); return; }
+    input.value = '';
     if (!res.reply) state.serverLogs.push('> ' + command);
     state.serverLogs = state.serverLogs.slice(-300);
     render();
-  } catch (e) { toast(e.message || '发送失败', 'error'); }
+  } catch (e) { toast(String(e.message || '发送失败').replace(/^Error invoking remote method[^:]*:\s*(?:Error:\s*)?/, ''), 'error'); }
 }
 
 async function openServerProperties(id) {
@@ -1880,20 +1901,30 @@ const SKIN_LIBRARY = [
 function pageSkins() {
   const s = state.skinData;
   const account = currentAccount();
-  const current = s && s.ok && !s.isDefault
+  const current = s && s.ok && s.dataUrl
     ? '<div class="skin-current">' +
         '<canvas id="skinCurrentCanvas" class="skin-front-canvas" width="160" height="330"></canvas>' +
         '<div class="skin-current-info"><div class="card-title">' + esc(s.name || (currentAccount() && currentAccount().name) || '未登录') + '</div>' +
-        '<div class="card-subtitle">' + (s.model === 'slim' ? 'Slim' : 'Classic') + ' · ' +
-          (s.source === 'microsoft' ? '微软账户' : s.source === 'thirdparty' ? '第三方验证' : '本地账户') + '</div>' +
-        '<div class="row" style="margin-top:10px"><button class="btn btn-ghost btn-sm" data-action="skin-refresh">刷新皮肤</button>' +
-        '<button class="btn btn-ghost btn-sm" data-action="skin-upload">上传本地皮肤</button></div>' +
+        '<div class="card-subtitle">' + (s.isDefault ? '默认 Steve · ' : (s.model === 'slim' ? 'Slim · ' : 'Classic · ')) +
+          (account && account.kind === 0 ? '离线账户不支持在线皮肤' :
+            (s.source === 'microsoft' ? '微软账户' : s.source === 'thirdparty' ? '第三方验证' : '未登录')) + '</div>' +
+        '<div class="row" style="margin-top:10px">' + (account && account.kind !== 0
+          ? '<button class="btn btn-ghost btn-sm" data-action="skin-refresh">刷新皮肤</button>' : '') +
+        (account && account.kind === 1 ? '<button class="btn btn-ghost btn-sm" data-action="skin-upload">上传本地皮肤</button>' : '') + '</div>' +
         '<div class="skin-layer-controls">' +
           [['hat', '帽子'], ['jacket', '外套'], ['sleeves', '袖子'], ['pants', '裤腿']].map(([key, label]) =>
             '<label class="skin-layer"><input type="checkbox" data-skin-layer="' + key + '"' +
               (state.skinLayers[key] !== false ? ' checked' : '') + '><span>' + label + '</span></label>').join('') +
         '</div></div></div>'
-    : emptyState(account ? '正在读取当前账户的皮肤，或当前账户没有皮肤。' : '登录账户后可以预览、使用推荐皮肤和切换披风。', 'user');
+    : emptyState(account && account.kind === 0 ? '离线账户默认使用 Steve 皮肤，不支持在线皮肤。' :
+      state.skinLoading ? '正在读取当前账户的皮肤…' :
+      (state.skinError || (account ? '当前账户没有可用皮肤。' : '登录账户后可以预览皮肤。')), 'user');
+
+  if (account && account.kind === 0) {
+    return '<div class="skin-page"><div class="card skin-current-card">' +
+      '<div class="card-head"><h3 class="card-title">当前皮肤</h3><span class="tag tag-blue">仅正面预览</span></div>' +
+      current + '</div></div>';
+  }
 
   const capes = s && Array.isArray(s.capes) ? s.capes : [];
   const capeList = capes.length
@@ -1935,6 +1966,7 @@ async function loadSkinPage(force = false) {
   if (state.skinLoading) return;
   state.skinLoading = true;
   state.skinError = '';
+  state.skinData = null;
   render();
   try {
     const data = await api.getSkin(force);
@@ -2151,17 +2183,30 @@ function pageSettings() {
 
 function logLineClass(line) {
   const text = String(line && line.text || '');
-  if (line && (line.level === 'err' || line.level === 'error')) return 'error';
-  if (/error|exception|fatal|崩溃|失败/i.test(text)) return 'error';
-  if (line && line.level === 'warn' || /warn|警告/i.test(text)) return 'warn';
+  if (line && line.level === 'error') return 'error';
+  if (/error|exception|fatal|崩溃|失败|^\s*at\s+\S+\(/i.test(text)) return 'error';
+  if ((line && line.level === 'warn') || /warn|警告/i.test(text)) return 'warn';
   return 'info';
 }
 
+function activeLogLines() {
+  return state.logVersionId === state.launchVersionId && state.logLines.length
+    ? state.logLines
+    : (state.latestLog ? state.latestLog.split(/\r?\n/).map((text) => ({ level: 'out', text })) : []);
+}
+
 function pageLogs() {
-  const all = state.logLines.length ? state.logLines : (state.latestLog ? state.latestLog.split(/\r?\n/).map((text) => ({ level: 'out', text })) : []);
+  const all = activeLogLines();
   const lines = state.logFilter === 'error' ? all.filter((l) => logLineClass(l) === 'error') : all;
-  return '<div class="toolbar"><div><div class="card-title">启动日志</div>' +
-    '<div class="card-subtitle">' + esc(state.launchLogFile || '尚未启动游戏') + '</div></div><div class="spacer"></div>' +
+  const versions = state.installed.map((v) => '<option value="' + esc(v.id) + '"' +
+    (state.logVersionId === v.id ? ' selected' : '') + '>' + esc(v.id) + '</option>').join('');
+  const progress = state.launching || state.launchWaiting
+    ? '<span class="log-inline-progress">启动进度 ' + Math.round(state.launchProgress || 0) + '% · ' + esc(state.launchProgressText) + '</span>' : '';
+  return '<div class="toolbar log-toolbar"><div><div class="card-title">启动日志</div>' +
+    '<div class="card-subtitle">' + esc(state.logVersionId || '请选择实例') + ' · ' +
+      esc(state.logVersionId === state.launchVersionId ? (state.launchLogFile || '当前会话') : '最近一次启动') +
+      '</div></div><div class="spacer"></div>' +
+    '<label class="log-instance-label">实例 <select class="select" data-change="log-version">' + versions + '</select></label>' + progress +
     '<button class="btn ' + (state.logFilter === 'all' ? 'btn-soft' : 'btn-ghost') + '" data-action="log-filter" data-value="all">全部</button>' +
     '<button class="btn ' + (state.logFilter === 'error' ? 'btn-soft' : 'btn-ghost') + '" data-action="log-filter" data-value="error">只看错误</button>' +
     '<button class="btn btn-ghost" data-action="detach-log">' + icon('terminal') + '独立窗口</button>' +
@@ -2174,18 +2219,10 @@ function pageLogs() {
       '<span class="log-line ' + logLineClass(l) + '">' + esc(l.text) + '</span>').join('') : '日志为空。启动一次游戏后，这里会显示 Java 输出。') + '</div>';
 }
 
-function openDetachedLog() {
-  const all = state.logLines.length ? state.logLines : (state.latestLog ? state.latestLog.split(/\r?\n/).map((text) => ({ level: 'out', text })) : []);
-  const win = window.open('', 'emcl-log-window', 'width=920,height=680');
-  if (!win) { toast('独立窗口被系统拦截，请允许弹窗', 'error'); return; }
-  const rows = all.map((line) => '<div class="' + logLineClass(line) + '">' + esc(line.text) + '</div>').join('');
-  win.document.write('<!doctype html><html><head><meta charset="utf-8"><title>EMCL 日志</title>' +
-    '<style>body{margin:0;background:#0b1621;color:#dcecff;font:12px/1.7 Consolas,monospace}' +
-    'header{padding:10px 14px;background:#122538;color:#9fc8f0;font-weight:700}' +
-    'main{padding:14px;white-space:pre-wrap;word-break:break-all}.error{color:#ff9d9d}.warn{color:#ffd479}.info{color:#c7d8ea}' +
-    '</style></head><body><header>EMCL 日志 · ' + esc(state.launchLogFile || '最新日志') + '</header><main id="log"></main></body></html>');
-  win.document.getElementById('log').innerHTML = rows || '<div class="info">暂无日志</div>';
-  win.document.close();
+async function openDetachedLog() {
+  const text = activeLogLines().map((line) => line.text).join('\n');
+  const res = await api.detachLog('EMCL 日志 · ' + (state.logVersionId || '最新日志'), text || '暂无日志');
+  if (!res || !res.ok) toast((res && res.error) || '无法打开日志窗口', 'error');
 }
 
 /* ---------------- Actions ---------------- */
@@ -2469,7 +2506,7 @@ async function handleAction(action, el) {
     case 'open-logs': await openLogs(); break;
     case 'copy-log': await copyLog(); break;
     case 'log-filter': state.logFilter = dataset.value || 'all'; render(); break;
-    case 'detach-log': openDetachedLog(); break;
+    case 'detach-log': await openDetachedLog(); break;
     case 'clear-log':
       if (!confirm('清空所有启动日志？此操作不会删除游戏文件。')) break;
       try {
@@ -3333,6 +3370,12 @@ async function doLaunch(versionId, accountId, options) {
     }
     state.skipModCheckOnce = false;
   } catch { /* 兼容性检查失败不阻止启动 */ }
+  clearTimeout(state.launchWaitTimer);
+  state.launchWaitTimer = null;
+  state.launchExited = false;
+  state.launchVersionId = id;
+  state.logVersionId = id;
+  state.latestLog = '';
   state.launching = true;
   state.launchProgress = 3;
   state.launchProgressText = '准备启动';
@@ -3347,13 +3390,15 @@ async function doLaunch(versionId, accountId, options) {
       showErrorModal('启动失败', res.error || '未知错误');
       return;
     }
+    if (state.launchExited || res.exited) return;
     state.gameRunning = true;
     state.launchWaiting = true;
     state.launchProgress = 72;
     state.launchProgressText = '等待游戏窗口';
     state.launchLogFile = res.logFile || '';
-    setTimeout(() => {
+    state.launchWaitTimer = setTimeout(() => {
       state.launchWaiting = false;
+      state.launchWaitTimer = null;
       renderLaunchProgress();
     }, 25000);
     state.config.lastVersionId = id;
@@ -3837,23 +3882,25 @@ async function setTheme(color) {
 }
 
 async function openLogs() {
-  if (state.launchLogFile) await api.showItem(state.launchLogFile);
-  else await api.openPath(state.config.gameDir);
+  const file = await api.latestLogPath(state.logVersionId || state.launchVersionId);
+  if (file) await api.showItem(file);
+  else toast('该实例还没有启动日志', 'error');
 }
 
 async function loadLatestLog() {
+  const versionId = state.logVersionId;
   try {
-    state.latestLog = await api.latestLog();
+    const log = await api.latestLog(versionId);
+    if (state.logVersionId !== versionId) return;
+    state.latestLog = log;
   } catch {
-    state.latestLog = '';
+    if (state.logVersionId === versionId) state.latestLog = '';
   }
   if (state.page === 'logs') render();
 }
 
 async function copyLog() {
-  const text = state.logLines.length
-    ? state.logLines.map((l) => '[' + l.level + '] ' + l.text).join('\n')
-    : state.latestLog;
+  const text = activeLogLines().map((l) => '[' + l.level + '] ' + l.text).join('\n');
   if (!text) { toast('没有可复制的日志', 'error'); return; }
   try {
     await navigator.clipboard.writeText(text);
@@ -4014,7 +4061,7 @@ async function copyErrorInfo() {
     return (line && (line.text || line.message)) || String(line);
   }).join('\n');
   try {
-    const latest = await api.latestLog();
+    const latest = await api.latestLog(state.launchVersionId || state.logVersionId);
     const text = typeof latest === 'string' ? latest : (latest && latest.text);
     if (text) {
       logs += '\n\n--- 最近启动日志 ---\n' + text.split(/\r?\n/).slice(-250).join('\n');
@@ -4048,7 +4095,7 @@ async function emailErrorInfo() {
     return (line && (line.text || line.message)) || String(line);
   }).join('\n');
   try {
-    const latest = await api.latestLog();
+    const latest = await api.latestLog(state.launchVersionId || state.logVersionId);
     const text = typeof latest === 'string' ? latest : (latest && latest.text);
     if (text) logs += '\n\n--- 最近启动日志 ---\n' + text.split(/\r?\n/).slice(-150).join('\n');
   } catch { /* ignore */ }
@@ -4130,7 +4177,12 @@ function bind() {
     const el = e.target.closest('[data-change]');
     if (el) {
       const key = el.dataset.change;
-      if (key === 'resource-version') {
+      if (key === 'log-version') {
+        state.logVersionId = el.value;
+        state.latestLog = '';
+        render();
+        await loadLatestLog();
+      } else if (key === 'resource-version') {
         state.resourceVersionId = el.value;
         state.resourceHits = [];
         if (state.resourceKind === 'recommend') await loadRecommendations(true);
@@ -4222,6 +4274,7 @@ async function patchSetting(key, value) {
     state.appVersion = s.appVersion || '';
     state.tasks = s.tasks || [];
     state.resourceVersionId = currentVersionId();
+    state.logVersionId = currentVersionId();
     state.firstRun = s.config.firstRun;
     state.page = 'home';
     if (window.EMCL_I18N) window.EMCL_I18N.setLanguage(state.config.language || 'zh-CN');
@@ -4281,11 +4334,12 @@ async function patchSetting(key, value) {
     }
     state.logLines.push(line);
     if (state.logLines.length > 600) state.logLines.shift();
-    if (state.page === 'logs') {
+    if (state.page === 'logs' && state.logVersionId === state.launchVersionId &&
+        (state.logFilter !== 'error' || logLineClass(line) === 'error')) {
       const box = $('logBox');
       if (box) {
         const span = document.createElement('span');
-        span.className = 'log-line ' + (line.level === 'err' ? 'err' : 'out');
+        span.className = 'log-line ' + logLineClass(line);
         span.textContent = line.text;
         box.appendChild(span);
         box.scrollTop = box.scrollHeight;
@@ -4294,10 +4348,25 @@ async function patchSetting(key, value) {
   });
 
   api.onLaunchExit((info) => {
+    if (state.launchExited) return;
+    state.launchExited = true;
+    clearTimeout(state.launchWaitTimer);
+    state.launchWaitTimer = null;
     state.gameRunning = false;
     state.launching = false;
+    state.launchWaiting = false;
+    state.launchProgress = 0;
+    state.launchProgressText = '';
     if (info && info.code === 0) toast('游戏已退出', 'success');
-    else toast('游戏进程结束，退出码 ' + (info ? info.code : '?'), '');
+    else {
+      const errors = state.logLines.filter((line) => logLineClass(line) === 'error').slice(-8);
+      const context = (errors.length ? errors : state.logLines.slice(-12))
+        .map((line) => String(line.text || '')).join('\n').trim();
+      const reason = info && info.signal ? '进程错误：' + info.signal :
+        '退出码：' + (info && info.code !== undefined ? info.code : '未知');
+      showErrorModal('游戏启动失败 · ' + (state.launchVersionId || '当前实例'),
+        reason + (context ? '\n\n最近错误日志：\n' + context : '\n请打开该实例的日志查看详细信息。'));
+    }
     render();
   });
 
