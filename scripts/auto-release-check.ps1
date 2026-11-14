@@ -4,6 +4,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+if (Test-Path 'C:\Program Files\nodejs\node.exe') { $env:Path = 'C:\Program Files\nodejs;' + $env:Path }
 $root = 'C:\emcl-release'
 $log = Join-Path $root 'auto-release.log'
 $lock = Join-Path $root 'auto-release.lock'
