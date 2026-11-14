@@ -5,6 +5,7 @@ const fsp = fs.promises;
 const path = require('path');
 const crypto = require('crypto');
 const { Readable } = require('stream');
+const { pipeline } = require('stream/promises');
 const AdmZip = require('adm-zip');
 
 const USER_AGENT = 'EMCL/1.26.25.14 (Windows; Minecraft Java Edition launcher)';
@@ -138,15 +139,25 @@ async function downloadFile(url, dest, options = {}) {
     onProgress = () => {},
     expectedSha1 = '',
     timeout = 300000,
+    idleTimeout = 45000,
     headers = {},
-    retries = 3
+    retries = 3,
+    onRetry = () => {}
   } = options;
   await ensureDir(path.dirname(dest));
   const tmp = dest + '.part';
   let lastError = null;
   for (let attempt = 0; attempt <= retries; attempt++) {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeout);
+    // A large jar may legitimately take longer than the old total timeout.
+    // Abort only when no bytes arrive, then retry from the partial file.
+    const idleLimit = Math.min(timeout, idleTimeout);
+    let timer;
+    const resetIdleTimer = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => controller.abort(), idleLimit);
+    };
+    resetIdleTimer();
     let start = 0;
     try {
       try { start = (await fsp.stat(tmp)).size; } catch { start = 0; }
@@ -174,6 +185,7 @@ async function downloadFile(url, dest, options = {}) {
       const out = fs.createWriteStream(tmp, { flags: start > 0 ? 'a' : 'w' });
       const body = Readable.fromWeb ? Readable.fromWeb(res.body) : Readable.from(res.body);
       body.on('data', (chunk) => {
+        resetIdleTimer();
         received += chunk.length;
         const now = Date.now();
         if (now - lastTick > 120) {
@@ -181,12 +193,7 @@ async function downloadFile(url, dest, options = {}) {
           onProgress(received, total);
         }
       });
-      await new Promise((resolve, reject) => {
-        body.on('error', reject);
-        out.on('error', reject);
-        out.on('finish', resolve);
-        body.pipe(out);
-      });
+      await pipeline(body, out);
       await fsp.rename(tmp, dest);
       onProgress(received, total || received);
       if (expectedSha1) {
@@ -200,7 +207,10 @@ async function downloadFile(url, dest, options = {}) {
       return received;
     } catch (e) {
       lastError = e;
-      if (attempt < retries) await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
+      if (attempt < retries) {
+        onRetry(attempt + 1, retries, e);
+        await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
+      }
     } finally {
       clearTimeout(timer);
     }

@@ -6,8 +6,8 @@
     "开发者页面新增设备表",
     "保留开发者密码验证"
   ],
-  "url": "https://www.emcl.life/dev/",
-  "downloadUrl": "https://www.emcl.life/downloads/dev/EMCL-Dev-Portable-1.26.25.26.exe",
+  "url": "https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/tag/dev-v1.26.25.26",
+  "downloadUrl": "https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/download/dev-v1.26.25.26/EMCL-Dev-Portable-1.26.25.26.exe",
   "mandatory": true,
   "sha256": "24A70C4BDBAA55FA87F5857469FDD3997B4D59C116C44B2967A4EFA4D3789570"
 }

@@ -147,7 +147,10 @@ async function findJavaCandidates(extra = []) {
 }
 
 function javaMajorForMc(mcVersion) {
-  const v = String(mcVersion || '');
+  const raw = String(mcVersion || '');
+  // Loader and custom instance names can prefix the actual game version.
+  const found = raw.match(/(?:^|[^\d])((?:1\.\d+(?:\.\d+)?)|(?:2[6-9]\.\d+(?:\.\d+)?))(?=$|[^\d.])/);
+  const v = found ? found[1] : raw;
   const parts = v.split('.').map((x) => parseInt(x, 10) || 0);
   // 2026 起 Mojang 改用 26.x 年份版本号，客户端要求 Java 25
   if (parts[0] !== 1) {

@@ -554,6 +554,10 @@ textarea.input { height: auto; padding: 9px 11px; resize: vertical; line-height:
 @keyframes toastIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
 /* ---------------- Log ---------------- */
+.log-toolbar { align-items: center; row-gap: 8px; }
+.log-instance-label { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; color: var(--text-2); font-size: 11px; }
+.log-instance-label .select { width: min(220px, 28vw); height: 32px; }
+.log-inline-progress { color: var(--accent-dark); background: var(--accent-soft); border-radius: 8px; padding: 7px 10px; font-size: 11px; white-space: nowrap; }
 .log-box {
   background: #101923; color: #BFD3E8; border-radius: 12px; padding: 14px;
   font-family: "Cascadia Code", Consolas, monospace; font-size: 10.5px; line-height: 1.7;

@@ -318,15 +318,27 @@ async function ensureLibrary(artifact, gameDir, source, progress, label) {
     } catch { /* fall through */ }
   }
   const url = mirrorUrl(artifact.url, source);
-  await downloadFile(url, dest, {
+  let receivedBytes = 0;
+  let totalBytes = artifact.size || 0;
+  const options = {
     expectedSha1: artifact.sha1,
     timeout: 600000,
     onProgress: (received, total) => {
-      if (progress && total) {
-        progress.subBytes = (progress.subBytes || 0) + received;
-      }
+      receivedBytes = received;
+      totalBytes = total || artifact.size || 0;
+      if (progress) progress(receivedBytes, totalBytes, '下载依赖 ' + path.basename(artifact.path));
+    },
+    onRetry: (attempt, retries) => {
+      if (progress) progress(receivedBytes, totalBytes, '依赖连接中断，续传重试 ' + attempt + '/' + retries);
     }
-  });
+  };
+  try {
+    await downloadFile(url, dest, options);
+  } catch (error) {
+    if (url === artifact.url || !artifact.url) throw error;
+    if (progress) progress(receivedBytes, totalBytes, '镜像失败，切换官方依赖源');
+    await downloadFile(artifact.url, dest, options);
+  }
 }
 
 async function installLibraries(version, gameDir, source, progress, label) {
@@ -338,7 +350,9 @@ async function installLibraries(version, gameDir, source, progress, label) {
   };
   for (const art of artifacts) {
     tick('库 ' + (done + 1) + '/' + total);
-    await ensureLibrary(art, gameDir, source, null, label);
+    await ensureLibrary(art, gameDir, source, (received, size, message) => {
+      if (progress) progress(done + (size ? Math.min(1, received / size) : 0), total, message);
+    }, label);
     done++;
     if (done % 4 === 0 || done === total) tick();
   }
@@ -348,7 +362,9 @@ async function installLibraries(version, gameDir, source, progress, label) {
     for (const art of natives) {
       tick('本机库 ' + (done + 1) + '/' + total);
       const dest = path.join(gameDir, 'libraries', art.path);
-      await ensureLibrary(art, gameDir, source, null, label);
+      await ensureLibrary(art, gameDir, source, (received, size, message) => {
+        if (progress) progress(done + (size ? Math.min(1, received / size) : 0), total, message);
+      }, label);
       try {
         await extractZipSafe(dest, nativesDir, { skipMeta: true });
       } catch (e) {
@@ -446,13 +462,24 @@ async function installVersion(versionId, jsonUrl, gameDir, source, progress) {
   }
   if (needJar) {
     progress(5, 100, '下载客户端 jar');
-    await downloadFile(mirrorUrl(client.url, source), jarPath, {
+    let clientPercent = 5;
+    const clientOptions = {
       expectedSha1: client.sha1 || '',
       timeout: 300000,
+      onRetry: (attempt, retries) => progress(clientPercent, 100, '客户端连接中断，续传重试 ' + attempt + '/' + retries),
       onProgress: (received, total) => {
-        if (total) progress(5 + Math.min(35, received / total * 35), 100, '客户端 ' + Math.round(received / 1048576) + ' MB');
+        const size = total || client.size;
+        if (size) clientPercent = 5 + Math.min(35, received / size * 35);
+        progress(clientPercent, 100, '客户端 ' + Math.round(received / 1048576) + ' MB');
       }
-    });
+    };
+    try {
+      await downloadFile(mirrorUrl(client.url, source), jarPath, clientOptions);
+    } catch (error) {
+      if (source !== 'bmclapi' || !client.url) throw error;
+      progress(clientPercent, 100, '镜像下载失败，切换 Mojang 官方源续传');
+      await downloadFile(client.url, jarPath, clientOptions);
+    }
   }
   progress(42, 100, '解析依赖');
   const resolved = await resolveVersion(gameDir, versionId);

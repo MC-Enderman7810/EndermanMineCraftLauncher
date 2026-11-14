@@ -511,11 +511,13 @@ function registerIpc() {
         restoreOptions = false;
       };
       let result;
+      let exitedBeforeReady = false;
       try {
         send('launch:progress', { percent: 55, text: '启动游戏进程' });
         result = await launchGame(store, versionId, account,
           (level, text) => send('launch:log', { level, text }),
           (code, signal) => {
+            exitedBeforeReady = true;
             currentGame = null;
             restoreLegacyOptions();
             send('launch:exit', { code, signal });
@@ -527,14 +529,15 @@ function registerIpc() {
         restoreLegacyOptions();
         throw e;
       }
-      currentGame = result;
-      send('launch:progress', { percent: 100, text: '游戏已启动' });
+      currentGame = exitedBeforeReady ? null : result;
+      if (!exitedBeforeReady) send('launch:progress', { percent: 100, text: '游戏已启动' });
       await store.patchConfig({ lastVersionId: versionId });
-      if (store.getConfig().closeAfterLaunch) {
+      if (!exitedBeforeReady && store.getConfig().closeAfterLaunch) {
         setTimeout(() => mainWindow && mainWindow.minimize(), 800);
       }
       return {
         ok: true,
+        exited: exitedBeforeReady,
         pid: result.pid,
         command: result.command,
         logFile: result.logFile
@@ -675,7 +678,10 @@ function registerIpc() {
   ipcMain.handle('servers:stopExisting', async (event, id) => serverManager.stopExisting(id));
   ipcMain.handle('servers:start', async (event, id) => serverManager.start(id));
   ipcMain.handle('servers:stop', async (event, id) => serverManager.stop(id));
-  ipcMain.handle('servers:command', async (event, id, command) => serverManager.command(id, command));
+  ipcMain.handle('servers:command', async (event, id, command) => {
+    try { return await serverManager.command(id, command); }
+    catch (e) { return { ok: false, error: e.message || '发送命令失败' }; }
+  });
   ipcMain.handle('servers:saveConsole', async (event, id) => serverManager.saveConsole(id));
   ipcMain.handle('servers:backup', async (event, id) => serverManager.backup(id));
   ipcMain.handle('servers:backups', async (event, id) => serverManager.listBackups(id));
@@ -943,7 +949,27 @@ function registerIpc() {
     return Array.from(tasks.values());
   });
 
-  ipcMain.handle('logs:latest', async () => store.readLatestLog());
+  ipcMain.handle('logs:latest', async (event, versionId) => store.readLatestLog(versionId));
+  ipcMain.handle('logs:path', async (event, versionId) => store.latestLogFile(versionId));
+  ipcMain.handle('logs:detach', async (event, title, text) => {
+    const escapeHtml = (value) => String(value || '').replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const logWindow = new BrowserWindow({
+      width: 920, height: 680, minWidth: 560, minHeight: 360,
+      title: 'EMCL 日志', parent: mainWindow || undefined,
+      backgroundColor: '#101923',
+      webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true }
+    });
+    logWindow.setMenuBarVisibility(false);
+    const html = '<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>EMCL 日志</title>' +
+      '<style>body{margin:0;background:#101923;color:#dcecff;font:12px/1.7 Consolas,monospace}' +
+      'header{position:sticky;top:0;padding:10px 14px;background:#182b3e;color:#b7d7f2}' +
+      'pre{padding:14px;white-space:pre-wrap;word-break:break-all;user-select:text}</style></head><body>' +
+      '<header>' + escapeHtml(title).slice(0, 300) + '</header><pre>' +
+      escapeHtml(text).slice(0, 2000000) + '</pre></body></html>';
+    await logWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(html));
+    return { ok: true };
+  });
   ipcMain.handle('logs:clear', async () => store.clearLogs());
 
   ipcMain.handle('announcements:local:list', async () => {
