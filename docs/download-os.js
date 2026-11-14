@@ -26,14 +26,24 @@
     document.documentElement.dataset.os = info.key;
     if (info.key === 'unknown') {
       if (kicker) kicker.textContent = '系统识别失败';
-      if (note) note.textContent = '请根据下方平台手动选择，不要默认下载 Windows 版';
+      if (note) note.textContent = '请根据下方平台手动选择，不会自动推荐 Windows';
       if (banner) banner.classList.add('os-unknown');
+      var gridUnknown = document.getElementById('allPlatforms');
+      if (gridUnknown) {
+        var oldNotice = gridUnknown.querySelector('.platform-unknown');
+        if (oldNotice) oldNotice.remove();
+        var notice = document.createElement('article');
+        notice.className = 'platform-card platform-unknown';
+        notice.innerHTML = '<div class="platform-head"><div class="platform-icon">?</div><div><div class="tag">需要手动选择</div><h2>未能识别你的系统</h2></div></div><p>浏览器没有提供可用的系统信息。请根据你的电脑或手机，在下方选择对应平台；不会默认推荐 Windows。</p><div class="platform-meta">如果你使用的是 Windows 7 / 8，请选择“旧版 Windows”。</div>';
+        gridUnknown.insertBefore(notice, gridUnknown.firstElementChild);
+      }
       return;
     }
     if (kicker) kicker.textContent = '检测到你的系统';
     if (note) note.textContent = '已把适合你的下载放在第一位';
     if (banner) banner.classList.remove('os-unknown');
     var grid = document.getElementById('allPlatforms');
+    if (grid) { var oldNotice = grid.querySelector('.platform-unknown'); if (oldNotice) oldNotice.remove(); }
     if (!grid) return;
     var card = grid.querySelector('[data-platform="' + info.key + '"]');
     if (!card) {
