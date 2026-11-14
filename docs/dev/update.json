@@ -1,12 +1,13 @@
 {
-  "version": "1.26.25.25kfz",
-  "releaseDate": "2026-11-12",
+  "version": "1.26.25.26kfz",
+  "releaseDate": "2026-11-15",
   "notes": [
-    "新增日志页「清空日志」",
-    "强制更新后需要输入开发者密码",
-    "开发者账户功能暂时隐藏"
+    "新增开发者设备 IP 上报表",
+    "开发者页面新增设备表",
+    "保留开发者密码验证"
   ],
   "url": "https://www.emcl.life/dev/",
-  "downloadUrl": "https://www.emcl.life/downloads/dev/EMCL-Dev-Portable-1.26.25.25.exe",
-  "mandatory": true
+  "downloadUrl": "https://www.emcl.life/downloads/dev/EMCL-Dev-Portable-1.26.25.26.exe",
+  "mandatory": true,
+  "sha256": "24A70C4BDBAA55FA87F5857469FDD3997B4D59C116C44B2967A4EFA4D3789570"
 }

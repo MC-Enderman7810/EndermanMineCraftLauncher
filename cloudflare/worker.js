@@ -41,7 +41,7 @@ export default {
       if (url.pathname === '/api/feedback' && request.method === 'GET') {
         if (!(await isAdmin(request, env))) return json({ ok: false, error: '未登录' }, cors, 401);
         const rows = await env.DB.prepare(
-          'SELECT id,name,email,type,message,app,version,status,created_at FROM feedback ORDER BY created_at DESC LIMIT 200'
+          'SELECT id,name,email,type,message,app,version,status,reply,replied_at,created_at FROM feedback ORDER BY created_at DESC LIMIT 200'
         ).all();
         return json({ ok: true, feedback: rows.results || [] }, cors);
       }
@@ -51,8 +51,51 @@ export default {
         if (!(await isAdmin(request, env))) return json({ ok: false, error: '未登录' }, cors, 401);
         const body = await readJson(request);
         const status = ['new', 'read', 'closed'].includes(body.status) ? body.status : 'read';
-        await env.DB.prepare('UPDATE feedback SET status = ? WHERE id = ?').bind(status, feedbackMatch[1]).run();
+        const reply = String(body.reply || '').trim().slice(0, 8000);
+        if (reply || body.replied_at) {
+          await env.DB.prepare(
+            'UPDATE feedback SET status = ?, reply = ?, replied_at = ? WHERE id = ?'
+          ).bind(status, reply, Number(body.replied_at) || Date.now(), feedbackMatch[1]).run();
+        } else {
+          await env.DB.prepare('UPDATE feedback SET status = ? WHERE id = ?').bind(status, feedbackMatch[1]).run();
+        }
         return json({ ok: true }, cors);
+      }
+
+      if (url.pathname === '/api/dev/device' && request.method === 'POST') {
+        const key = request.headers.get('X-EMCL-Dev-Key') || '';
+        const expected = env.DEV_DEVICE_KEY || 'emcl-dev-device-2026';
+        if (!timingSafeEqual(key, expected)) return json({ ok: false, error: 'forbidden' }, cors, 401);
+        const body = await readJson(request);
+        const deviceId = String(body.deviceId || '').trim().slice(0, 120);
+        if (!deviceId) return json({ ok: false, error: 'missing deviceId' }, cors, 400);
+        const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || 'unknown';
+        const now = Date.now();
+        await env.DB.prepare(
+          'INSERT INTO dev_devices (id,ip,name,host,os,arch,app,version,first_seen,last_seen,hits) VALUES (?,?,?,?,?,?,?,?,?,?,1) ' +
+          'ON CONFLICT(id) DO UPDATE SET ip=excluded.ip,name=excluded.name,host=excluded.host,os=excluded.os,' +
+          'arch=excluded.arch,app=excluded.app,version=excluded.version,last_seen=excluded.last_seen,hits=hits+1'
+        ).bind(
+          deviceId,
+          String(ip).slice(0, 80),
+          String(body.name || '').slice(0, 80),
+          String(body.host || '').slice(0, 120),
+          String(body.os || '').slice(0, 80),
+          String(body.arch || '').slice(0, 40),
+          String(body.app || 'EMCL 开发者版').slice(0, 80),
+          String(body.version || '').slice(0, 40),
+          now,
+          now
+        ).run();
+        return json({ ok: true }, cors);
+      }
+
+      if (url.pathname === '/api/dev/devices' && request.method === 'GET') {
+        if (!(await isAdmin(request, env))) return json({ ok: false, error: '未登录' }, cors, 401);
+        const rows = await env.DB.prepare(
+          'SELECT id,ip,name,host,os,arch,app,version,first_seen,last_seen,hits FROM dev_devices ORDER BY last_seen DESC LIMIT 500'
+        ).all();
+        return json({ ok: true, devices: rows.results || [] }, cors);
       }
 
       if (url.pathname === '/api/announcements' && request.method === 'POST') {

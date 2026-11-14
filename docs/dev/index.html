@@ -90,23 +90,23 @@
     <section class="grid">
       <div class="card">
         <h2>当前开发者版本</h2>
-        <div class="kv"><span>版本号</span><b>1.26.25.25kfz</b></div>
+        <div class="kv"><span>版本号</span><b>1.26.25.26kfz</b></div>
         <div class="kv"><span>通道</span><b>Developer / 内部测试</b></div>
         <div class="kv"><span>更新方式</span><b>开发者版启动器检查更新</b></div>
         <div class="kv"><span>更新清单</span><b><a href="update.json">update.json</a></b></div>
         <div class="actions">
-          <a class="btn" href="../downloads/dev/EMCL-Dev-Portable-1.26.25.25.exe">下载开发者版</a>
+          <a class="btn" href="../downloads/dev/EMCL-Dev-Portable-1.26.25.26.exe">下载开发者版</a>
           <a class="btn ghost" href="update.json">查看更新清单</a>
           <a class="btn ghost" href="../download.html">稳定版下载</a>
         </div>
         <p class="note">开发者版下载仅在本页通过密码后显示。启动器会读取此目录的 <code>update.json</code> 检查新版本。</p>
-        <p class="note">SHA256：<code style="word-break:break-all">35E9B48848818A65DF36576A47E4031B00BB3710FCFC9919DE1C00E379EBAAF7</code></p>
+        <p class="note">SHA256：<code style="word-break:break-all">24A70C4BDBAA55FA87F5857469FDD3997B4D59C116C44B2967A4EFA4D3789570</code></p>
       </div>
 
       <div class="card">
         <h2>最新更新</h2>
         <ul class="log">
-          <li><b>2026-11-12 · 1.26.25.25kfz</b>开发者版强制更新；首次打开或更新后需要输入开发者密码，开发者账户功能暂时隐藏。</li><li><b>2026-10-31 · 1.26.25.23kfz</b>所有版本加入 Steve / Alex 模型选择，开发者版提供直链下载。</li>
+          <li><b>2026-11-12 · 1.26.25.26kfz</b>开发者版强制更新；首次打开或更新后需要输入开发者密码，开发者账户功能暂时隐藏。</li><li><b>2026-10-31 · 1.26.25.23kfz</b>所有版本加入 Steve / Alex 模型选择，开发者版提供直链下载。</li>
           <li><b>2026-10-31 · 1.26.25.20kfz</b>重启皮肤库：仅正面预览、8 款原创推荐皮肤、本地皮肤上传和披风切换。</li>
           <li><b>2026-10-31 · 1.26.25.15kfz</b>开发者更新通道接入 emcl.life；新增“刷新公告和更新”，移除皮肤页面、3D 皮肤和披风入口。</li>
           <li><b>2026-10-25 · 1.26.25.15kfz</b>Mojang appID 通过 allowlist，开发者版切换到自有 Azure appID。</li>
@@ -137,6 +137,15 @@
       </div>
       <div id="adminStatus" class="note" style="margin-top:8px"></div>
       <div id="feedbackList" style="margin-top:12px"></div>
+    </section>
+
+
+    <section class="card" id="devicePanel" style="margin-top:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <div><h2 style="margin:0">开发者设备</h2><p class="note" style="margin:4px 0 0">开发者版启动时上报的设备 IP 和系统信息。</p></div>
+        <button class="btn ghost" id="refreshDevices" type="button">刷新设备</button>
+      </div>
+      <div id="deviceList" style="margin-top:12px;overflow:auto"></div>
     </section>
 
     <section class="card" id="remotePanel" style="margin-top:14px">
@@ -198,7 +207,7 @@
 
 <script>
   (function () {
-    var PASSWORD_HASH = '60eadcd61fd6f3b954705267676239a7d26c428e9a0c5894a06ec47cbad7e242';
+    var PASSWORD_24A70C4BDBAA55FA87F5857469FDD3997B4D59C116C44B2967A4EFA4D3789570 = '60eadcd61fd6f3b954705267676239a7d26c428e9a0c5894a06ec47cbad7e242';
     var SESSION_KEY = 'emcl_dev_access_v1';
     var gate = document.getElementById('gate');
     var app = document.getElementById('devApp');
@@ -226,7 +235,7 @@
       if (!value) { error.textContent = '请输入密码'; return; }
       try {
         var hash = await sha256(value);
-        if (hash === PASSWORD_HASH) {
+        if (hash === PASSWORD_24A70C4BDBAA55FA87F5857469FDD3997B4D59C116C44B2967A4EFA4D3789570) {
           sessionStorage.setItem(SESSION_KEY, '1');
           unlock();
         } else {
@@ -242,6 +251,7 @@
     var adminToken = sessionStorage.getItem('emcl_admin_token') || '';
     var adminStatus = document.getElementById('adminStatus');
     var feedbackList = document.getElementById('feedbackList');
+    var deviceList = document.getElementById('deviceList');
     var feedbackItems = [];
     var announcementsList = document.getElementById('announcementsList');
 
@@ -270,6 +280,7 @@
         sessionStorage.setItem('emcl_admin_token', adminToken);
         setAdminStatus('已登录，可以管理反馈和公告。');
         await loadFeedback();
+        await loadDevices();
         await loadAnnouncements();
       } catch (e) {
         setAdminStatus(e.message || '开发者接口登录失败', true);
@@ -280,6 +291,7 @@
       if (adminToken) {
         setAdminStatus('正在加载反馈…');
         await loadFeedback();
+        await loadDevices();
         await loadAnnouncements();
       } else if (input && input.value) {
         await adminLogin(input.value);
@@ -387,6 +399,38 @@
       area.select();
       document.execCommand('copy');
       area.remove();
+    }
+
+
+    async function loadDevices() {
+      if (!deviceList) return;
+      try {
+        var data = await apiFetch('/api/dev/devices');
+        var rows = (data.devices || []).map(function (d) {
+          var first = d.first_seen ? new Date(d.first_seen).toLocaleString('zh-CN') : '';
+          var last = d.last_seen ? new Date(d.last_seen).toLocaleString('zh-CN') : '';
+          return '<tr>' +
+            '<td style="padding:7px 8px;border-bottom:1px solid #E6EEF7;white-space:nowrap">' + esc(d.ip || '') + '</td>' +
+            '<td style="padding:7px 8px;border-bottom:1px solid #E6EEF7">' + esc(d.host || d.name || '') + '</td>' +
+            '<td style="padding:7px 8px;border-bottom:1px solid #E6EEF7">' + esc(d.os || '') + ' ' + esc(d.arch || '') + '</td>' +
+            '<td style="padding:7px 8px;border-bottom:1px solid #E6EEF7">' + esc(d.version || '') + '</td>' +
+            '<td style="padding:7px 8px;border-bottom:1px solid #E6EEF7">' + esc(first) + '</td>' +
+            '<td style="padding:7px 8px;border-bottom:1px solid #E6EEF7">' + esc(last) + '</td>' +
+            '<td style="padding:7px 8px;border-bottom:1px solid #E6EEF7">' + esc(String(d.hits || 0)) + '</td>' +
+            '</tr>';
+        }).join('');
+        deviceList.innerHTML = rows
+          ? '<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr>' +
+            '<th style="text-align:left;padding:7px 8px;border-bottom:2px solid #C9D9EA">IP</th>' +
+            '<th style="text-align:left;padding:7px 8px;border-bottom:2px solid #C9D9EA">设备</th>' +
+            '<th style="text-align:left;padding:7px 8px;border-bottom:2px solid #C9D9EA">系统 / 架构</th>' +
+            '<th style="text-align:left;padding:7px 8px;border-bottom:2px solid #C9D9EA">版本</th>' +
+            '<th style="text-align:left;padding:7px 8px;border-bottom:2px solid #C9D9EA">首次</th>' +
+            '<th style="text-align:left;padding:7px 8px;border-bottom:2px solid #C9D9EA">最近</th>' +
+            '<th style="text-align:left;padding:7px 8px;border-bottom:2px solid #C9D9EA">次数</th>' +
+            '</tr></thead><tbody>' + rows + '</tbody></table>'
+          : '<p class="note">还没有开发者设备上报。</p>';
+      } catch (e) { deviceList.innerHTML = '<p class="note" style="color:#B33A3A">读取设备失败：' + esc(e.message) + '</p>'; }
     }
 
     if (feedbackList) {
