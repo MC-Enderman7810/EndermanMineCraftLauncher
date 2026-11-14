@@ -1012,6 +1012,24 @@ function registerIpc() {
     }
   });
 
+  ipcMain.handle('updates:downloadAsar', async (event, update) => {
+    try {
+      const result = await updater.downloadAsarUpdate(update || {}, (progress) => send('update:progress', progress));
+      send('update:ready', result);
+      return result;
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+  });
+
+  ipcMain.handle('updates:installAsar', async (event, download) => {
+    try {
+      return await updater.installAsarUpdate(download || {});
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+  });
+
   ipcMain.handle('updates:install', async (event, download) => {
     try {
       return await updater.installUpdate(download || {});
@@ -1034,10 +1052,24 @@ async function autoCheck() {
       store && store.getConfig().autoUpdate !== false) {
       autoUpdating = true;
       try {
-        send('update:progress', { percent: 0, text: '正在下载更新 ' + update.latest });
-        const downloaded = await updater.downloadUpdate(update, (progress) => send('update:progress', progress));
-        send('update:ready', downloaded);
-        await updater.installUpdate(downloaded);
+        let installed = false;
+        if (update.asarUrl) {
+          try {
+            send('update:progress', { percent: 0, text: '正在应用增量更新 ' + update.latest });
+            const patch = await updater.downloadAsarUpdate(update, (progress) => send('update:progress', progress));
+            send('update:ready', patch);
+            await updater.installAsarUpdate(patch);
+            installed = true;
+          } catch (error) {
+            send('update:progress', { percent: 0, text: '增量更新不可用，改用完整安装包' });
+          }
+        }
+        if (!installed) {
+          send('update:progress', { percent: 0, text: '正在下载更新 ' + update.latest });
+          const downloaded = await updater.downloadUpdate(update, (progress) => send('update:progress', progress));
+          send('update:ready', downloaded);
+          await updater.installUpdate(downloaded);
+        }
       } catch (error) {
         send('update:error', { error: error.message || '自动更新失败' });
       } finally {

@@ -1,13 +1,14 @@
 {
-  "version": "1.26.26.18",
+  "version": "1.26.26.19",
   "releaseDate": "2026-10-31",
   "notes": [
-    "新增日志 INFO/WARN/ERROR 颜色、筛选和独立窗口",
-    "新增页面切换、卡片和按钮过渡动画",
-    "中文搜索补充 Sodium 等常见模组别名",
-    "保留 Forge 1.8.9 参数修复、可关闭通知和 Java 自动选择"
+    "更新改为增量补丁 app.asar，不再每次下载完整安装包",
+    "Store 支持语言声明保持 7 种",
+    "保留日志颜色、动画、中文搜索和 Forge 修复"
   ],
   "url": "https://www.emcl.life/download.html",
-  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.18.exe",
-  "sha256": "F4493594FC75D24BFCFB3B243AD7BF6E996EF83EAE6A600998C1743F2C1429A6"
+  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.19.exe",
+  "sha256": "3BF9D84268AE31C7EAEF6DA7CAB2388968745ECEB154CD42F039AE26CB434214",
+  "asarUrl": "https://www.emcl.life/downloads/updates/app-1.26.26.19.asar",
+  "asarSha256": "73BCA6FF1A6EB7DA7B160F5A438422BDF12C056237D36512B76AD0A907544FA9"
 }

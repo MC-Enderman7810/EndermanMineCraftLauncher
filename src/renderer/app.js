@@ -2821,7 +2821,17 @@ async function startUpdate() {
   closeModal();
   toast('开始下载更新 ' + u.latest);
   try {
-    const downloaded = await api.downloadUpdate(u);
+    let downloaded = null;
+    if (u.asarUrl && !u.store) {
+      try {
+        const patch = await api.downloadAsarUpdate(u);
+        if (patch.ok) {
+          const patched = await api.installAsarUpdate(patch);
+          if (patched.ok) return;
+        }
+      } catch (e) { /* fall back to full package */ }
+    }
+    downloaded = await api.downloadUpdate(u);
     if (!downloaded.ok) throw new Error(downloaded.error || '下载失败');
     toast('更新下载完成，正在安装', 'success');
     const installed = await api.installUpdate(downloaded);

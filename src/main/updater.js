@@ -151,6 +151,8 @@ async function checkUpdates(force = false) {
       url: officialUrl(data.url) || REPO,
       downloadUrl: officialUrl(data.downloadUrl) || officialUrl(data.url) || REPO,
       sha256: String(data.sha256 || '').toLowerCase(),
+      asarUrl: officialUrl(data.asarUrl) || '',
+      asarSha256: String(data.asarSha256 || '').toLowerCase(),
       store: !!process.windowsStore,
       platform: process.platform,
       checkedAt: now,
@@ -282,6 +284,62 @@ async function downloadUpdate(update, onProgress) {
   return { ok: true, path: dest, version: update.latest, size: fs.statSync(dest).size };
 }
 
+async function downloadAsarUpdate(update, onProgress) {
+  if (!update || !update.hasUpdate) throw new Error('当前没有可下载的更新');
+  if (update.store || process.windowsStore) throw new Error('Microsoft Store 版本请通过 Store 更新');
+  if (process.env.PORTABLE_EXECUTABLE_FILE) throw new Error('便携版不能使用增量更新');
+  const url = officialUrl(update.asarUrl);
+  if (!url) throw new Error('增量更新地址无效');
+  const dir = path.join(app.getPath('temp'), 'emcl-updates');
+  fs.mkdirSync(dir, { recursive: true });
+  const dest = path.join(dir, 'app-' + String(update.latest || 'new').replace(/[^\w.\-]+/g, '-') + '.asar');
+  const part = dest + '.part';
+  try { fs.rmSync(part, { force: true }); } catch { /* ignore */ }
+  await downloadFile(url, part, {
+    onProgress: (received, total) => {
+      const percent = total ? Math.max(0, Math.min(100, Number(received) / Number(total) * 100)) : 0;
+      if (onProgress) onProgress({ percent, received, total });
+    }
+  });
+  if (update.asarSha256) {
+    const hash = crypto.createHash('sha256').update(fs.readFileSync(part)).digest('hex');
+    if (hash !== String(update.asarSha256).toLowerCase()) {
+      try { fs.rmSync(part, { force: true }); } catch { /* ignore */ }
+      throw new Error('增量更新校验失败');
+    }
+  }
+  try { fs.rmSync(dest, { force: true }); } catch { /* ignore */ }
+  fs.renameSync(part, dest);
+  return { ok: true, path: dest, version: update.latest, size: fs.statSync(dest).size, mode: 'asar' };
+}
+
+async function installAsarUpdate(download) {
+  if (process.windowsStore) throw new Error('Microsoft Store 版本不能自动安装');
+  if (process.env.PORTABLE_EXECUTABLE_FILE) throw new Error('便携版不能使用增量更新');
+  const file = download && download.path;
+  if (!file || !fs.existsSync(file)) throw new Error('增量更新文件不存在');
+  const target = path.join(process.resourcesPath, 'app.asar');
+  if (!fs.existsSync(target)) throw new Error('找不到应用资源，改用完整安装包');
+  try { fs.accessSync(target, fs.constants.W_OK); } catch { throw new Error('当前安装目录不可写，改用完整安装包'); }
+  const helper = path.join(app.getPath('temp'), 'emcl-asar-update-' + Date.now() + '.ps1');
+  const script = [
+    '$ErrorActionPreference = "SilentlyContinue"',
+    'Wait-Process -Id ' + process.pid + ' -Timeout 30',
+    'Start-Sleep -Milliseconds 700',
+    'Copy-Item -LiteralPath ' + JSON.stringify(file) + ' -Destination ' + JSON.stringify(target) + ' -Force',
+    'Start-Process -FilePath ' + JSON.stringify(process.execPath),
+    'Remove-Item -LiteralPath ' + JSON.stringify(helper) + ' -Force'
+  ].join('\r\n');
+  fs.writeFileSync(helper, script, 'utf8');
+  spawn('powershell.exe', ['-NoProfile', '-WindowStyle', 'Hidden', '-ExecutionPolicy', 'Bypass', '-File', helper], {
+    detached: true,
+    stdio: 'ignore',
+    windowsHide: true
+  }).unref();
+  setTimeout(() => app.quit(), 500);
+  return { ok: true, mode: 'asar' };
+}
+
 async function installUpdate(download) {
   if (process.windowsStore) throw new Error('Microsoft Store 版本不能自动安装，请通过 Store 更新');
   const file = download && download.path;
@@ -321,5 +379,7 @@ module.exports = {
   openUpdate,
   downloadUpdate,
   installUpdate,
+  downloadAsarUpdate,
+  installAsarUpdate,
   currentVersion
 };

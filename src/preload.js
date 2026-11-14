@@ -74,6 +74,8 @@ contextBridge.exposeInMainWorld('emcl', {
   openUpdate: (url) => ipcRenderer.invoke('updates:open', url),
   downloadUpdate: (update) => ipcRenderer.invoke('updates:download', update),
   installUpdate: (download) => ipcRenderer.invoke('updates:install', download),
+  downloadAsarUpdate: (update) => ipcRenderer.invoke('updates:downloadAsar', update),
+  installAsarUpdate: (download) => ipcRenderer.invoke('updates:installAsar', download),
   onUpdateProgress: (callback) => on('update:progress', callback),
   onUpdateReady: (callback) => on('update:ready', callback),
   onUpdateError: (callback) => on('update:error', callback),
