@@ -157,6 +157,8 @@
     .platform-actions .btn { width:100%; margin-top:0; }
     .platform-actions .store-badge { margin-top:4px; }
     .platform-meta { color:var(--muted); font-size:11px; line-height:1.6; border-top:1px solid var(--line); padding-top:10px; }
+    .os-recommend.os-unknown { border-color:#C98A12; background:linear-gradient(110deg,#FFF9EC,rgba(255,255,255,.6)); }
+    .os-recommend.os-unknown .os-kicker { color:#9A650C; }
     html[data-theme="dark"] .os-recommend { background:linear-gradient(110deg,#132C45,rgba(15,34,52,.75)); }
     @media (max-width:760px) { .platform-grid { grid-template-columns:1fr; } .platform-card { padding:20px; } }
 
@@ -201,10 +203,11 @@
     </section>
 
     <section class="os-recommend" id="osRecommendation">
+  <!-- 系统识别结果由 download-os.js 更新；无法识别时不默认推荐 Windows -->
   <div class="os-recommend-main">
-    <span class="os-kicker">检测到你的系统</span>
+    <span class="os-kicker" id="osKicker">正在检测你的系统</span>
     <b id="osName">正在检测…</b>
-    <span class="os-note">已把适合你的下载放在第一位</span>
+    <span class="os-note" id="osNote">正在识别系统版本</span>
   </div>
   <a class="os-jump" href="#allPlatforms">查看全部平台 ↓</a>
 </section>
