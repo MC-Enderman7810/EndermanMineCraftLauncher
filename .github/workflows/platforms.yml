@@ -45,11 +45,15 @@ jobs:
           node-version: 20
       - name: Install dependencies
         run: npm install --no-audit --no-fund
-      - name: Build unsigned macOS zips
+      - name: Build ad-hoc signed macOS zips
         run: |
           node -e "const fs=require('fs');const p='package.json';const d=JSON.parse(fs.readFileSync(p));delete d.build.electronDist;fs.writeFileSync(p,JSON.stringify(d,null,2))"
-          npx electron-builder --mac zip --x64 --publish never
-          npx electron-builder --mac zip --arm64 --publish never
+          npx electron-builder --mac dir --x64 --publish never
+          npx electron-builder --mac dir --arm64 --publish never
+          codesign --force --deep --sign - "dist/mac/EMCL.app"
+          codesign --force --deep --sign - "dist/mac-arm64/EMCL.app"
+          ditto -c -k --sequesterRsrc --keepParent "dist/mac/EMCL.app" "dist/EMCL-1.26.2-6.16-mac.zip"
+          ditto -c -k --sequesterRsrc --keepParent "dist/mac-arm64/EMCL.app" "dist/EMCL-1.26.2-6.16-arm64-mac.zip"
       - name: Publish release assets
         uses: softprops/action-gh-release@v2
         with:

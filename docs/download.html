@@ -120,7 +120,51 @@
       .req { grid-template-columns: 1fr; }
       footer { display: block; line-height: 1.8; }
     }
-  </style>
+  
+    .os-recommend {
+      display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+      margin-top:24px; padding:14px 16px; border:1px solid var(--line); border-radius:14px;
+      background:linear-gradient(110deg, var(--blue-soft), rgba(255,255,255,.6)); color:var(--ink);
+    }
+    .os-recommend-main { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+    .os-kicker { color:var(--blue-dark); font-size:12px; font-weight:800; letter-spacing:.4px; }
+    .os-recommend b { font-size:16px; }
+    .os-note { color:var(--muted); font-size:12px; }
+    .os-jump { color:var(--blue); font-size:12px; font-weight:700; }
+    .platform-grid {
+      display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin-top:18px;
+    }
+    .platform-card {
+      position:relative; display:flex; flex-direction:column; gap:12px; min-width:0;
+      padding:26px; border:1px solid var(--line); border-radius:20px; background:var(--white);
+      box-shadow:var(--shadow); color:var(--ink);
+    }
+    .platform-card.recommended { border-color:var(--blue); box-shadow:0 0 0 3px rgba(47,127,209,.14), var(--shadow); }
+    .platform-card.recommended::before {
+      content:'推荐给你的系统'; position:absolute; top:14px; right:16px;
+      padding:5px 9px; border-radius:999px; background:var(--blue); color:#fff;
+      font-size:10px; font-weight:800; letter-spacing:.3px;
+    }
+    .platform-head { display:flex; align-items:center; gap:12px; }
+    .platform-icon {
+      width:46px; height:46px; flex:0 0 46px; border-radius:13px; display:grid; place-items:center;
+      background:linear-gradient(145deg,#59A9FF,#1F6FCA); color:#fff; font-size:13px; font-weight:900;
+      letter-spacing:-.3px;
+    }
+    .platform-card h2 { margin:4px 0 0; font-size:22px; letter-spacing:-.5px; }
+    .platform-card p { margin:0; color:var(--muted); font-size:13px; line-height:1.75; flex:1; }
+    .platform-actions { display:flex; flex-direction:column; gap:8px; margin-top:4px; }
+    .platform-actions .btn { width:100%; margin-top:0; }
+    .platform-actions .store-badge { margin-top:4px; }
+    .platform-meta { color:var(--muted); font-size:11px; line-height:1.6; border-top:1px solid var(--line); padding-top:10px; }
+    html[data-theme="dark"] .os-recommend { background:linear-gradient(110deg,#132C45,rgba(15,34,52,.75)); }
+    @media (max-width:760px) { .platform-grid { grid-template-columns:1fr; } .platform-card { padding:20px; } }
+
+    .platform-help { color:var(--muted); font-size:11px; line-height:1.7; }
+    .platform-help summary { cursor:pointer; color:var(--blue); font-weight:700; }
+    .platform-help p { margin:7px 0 4px; }
+    .platform-help code { display:block; margin:5px 0; padding:7px 8px; overflow:auto; font-size:10px; border-radius:7px; background:var(--blue-soft); color:var(--ink); }
+</style>
   <link rel="stylesheet" href="./site-common.css">
   <script>try{var t=localStorage.getItem('emcl-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t;var l=localStorage.getItem('emcl-lang')||'zh-CN';document.documentElement.lang=l;document.documentElement.dataset.lang=l;}catch(e){}</script>
 </head>
@@ -156,56 +200,93 @@
       </div>
     </section>
 
-    <section class="downloads" aria-label="下载方式">
-      <article class="download-card primary">
-        <div class="tag">推荐</div>
-        <h2>Microsoft Store</h2>
-        <p>由 Microsoft 签名和分发，自动更新，安装最省心。适合大多数 Windows 10 / 11 用户。</p>
-        <a class="store-badge" href="https://apps.microsoft.com/detail/9PHPTWV56WXB" target="_blank" rel="noopener" aria-label="从 Microsoft Store 获取 EMCL">
-          <img src="./assets/microsoft-store-zh.svg" width="161" height="44" alt="从 Microsoft Store 获取">
-        </a>
-      </article>
+    <section class="os-recommend" id="osRecommendation">
+  <div class="os-recommend-main">
+    <span class="os-kicker">检测到你的系统</span>
+    <b id="osName">正在检测…</b>
+    <span class="os-note">已把适合你的下载放在第一位</span>
+  </div>
+  <a class="os-jump" href="#allPlatforms">查看全部平台 ↓</a>
+</section>
 
-      <article class="download-card">
-        <div class="tag">Windows 安装版</div>
-        <h2>安装程序</h2>
-        <p>创建开始菜单和桌面快捷方式，带标准卸载程序。当前版本 1.26.26.12。</p>
-        <a class="btn" href="./downloads/EMCL-Setup-1.26.26.12.exe">下载安装程序 <span class="arrow">↓</span></a>
-      </article>
+<section class="platform-grid" id="allPlatforms" aria-label="所有平台下载">
+  <article class="platform-card" data-platform="windows">
+    <div class="platform-head">
+      <div class="platform-icon">Win</div>
+      <div><div class="tag">Windows 10 / 11</div><h2>Windows 版</h2></div>
+    </div>
+    <p>安装版、便携版和 Microsoft Store。安装版带开始菜单和卸载程序，便携版适合 U 盘。</p>
+    <div class="platform-actions">
+      <a class="btn" href="https://gh-proxy.com/https://raw.githubusercontent.com/MC-Enderman7810/EndermanMineCraftLauncher/main/docs/downloads/EMCL-Setup-1.26.26.17.exe">下载安装版 <span class="arrow">↓</span></a>
+      <a class="btn ghost" href="https://gh-proxy.com/https://raw.githubusercontent.com/MC-Enderman7810/EndermanMineCraftLauncher/main/docs/downloads/EMCL-Portable-1.26.26.17.exe">下载便携版 <span class="arrow">↓</span></a>
+      <a class="store-badge" href="https://apps.microsoft.com/detail/9PHPTWV56WXB" target="_blank" rel="noopener" aria-label="从 Microsoft Store 获取 EMCL">
+        <img src="./assets/microsoft-store-zh.svg" width="161" height="44" alt="从 Microsoft Store 获取">
+      </a>
+    </div>
+    <div class="platform-meta">当前版本 1.26.26.17 · x64</div>
+  </article>
 
-      <article class="download-card">
-        <div class="tag">免安装</div>
-        <h2>便携版</h2>
-        <p>单个 EXE，不写开始菜单。适合放在 U 盘或临时测试环境。</p>
-        <a class="btn ghost" href="./downloads/EMCL-Portable-1.26.26.12.exe">下载便携版 <span class="arrow">↓</span></a>
-      </article>
-    </section>
+  <article class="platform-card" data-platform="mac">
+    <div class="platform-head">
+      <div class="platform-icon">Mac</div>
+      <div><div class="tag">macOS</div><h2>macOS 版</h2></div>
+    </div>
+    <p>同时提供 Intel 和 Apple Silicon 构建。未签名版本，首次打开如被拦截请右键 → 打开。</p>
+    <div class="platform-actions">
+      <a class="btn" href="https://gh-proxy.com/https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/download/platforms-v6/EMCL-1.26.2-6.16-mac.zip">macOS Intel <span class="arrow">↓</span></a>
+      <a class="btn ghost" href="https://gh-proxy.com/https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/download/platforms-v6/EMCL-1.26.2-6.16-arm64-mac.zip">Apple Silicon <span class="arrow">↓</span></a>
+    </div>
+    <div class="platform-meta">ZIP · 临时签名 · 不需要 Apple 开发者账号</div>
+    <details class="platform-help"><summary>macOS 提示“已损坏”怎么办？</summary><p>这是下载隔离属性导致的，不是文件损坏。把 App 拖到“应用程序”后，在终端执行：</p><code>xattr -dr com.apple.quarantine /Applications/EMCL.app</code><p>然后右键 App → 打开。若仍在下载目录，先执行 <code>xattr -dr com.apple.quarantine ~/Downloads/EMCL.app</code>。</p></details>
+  </article>
 
-    <section class="panel" style="margin-top:16px">
-      <h3>下载加速 · 国内镜像</h3>
-      <p class="note">如果 emcl.life 直链速度慢，可使用下面的 GitHub 代理镜像。镜像文件与直链相同，SHA256 校验值一致。</p>
-      <div class="links" style="margin-top:10px">
-        <a href="https://gh-proxy.com/https://raw.githubusercontent.com/MC-Enderman7810/EndermanMineCraftLauncher/main/docs/downloads/EMCL-Setup-1.26.26.12.exe">安装版镜像 ①</a>
-        <a href="https://ghfast.top/https://raw.githubusercontent.com/MC-Enderman7810/EndermanMineCraftLauncher/main/docs/downloads/EMCL-Setup-1.26.26.12.exe">安装版镜像 ②</a>
-        <a href="https://gh-proxy.com/https://raw.githubusercontent.com/MC-Enderman7810/EndermanMineCraftLauncher/main/docs/downloads/EMCL-Portable-1.26.26.12.exe">便携版镜像 ①</a>
-        <a href="https://ghfast.top/https://raw.githubusercontent.com/MC-Enderman7810/EndermanMineCraftLauncher/main/docs/downloads/EMCL-Portable-1.26.26.12.exe">便携版镜像 ②</a>
-      </div>
-      <p class="note">建议使用支持多线程的下载工具；如果镜像也慢，请换一个时段或使用 Microsoft Store 版本。</p>
-    </section>
+  <article class="platform-card" data-platform="linux">
+    <div class="platform-head">
+      <div class="platform-icon">Lx</div>
+      <div><div class="tag">Linux</div><h2>Linux 版</h2></div>
+    </div>
+    <p>提供 AppImage 和 Debian / Ubuntu 的 .deb 包。AppImage 需要先赋予执行权限。</p>
+    <div class="platform-actions">
+      <a class="btn" href="https://gh-proxy.com/https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/download/platforms-v5/EMCL-1.26.2-6.16.AppImage">下载 AppImage <span class="arrow">↓</span></a>
+      <a class="btn ghost" href="https://gh-proxy.com/https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/download/platforms-v5/emcl-launcher_1.26.2-6.16_amd64.deb">下载 .deb <span class="arrow">↓</span></a>
+    </div>
+    <div class="platform-meta">x64 · WSL / 原生 Linux 均可测试</div>
+  </article>
 
-    <section class="panel" style="margin-top:16px">
-      <h3>其他平台</h3>
-      <p class="note">Linux 和旧版 Windows 构建来自 GitHub Actions。macOS Intel / Apple Silicon 已构建。</p>
-      <div class="links" style="margin-top:10px">
-        <a href="https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/download/platforms-v2/EMCL-1.26.2-6.16.AppImage">Linux AppImage</a>
-        <a href="https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/download/platforms-v2/emcl-launcher_1.26.2-6.16_amd64.deb">Linux .deb</a>
-        <a href="https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/download/platforms-v4/EMCL-1.26.2-6.16-mac.zip">macOS Intel</a>
-        <a href="https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/download/platforms-v4/EMCL-1.26.2-6.16-arm64-mac.zip">macOS Apple Silicon</a>
-        <a href="https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/download/platforms-v2/EMCL-Legacy-1.26.2-6.16-ia32.exe">旧版 Windows（Win7/8，32 位）</a>
-      </div>
-      <p class="note">Linux 可在 WSL 中测试：<code>chmod +x EMCL-*.AppImage &amp;&amp; ./EMCL-*.AppImage --no-sandbox</code></p>
-    </section>
-    <section class="details">
+  <article class="platform-card" data-platform="legacy">
+    <div class="platform-head">
+      <div class="platform-icon">旧</div>
+      <div><div class="tag">Windows 7 / 8 / 8.1</div><h2>旧版 Windows</h2></div>
+    </div>
+    <p>基于 Electron 22 的兼容构建，适合 Windows 7 / 8 / 8.1。提供 64 位和 32 位。</p>
+    <div class="platform-actions">
+      <a class="btn" href="https://gh-proxy.com/https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/download/platforms-v5/EMCL-Legacy-1.26.2-6.16-x64.exe">64 位旧版 <span class="arrow">↓</span></a>
+      <a class="btn ghost" href="https://gh-proxy.com/https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/download/platforms-v2/EMCL-Legacy-1.26.2-6.16-ia32.exe">32 位旧版 <span class="arrow">↓</span></a>
+    </div>
+    <div class="platform-meta">Windows 7 SP1 及以上 · 32 / 64 位</div>
+  </article>
+
+  <article class="platform-card" data-platform="android">
+    <div class="platform-head">
+      <div class="platform-icon">A</div>
+      <div><div class="tag">Android 电脑 / 平板</div><h2>Android 版</h2></div>
+    </div>
+    <p>Android 目前先提供网页版入口；原生 APK 需要单独适配，暂未提供安装包。</p>
+    <div class="platform-actions">
+      <a class="btn" href="./index.html">打开网页版 <span class="arrow">→</span></a>
+      <a class="btn ghost" href="./download.html#allPlatforms">查看桌面版</a>
+    </div>
+    <div class="platform-meta">Android 平板 / Android 电脑 · 浏览器直接使用</div>
+  </article>
+</section>
+
+<section class="panel" style="margin-top:16px">
+  <h3>国内加速下载</h3>
+  <p class="note">上面的按钮默认使用国内可访问的 GitHub 加速镜像。镜像文件与原始文件一致；如果某个镜像不可用，可稍后重试或使用 Microsoft Store 版本。</p>
+  <p class="note">Windows 安装包 SHA256 会随版本更新，具体校验值以更新清单为准。</p>
+</section>
+
+<section class="details">
       <div class="panel">
         <h3>系统要求</h3>
         <div class="req">
@@ -237,5 +318,6 @@
   </footer>
 </div>
   <script src="./site-common.js"></script>
+  <script src="./download-os.js"></script>
 </body>
 </html>
