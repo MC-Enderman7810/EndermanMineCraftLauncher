@@ -145,6 +145,31 @@ function mergeArguments(chain, key) {
   return out;
 }
 
+// 1.8.x / early Forge use the legacy minecraftArguments string. A Forge child
+// may only contain --tweakClass while the parent vanilla JSON holds the real
+// --username / --gameDir / --uuid arguments. Keep the full parent string and
+// append the child-only tokens instead of replacing it.
+function mergeLegacyArguments(chain) {
+  const values = chain
+    .map((item) => item.json && item.json.minecraftArguments)
+    .filter((value) => typeof value === 'string' && value.trim());
+  if (!values.length) return '';
+  const full = values.find((value) => value.includes('${auth_player_name}') || value.includes('--username'));
+  const base = full || values.slice().sort((a, b) => b.length - a.length)[0];
+  const parts = base.trim().split(/\s+/);
+  const seen = new Set(parts);
+  for (const value of values) {
+    if (value === base) continue;
+    for (const token of value.trim().split(/\s+/)) {
+      if (!seen.has(token)) {
+        seen.add(token);
+        parts.push(token);
+      }
+    }
+  }
+  return parts.join(' ');
+}
+
 async function resolveVersion(gameDir, id) {
   const chain = await loadVersionChain(gameDir, id);
   const last = chain[chain.length - 1];
@@ -156,10 +181,19 @@ async function resolveVersion(gameDir, id) {
     game: mergeArguments(chain, 'game'),
     jvm: mergeArguments(chain, 'jvm')
   };
-  if (!merged.arguments.game.length && last.json.minecraftArguments) {
-    merged.minecraftArguments = last.json.minecraftArguments;
-  } else if (last.json.minecraftArguments) {
-    merged.minecraftArguments = last.json.minecraftArguments;
+  const legacyArguments = mergeLegacyArguments(chain);
+  if (legacyArguments) merged.minecraftArguments = legacyArguments;
+  else delete merged.minecraftArguments;
+  // Forge sometimes mixes arguments.game (child) with legacy
+  // minecraftArguments (parent). Keep the parent tokens as well.
+  if (legacyArguments && merged.arguments.game.length) {
+    const existing = new Set(merged.arguments.game.filter((x) => typeof x === 'string'));
+    for (const token of legacyArguments.split(/\s+/)) {
+      if (token && !existing.has(token)) {
+        existing.add(token);
+        merged.arguments.game.push(token);
+      }
+    }
   }
   merged.mainClass = last.json.mainClass || base.json.mainClass;
   merged.assetIndex = last.json.assetIndex || base.json.assetIndex ||

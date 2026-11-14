@@ -24,7 +24,8 @@ async function exists(p) {
 
 async function readJson(file, fallback = null) {
   try {
-    return JSON.parse(await fsp.readFile(file, 'utf8'));
+    const text = (await fsp.readFile(file, 'utf8')).replace(/^\uFEFF/, '');
+    return JSON.parse(text);
   } catch {
     return fallback;
   }

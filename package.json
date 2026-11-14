@@ -1,6 +1,6 @@
 {
   "name": "emcl-launcher",
-  "version": "1.26.26.16",
+  "version": "1.26.26.17",
   "description": "EMCL - a blue PCL2-style Minecraft Java launcher for Windows",
   "main": "src/main/main.js",
   "author": {
@@ -19,8 +19,7 @@
     "dist:legacy": "electron-builder --win portable --ia32 --config electron-builder.legacy.json"
   },
   "dependencies": {
-    "adm-zip": "^0.5.16",
-    "undici": "^5.28.4"
+    "adm-zip": "^0.5.16"
   },
   "devDependencies": {
     "electron": "^38.0.0",

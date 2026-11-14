@@ -68,7 +68,9 @@ jobs:
           node-version: 20
       - name: Install dependencies
         run: npm install --no-audit --no-fund
-      - name: Build legacy 32-bit Windows portable
+      - name: Install legacy fetch polyfill
+        run: npm install undici@5 --no-save
+      - name: Build legacy Windows portable
         run: |
           node -e "const fs=require('fs');const p='package.json';const d=JSON.parse(fs.readFileSync(p));delete d.build.electronDist;d.build.electronVersion='22.3.27';fs.writeFileSync(p,JSON.stringify(d,null,2))"
           npx electron-builder --win portable --config electron-builder.legacy.json --publish never

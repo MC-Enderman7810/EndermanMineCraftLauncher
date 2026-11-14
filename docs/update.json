@@ -1,14 +1,13 @@
 {
-  "version": "1.26.26.16",
+  "version": "1.26.26.17",
   "releaseDate": "2026-10-31",
   "notes": [
-    "版本列表新增「设置」，可按实例指定 Java 和版本隔离",
-    "修复 1.8.9 等旧版本被误判为需要 Java 21",
-    "自动匹配 Java 8/17/21/25",
-    "自动下载并静默安装更新包",
-    "开发者页面支持复制反馈"
+    "修复 Forge 1.8.9 缺少 --gameDir / --username 等游戏参数",
+    "修复旧版版本 JSON 的 BOM 解析失败",
+    "通知现在可关闭、可拖动、悬停暂停",
+    "保留 Java 自动选择和版本独立设置"
   ],
   "url": "https://www.emcl.life/download.html",
-  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.16.exe",
-  "sha256": "C09F282A76B1F11EDFAEB6A1FAD86CB014EAB15DAAA3F5C77ED84CD5A06EED13"
+  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.17.exe",
+  "sha256": "4CADA8488FE010011A0D2985F555EC820B08FA56D39D9CF5AC4FF46354562BDC"
 }

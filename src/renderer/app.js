@@ -153,16 +153,73 @@ function $(id) {
 }
 
 function toast(message, type = '') {
-  if (type === 'error') {
-    showErrorModal('操作失败', String(message || '未知错误'));
-    return;
-  }
   const root = $('toastRoot');
+  if (!root) return;
   const node = document.createElement('div');
   node.className = 'toast ' + type;
-  node.textContent = message;
+  const text = document.createElement('span');
+  text.className = 'toast-text';
+  text.textContent = message;
+  const close = document.createElement('button');
+  close.className = 'toast-close';
+  close.type = 'button';
+  close.setAttribute('aria-label', '关闭通知');
+  close.textContent = '×';
+  node.appendChild(text);
+  node.appendChild(close);
   root.appendChild(node);
-  setTimeout(() => node.remove(), 3200);
+
+  let timer = null;
+  let remaining = 3600;
+  let started = Date.now();
+  const hide = () => { if (timer) clearTimeout(timer); node.remove(); };
+  const arm = () => {
+    started = Date.now();
+    timer = setTimeout(hide, remaining);
+  };
+  const pause = () => {
+    if (timer) clearTimeout(timer);
+    timer = null;
+    remaining = Math.max(500, remaining - (Date.now() - started));
+  };
+  arm();
+
+  close.addEventListener('pointerdown', (e) => e.stopPropagation());
+  close.addEventListener('click', (e) => { e.stopPropagation(); hide(); });
+  node.addEventListener('pointerenter', pause);
+  node.addEventListener('pointerleave', () => { if (!timer) arm(); });
+
+  // Drag notifications away from buttons.
+  let dragging = false;
+  let startX = 0;
+  let startY = 0;
+  let dx = 0;
+  let dy = 0;
+  node.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0 || e.target === close) return;
+    dragging = true;
+    startX = e.clientX - dx;
+    startY = e.clientY - dy;
+    node.setPointerCapture(e.pointerId);
+    node.classList.add('dragging');
+    pause();
+  });
+  node.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    dx = e.clientX - startX;
+    dy = e.clientY - startY;
+    node.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
+  });
+  const endDrag = (e) => {
+    if (!dragging) return;
+    dragging = false;
+    node.classList.remove('dragging');
+    try { node.releasePointerCapture(e.pointerId); } catch { /* ignore */ }
+    node.addEventListener('pointerleave', () => { if (!timer) arm(); }, { once: true });
+  };
+  node.addEventListener('pointerup', endDrag);
+  node.addEventListener('pointercancel', endDrag);
+  node.addEventListener('dblclick', hide);
 }
 
 function bytes(n) {
