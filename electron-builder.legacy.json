@@ -17,12 +17,12 @@
     "target": [
       {
         "target": "portable",
-        "arch": ["ia32"]
+        "arch": ["ia32", "x64"]
       }
     ],
     "icon": "assets/icon.ico"
   },
   "portable": {
-    "artifactName": "EMCL-Legacy-${version}-ia32.exe"
+    "artifactName": "EMCL-Legacy-${version}-${arch}.exe"
   }
 }

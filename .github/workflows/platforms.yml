@@ -71,7 +71,7 @@ jobs:
       - name: Build legacy 32-bit Windows portable
         run: |
           node -e "const fs=require('fs');const p='package.json';const d=JSON.parse(fs.readFileSync(p));delete d.build.electronDist;d.build.electronVersion='22.3.27';fs.writeFileSync(p,JSON.stringify(d,null,2))"
-          npx electron-builder --win portable --ia32 --config electron-builder.legacy.json --publish never
+          npx electron-builder --win portable --config electron-builder.legacy.json --publish never
       - name: Publish release assets
         uses: softprops/action-gh-release@v2
         with:
