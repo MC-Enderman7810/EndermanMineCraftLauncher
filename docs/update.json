@@ -1,13 +1,13 @@
 {
-  "version": "1.26.26.17",
+  "version": "1.26.26.18",
   "releaseDate": "2026-10-31",
   "notes": [
-    "修复 Forge 1.8.9 缺少 --gameDir / --username 等游戏参数",
-    "修复旧版版本 JSON 的 BOM 解析失败",
-    "通知现在可关闭、可拖动、悬停暂停",
-    "保留 Java 自动选择和版本独立设置"
+    "新增日志 INFO/WARN/ERROR 颜色、筛选和独立窗口",
+    "新增页面切换、卡片和按钮过渡动画",
+    "中文搜索补充 Sodium 等常见模组别名",
+    "保留 Forge 1.8.9 参数修复、可关闭通知和 Java 自动选择"
   ],
   "url": "https://www.emcl.life/download.html",
-  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.17.exe",
-  "sha256": "4CADA8488FE010011A0D2985F555EC820B08FA56D39D9CF5AC4FF46354562BDC"
+  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.18.exe",
+  "sha256": "F4493594FC75D24BFCFB3B243AD7BF6E996EF83EAE6A600998C1743F2C1429A6"
 }

@@ -4,6 +4,32 @@ const api = window.emcl;
 const OFFICIAL_URL = 'https://www.emcl.life';
 const SUPPORT_EMAIL = 'EMCLsupport2026@163.com';
 
+// Modrinth 的搜索以英文项目名为主。这里把常见中文名/别名补成英文检索词，
+// 让「钠」「苹果皮」这类中文输入也能找到正确项目。
+const RESOURCE_ALIASES = {
+  '钠': 'sodium', '钠离子': 'sodium', '锂': 'lithium', '磷': 'phosphor',
+  '星光': 'starlight', '铟': 'indium', '碘': 'iodine',
+  '苹果皮': 'appleskin', '高清修复': 'optifine', '光影': 'shaders',
+  '旅行地图': 'journeymap', '小地图': 'xaero', '世界地图': 'xaero',
+  '匠魂': 'tinkers construct', '植物魔法': 'botania', '热力膨胀': 'thermal expansion',
+  '通用机械': 'mekanism', '工业时代': 'industrialcraft', '工业': 'industrialcraft',
+  '应用能源': 'applied energistics', '精致存储': 'refined storage',
+  '储存抽屉': 'storage drawers', '暮色森林': 'twilight forest',
+  '虚无世界': 'advent of ascension', '星系': 'galacticraft',
+  '龙之研究': 'draconic evolution', '建筑': 'buildcraft', '林业': 'forestry',
+  '铁路': 'railcraft', '农夫乐事': 'farmers delight', '更好的战斗': 'better combat',
+  '交错次元': 'the betweenlands', '神秘时代': 'thaumcraft',
+  '沉浸工程': 'immersive engineering'
+};
+
+function expandResourceQuery(query) {
+  const raw = String(query || '').trim();
+  if (!raw) return raw;
+  const hit = Object.keys(RESOURCE_ALIASES).find((key) => raw.includes(key));
+  if (!hit) return raw;
+  return raw + ' ' + RESOURCE_ALIASES[hit];
+}
+
 const state = {
   config: null,
   accounts: [],
@@ -49,6 +75,7 @@ const state = {
   launchProgress: 0,
   launchProgressText: '',
   logLines: [],
+  logFilter: 'all',
   latestLog: '',
   launchLogFile: '',
   msBusy: false,
@@ -2122,18 +2149,43 @@ function pageSettings() {
 
 /* ---------------- Logs ---------------- */
 
+function logLineClass(line) {
+  const text = String(line && line.text || '');
+  if (line && (line.level === 'err' || line.level === 'error')) return 'error';
+  if (/error|exception|fatal|崩溃|失败/i.test(text)) return 'error';
+  if (line && line.level === 'warn' || /warn|警告/i.test(text)) return 'warn';
+  return 'info';
+}
+
 function pageLogs() {
-  const lines = state.logLines.length ? state.logLines : (state.latestLog ? state.latestLog.split(/\r?\n/).map((text) => ({ level: 'out', text })) : []);
+  const all = state.logLines.length ? state.logLines : (state.latestLog ? state.latestLog.split(/\r?\n/).map((text) => ({ level: 'out', text })) : []);
+  const lines = state.logFilter === 'error' ? all.filter((l) => logLineClass(l) === 'error') : all;
   return '<div class="toolbar"><div><div class="card-title">启动日志</div>' +
     '<div class="card-subtitle">' + esc(state.launchLogFile || '尚未启动游戏') + '</div></div><div class="spacer"></div>' +
+    '<button class="btn ' + (state.logFilter === 'all' ? 'btn-soft' : 'btn-ghost') + '" data-action="log-filter" data-value="all">全部</button>' +
+    '<button class="btn ' + (state.logFilter === 'error' ? 'btn-soft' : 'btn-ghost') + '" data-action="log-filter" data-value="error">只看错误</button>' +
+    '<button class="btn btn-ghost" data-action="detach-log">' + icon('terminal') + '独立窗口</button>' +
     '<button class="btn btn-ghost" data-action="copy-log">' + icon('copy') + '复制全部</button>' +
     '<button class="btn btn-ghost" data-action="open-logs">' + icon('folder') + '打开日志目录</button>' +
     '<button class="btn btn-ghost" data-action="clear-log">' + icon('trash') + '清空日志</button>' +
     '<button class="btn btn-soft" data-action="open-feedback">' + icon('info') + '提交错误</button>' +
     '<button class="btn btn-primary" data-action="refresh-log">' + icon('refresh') + '刷新</button></div>' +
     '<div class="log-box" id="logBox">' + (lines.length ? lines.map((l) =>
-      '<span class="log-line ' + (l.level === 'err' || l.level === 'error' ? 'err' : 'out') + '">' +
-      esc(l.text) + '</span>').join('') : '日志为空。启动一次游戏后，这里会显示 Java 输出。') + '</div>';
+      '<span class="log-line ' + logLineClass(l) + '">' + esc(l.text) + '</span>').join('') : '日志为空。启动一次游戏后，这里会显示 Java 输出。') + '</div>';
+}
+
+function openDetachedLog() {
+  const all = state.logLines.length ? state.logLines : (state.latestLog ? state.latestLog.split(/\r?\n/).map((text) => ({ level: 'out', text })) : []);
+  const win = window.open('', 'emcl-log-window', 'width=920,height=680');
+  if (!win) { toast('独立窗口被系统拦截，请允许弹窗', 'error'); return; }
+  const rows = all.map((line) => '<div class="' + logLineClass(line) + '">' + esc(line.text) + '</div>').join('');
+  win.document.write('<!doctype html><html><head><meta charset="utf-8"><title>EMCL 日志</title>' +
+    '<style>body{margin:0;background:#0b1621;color:#dcecff;font:12px/1.7 Consolas,monospace}' +
+    'header{padding:10px 14px;background:#122538;color:#9fc8f0;font-weight:700}' +
+    'main{padding:14px;white-space:pre-wrap;word-break:break-all}.error{color:#ff9d9d}.warn{color:#ffd479}.info{color:#c7d8ea}' +
+    '</style></head><body><header>EMCL 日志 · ' + esc(state.launchLogFile || '最新日志') + '</header><main id="log"></main></body></html>');
+  win.document.getElementById('log').innerHTML = rows || '<div class="info">暂无日志</div>';
+  win.document.close();
 }
 
 /* ---------------- Actions ---------------- */
@@ -2416,6 +2468,8 @@ async function handleAction(action, el) {
     case 'set-theme': await setTheme(dataset.color); break;
     case 'open-logs': await openLogs(); break;
     case 'copy-log': await copyLog(); break;
+    case 'log-filter': state.logFilter = dataset.value || 'all'; render(); break;
+    case 'detach-log': openDetachedLog(); break;
     case 'clear-log':
       if (!confirm('清空所有启动日志？此操作不会删除游戏文件。')) break;
       try {
@@ -3530,7 +3584,7 @@ async function doSearch() {
   render();
   try {
     const vid = state.resourceVersionId || currentVersionId();
-    const res = await api.searchContent(state.resourceKind, state.resourceQuery,
+    const res = await api.searchContent(state.resourceKind, expandResourceQuery(state.resourceQuery),
       gameVersionOf(vid), loaderOf(vid), state.resourceSource);
     if (!res.ok) throw new Error(res.error || '搜索失败');
     state.resourceHits = res.hits || [];
