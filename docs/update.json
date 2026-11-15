@@ -1,14 +1,14 @@
 {
-  "version": "1.26.26.19",
+  "version": "1.26.26.20",
   "releaseDate": "2026-10-31",
   "notes": [
-    "更新改为增量补丁 app.asar，不再每次下载完整安装包",
-    "Store 支持语言声明保持 7 种",
-    "保留日志颜色、动画、中文搜索和 Forge 修复"
+    "同步 szy 的发布版反馈修复",
+    "修复实例 Java 选择按父版本判断",
+    "修复日志筛选、服务器状态和离线皮肤提示"
   ],
   "url": "https://www.emcl.life/download.html",
-  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.19.exe?v=19",
-  "sha256": "3BF9D84268AE31C7EAEF6DA7CAB2388968745ECEB154CD42F039AE26CB434214",
-  "asarUrl": "https://www.emcl.life/downloads/updates/app-1.26.26.19.asar",
-  "asarSha256": "73BCA6FF1A6EB7DA7B160F5A438422BDF12C056237D36512B76AD0A907544FA9"
+  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.20.exe?v=20",
+  "sha256": "C36896A55C915D3F612510F9F718ACD56792E2F82A5267624A98B97316DC6B48",
+  "asarUrl": "https://www.emcl.life/downloads/updates/app-1.26.26.20.asar",
+  "asarSha256": "A68ACDAF2BB526B6E1AB53CDA911FCC4311A7D695B17CF31BFFB8232B9C55B67"
 }
