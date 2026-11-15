@@ -8,7 +8,7 @@
   <style>
     :root { --blue:#2F7FD1; --blue-dark:#1D5FA8; --ink:#14283B; --muted:#62788D; --line:#D8E7F5; --bg:#F3F8FE; }
     * { box-sizing:border-box; }
-    body { margin:0; min-height:100vh; font-family:"Segoe UI","Microsoft YaHei",sans-serif; color:var(--ink);
+    body { margin:0; min-height:100vh; font-family:"Segoe UI","Microsoft Ya058911C993672B444F08B118161729DE6FA39C8D962F511346436D2D0FAAF7F2ei",sans-serif; color:var(--ink);
       background:radial-gradient(circle at 80% 0,#DCEFFF 0,rgba(220,239,255,0) 34%),var(--bg); }
     .wrap { max-width:980px; margin:0 auto; padding:0 24px 48px; }
     header { display:flex; justify-content:space-between; align-items:center; padding:22px 0; }
@@ -90,23 +90,23 @@
     <section class="grid">
       <div class="card">
         <h2>当前开发者版本</h2>
-        <div class="kv"><span>版本号</span><b>1.26.25.26kfz</b></div>
+        <div class="kv"><span>版本号</span><b>1.26.25.28kfz</b></div>
         <div class="kv"><span>通道</span><b>Developer / 内部测试</b></div>
         <div class="kv"><span>更新方式</span><b>开发者版启动器检查更新</b></div>
         <div class="kv"><span>更新清单</span><b><a href="update.json">update.json</a></b></div>
         <div class="actions">
-          <a class="btn" href="https://gh-proxy.com/https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/download/dev-v1.26.25.26/EMCL-Dev-Portable-1.26.25.26.exe">下载开发者版</a>
+          <a class="btn" href="https://gh-proxy.com/https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/download/dev-v1.26.25.28/EMCL-Dev-Portable-1.26.25.28.exe">下载开发者版</a>
           <a class="btn ghost" href="update.json">查看更新清单</a>
           <a class="btn ghost" href="../download.html">稳定版下载</a>
         </div>
         <p class="note">开发者版下载仅在本页通过密码后显示。启动器会读取此目录的 <code>update.json</code> 检查新版本。</p>
-        <p class="note">SHA256：<code style="word-break:break-all">24A70C4BDBAA55FA87F5857469FDD3997B4D59C116C44B2967A4EFA4D3789570</code></p>
+        <p class="note">S058911C993672B444F08B118161729DE6FA39C8D962F511346436D2D0FAAF7F2A256：<code style="word-break:break-all">058911C993672B444F08B118161729DE6FA39C8D962F511346436D2D0FAAF7F2</code></p>
       </div>
 
       <div class="card">
         <h2>最新更新</h2>
         <ul class="log">
-          <li><b>2026-11-12 · 1.26.25.26kfz</b>开发者版强制更新；首次打开或更新后需要输入开发者密码，开发者账户功能暂时隐藏。</li><li><b>2026-10-31 · 1.26.25.23kfz</b>所有版本加入 Steve / Alex 模型选择，开发者版提供直链下载。</li>
+          <li><b>2026-11-12 · 1.26.25.28kfz</b>开发者版强制更新；首次打开或更新后需要输入开发者密码，开发者账户功能暂时隐藏。</li><li><b>2026-10-31 · 1.26.25.23kfz</b>所有版本加入 Steve / Alex 模型选择，开发者版提供直链下载。</li>
           <li><b>2026-10-31 · 1.26.25.20kfz</b>重启皮肤库：仅正面预览、8 款原创推荐皮肤、本地皮肤上传和披风切换。</li>
           <li><b>2026-10-31 · 1.26.25.15kfz</b>开发者更新通道接入 emcl.life；新增“刷新公告和更新”，移除皮肤页面、3D 皮肤和披风入口。</li>
           <li><b>2026-10-25 · 1.26.25.15kfz</b>Mojang appID 通过 allowlist，开发者版切换到自有 Azure appID。</li>
@@ -207,7 +207,7 @@
 
 <script>
   (function () {
-    var PASSWORD_24A70C4BDBAA55FA87F5857469FDD3997B4D59C116C44B2967A4EFA4D3789570 = '60eadcd61fd6f3b954705267676239a7d26c428e9a0c5894a06ec47cbad7e242';
+    var PASSWORD_058911C993672B444F08B118161729DE6FA39C8D962F511346436D2D0FAAF7F2 = '60eadcd61fd6f3b954705267676239a7d26c428e9a0c5894a06ec47cbad7e242';
     var SESSION_KEY = 'emcl_dev_access_v1';
     var gate = document.getElementById('gate');
     var app = document.getElementById('devApp');
@@ -223,7 +223,7 @@
 
     async function sha256(text) {
       var data = new TextEncoder().encode(text);
-      var digest = await crypto.subtle.digest('SHA-256', data);
+      var digest = await crypto.subtle.digest('S058911C993672B444F08B118161729DE6FA39C8D962F511346436D2D0FAAF7F2A-256', data);
       return Array.from(new Uint8Array(digest)).map(function (b) {
         return b.toString(16).padStart(2, '0');
       }).join('');
@@ -235,7 +235,7 @@
       if (!value) { error.textContent = '请输入密码'; return; }
       try {
         var hash = await sha256(value);
-        if (hash === PASSWORD_24A70C4BDBAA55FA87F5857469FDD3997B4D59C116C44B2967A4EFA4D3789570) {
+        if (hash === PASSWORD_058911C993672B444F08B118161729DE6FA39C8D962F511346436D2D0FAAF7F2) {
           sessionStorage.setItem(SESSION_KEY, '1');
           unlock();
         } else {
@@ -243,7 +243,7 @@
           input.select();
         }
       } catch (e) {
-        error.textContent = '当前环境不支持密码校验，请使用 HTTPS 访问';
+        error.textContent = '当前环境不支持密码校验，请使用 058911C993672B444F08B118161729DE6FA39C8D962F511346436D2D0FAAF7F2TTPS 访问';
       }
     }
 
@@ -320,10 +320,10 @@
         var data = await apiFetch('/api/feedback');
         feedbackItems = data.feedback || [];
         if (!data.feedback.length) {
-          feedbackList.innerHTML = '<p class="note">还没有反馈。</p>';
+          feedbackList.inner058911C993672B444F08B118161729DE6FA39C8D962F511346436D2D0FAAF7F2TML = '<p class="note">还没有反馈。</p>';
           return;
         }
-        feedbackList.innerHTML = data.feedback.map(function (item) {
+        feedbackList.inner058911C993672B444F08B118161729DE6FA39C8D962F511346436D2D0FAAF7F2TML = data.feedback.map(function (item) {
           var date = item.created_at ? new Date(item.created_at).toLocaleString('zh-CN') : '';
           return '<div class="feedback-item" style="border:1px solid #D8E4F2;border-radius:10px;padding:12px;margin-bottom:8px">' +
             '<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">' +
@@ -350,7 +350,7 @@
         var res = await fetch(API + '/api/announcements', { cache: 'no-store' });
         var data = await res.json();
         var items = (data && data.announcements) || [];
-        announcementsList.innerHTML = items.length
+        announcementsList.inner058911C993672B444F08B118161729DE6FA39C8D962F511346436D2D0FAAF7F2TML = items.length
           ? items.slice(0, 10).map(function (item) {
             return '<div style="padding:7px 0;border-top:1px solid #EDF3FA;font-size:12px">' +
               '<b>' + esc(item.title) + '</b> <span style="color:#60758C">' + esc(item.date) + ' · ' + esc(item.tag) + '</span></div>';
@@ -419,7 +419,7 @@
             '<td style="padding:7px 8px;border-bottom:1px solid #E6EEF7">' + esc(String(d.hits || 0)) + '</td>' +
             '</tr>';
         }).join('');
-        deviceList.innerHTML = rows
+        deviceList.inner058911C993672B444F08B118161729DE6FA39C8D962F511346436D2D0FAAF7F2TML = rows
           ? '<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr>' +
             '<th style="text-align:left;padding:7px 8px;border-bottom:2px solid #C9D9EA">IP</th>' +
             '<th style="text-align:left;padding:7px 8px;border-bottom:2px solid #C9D9EA">设备</th>' +
@@ -430,7 +430,7 @@
             '<th style="text-align:left;padding:7px 8px;border-bottom:2px solid #C9D9EA">次数</th>' +
             '</tr></thead><tbody>' + rows + '</tbody></table>'
           : '<p class="note">还没有开发者设备上报。</p>';
-      } catch (e) { deviceList.innerHTML = '<p class="note" style="color:#B33A3A">读取设备失败：' + esc(e.message) + '</p>'; }
+      } catch (e) { deviceList.inner058911C993672B444F08B118161729DE6FA39C8D962F511346436D2D0FAAF7F2TML = '<p class="note" style="color:#B33A3A">读取设备失败：' + esc(e.message) + '</p>'; }
     }
 
     if (feedbackList) {
@@ -465,7 +465,7 @@
             return;
           }
           if (id && status) {
-            await apiFetch('/api/feedback/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: status }) });
+            await apiFetch('/api/feedback/' + id, { method: 'PATC058911C993672B444F08B118161729DE6FA39C8D962F511346436D2D0FAAF7F2', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: status }) });
             var label = status === 'closed' ? '已处理' : '已读';
             var statusNode = document.getElementById('fb-status-' + id);
             if (statusNode) statusNode.textContent = '状态：' + status + ' · ' + label;

@@ -1,13 +1,12 @@
 {
-  "version": "1.26.25.26kfz",
+  "version": "1.26.25.28kfz",
   "releaseDate": "2026-11-15",
   "notes": [
-    "新增开发者设备 IP 上报表",
-    "开发者页面新增设备表",
-    "保留开发者密码验证"
+    "同步正式版 1.26.26.20 的 Java、日志、服务器和皮肤修复",
+    "保留开发者 IP 上报与更新中心"
   ],
-  "url": "https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/tag/dev-v1.26.25.26",
-  "downloadUrl": "https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/download/dev-v1.26.25.26/EMCL-Dev-Portable-1.26.25.26.exe",
+  "url": "https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/tag/dev-v1.26.25.28",
+  "downloadUrl": "https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/download/dev-v1.26.25.28/EMCL-Dev-Portable-1.26.25.28.exe",
   "mandatory": true,
-  "sha256": "24A70C4BDBAA55FA87F5857469FDD3997B4D59C116C44B2967A4EFA4D3789570"
+  "sha256": "058911C993672B444F08B118161729DE6FA39C8D962F511346436D2D0FAAF7F2"
 }
