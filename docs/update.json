@@ -1,14 +1,14 @@
 {
-  "version": "1.26.26.20",
+  "version": "1.26.26.21",
   "releaseDate": "2026-10-31",
   "notes": [
-    "同步 szy 的发布版反馈修复",
-    "修复实例 Java 选择按父版本判断",
-    "修复日志筛选、服务器状态和离线皮肤提示"
+    "桌面端优先读取 api.emcl.life 公告接口",
+    "修复网站发布公告后发布版收不到的问题",
+    "保留 GitHub 公告作为回退"
   ],
   "url": "https://www.emcl.life/download.html",
-  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.20.exe?v=20",
-  "sha256": "C36896A55C915D3F612510F9F718ACD56792E2F82A5267624A98B97316DC6B48",
-  "asarUrl": "https://www.emcl.life/downloads/updates/app-1.26.26.20.asar",
-  "asarSha256": "A68ACDAF2BB526B6E1AB53CDA911FCC4311A7D695B17CF31BFFB8232B9C55B67"
+  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.21.exe?v=21",
+  "sha256": "C0EB781688FA7EDE2C7C2EC425EB33F344E9625032D56D7B23FAECAD24A6F6C4",
+  "asarUrl": "https://www.emcl.life/downloads/updates/app-1.26.26.21.asar",
+  "asarSha256": "397EFB0C79F481A8F09724D84B4E0D72F8579CE06B345FF1DDB3EC2D4C51AE25"
 }
