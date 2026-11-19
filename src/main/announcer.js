@@ -30,6 +30,7 @@ function normalize(item) {
     date: String(item.date || ''),
     tag: String(item.tag || '公告'),
     type: String(item.tag || '公告'),
+    audience: String(item.audience || 'both'),
     url: String(item.url || ''),
     pinned: item.pinned === true || item.pinned === 1,
     createdAt: Number(item.created_at) || 0
@@ -100,6 +101,7 @@ module.exports = function createAnnouncer(store) {
         tag,
         date: input.date || new Date().toISOString().slice(0, 10),
         url: input.url || '',
+        audience: Array.isArray(input.audience) ? input.audience : [String(input.audience || 'release')],
         pinned: input.pinned === true
       })
     });

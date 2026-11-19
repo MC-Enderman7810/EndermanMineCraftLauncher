@@ -2793,6 +2793,10 @@ function openRemoteAnnouncementComposer() {
     body: '<div class="field"><label>标题</label><input class="input" id="remoteAnnTitle" maxlength="80" placeholder="例如：服务器维护通知" /></div>' +
       '<div class="field"><label>正文</label><textarea class="input" id="remoteAnnBody" rows="5" placeholder="公告内容，支持换行"></textarea></div>' +
       '<div class="field"><label>公告类型</label><div class="row" style="flex-wrap:wrap">' + typeBoxes + '</div></div>' +
+      '<div class="field"><label>发布对象</label><div class="row" style="flex-wrap:wrap">' +
+        '<label class="check-line" style="margin-right:14px"><input type="checkbox" name="remoteAnnAudience" value="release" checked> 发布版</label>' +
+        '<label class="check-line" style="margin-right:14px"><input type="checkbox" name="remoteAnnAudience" value="dev" checked> 开发者版</label>' +
+      '</div></div>' +
       '<div class="field"><label>置顶</label><label class="check-line"><input type="checkbox" id="remoteAnnPinned" /> 置顶显示</label></div>',
     actions: [
       { label: '取消', kind: 'ghost', action: 'close-modal' },
@@ -2805,12 +2809,13 @@ async function publishRemoteAnnouncement() {
   const title = $('remoteAnnTitle') ? $('remoteAnnTitle').value.trim() : '';
   const body = $('remoteAnnBody') ? $('remoteAnnBody').value.trim() : '';
   const types = Array.from(document.querySelectorAll('input[name="remoteAnnType"]:checked')).map((el) => el.value);
+  const audience = Array.from(document.querySelectorAll('input[name="remoteAnnAudience"]:checked')).map((el) => el.value);
   const pinned = $('remoteAnnPinned') ? $('remoteAnnPinned').checked : false;
   if (!title || !body) {
     toast('标题和正文不能为空', 'error');
     return;
   }
-  const res = await api.announcerPublish({ title, body, types, pinned });
+  const res = await api.announcerPublish({ title, body, types, audience, pinned });
   if (!res.ok) {
     toast(res.error || '发布失败', 'error');
     return;
@@ -2854,8 +2859,13 @@ function announcementAccepted(item) {
   return tags.some((x) => selected.includes(x));
 }
 
+function announcementAudienceAccepted(item) {
+  const audience = String((item && item.audience) || 'both');
+  return audience === 'both' || (isDeveloper() ? audience === 'dev' : audience === 'release');
+}
+
 function filterAnnouncements(items) {
-  return (Array.isArray(items) ? items : []).filter(announcementAccepted);
+  return (Array.isArray(items) ? items : []).filter((item) => announcementAccepted(item) && announcementAudienceAccepted(item));
 }
 
 async function loadAnnouncements(force = false) {

@@ -65,7 +65,7 @@ export default {
 
       if (url.pathname === '/api/announcements' && request.method === 'GET') {
         const rows = await env.DB.prepare(
-          'SELECT id,title,body,date,tag,url,created_at FROM announcements ORDER BY date DESC, created_at DESC LIMIT 100'
+          'SELECT id,title,body,date,tag,url,audience,created_at FROM announcements ORDER BY date DESC, created_at DESC LIMIT 100'
         ).all();
         return json({ ok: true, announcements: rows.results || [] }, cors);
       }
@@ -152,9 +152,13 @@ export default {
         const date = String(body.date || new Date().toISOString().slice(0, 10)).slice(0, 20);
         const tag = String(body.tag || '公告').slice(0, 20);
         const link = String(body.url || '').slice(0, 500);
+        const requestedAudience = Array.isArray(body.audience) ? body.audience : [String(body.audience || 'release')];
+        const audience = requestedAudience.includes('both') || (requestedAudience.includes('dev') && requestedAudience.includes('release'))
+          ? 'both'
+          : (requestedAudience.includes('dev') ? 'dev' : 'release');
         await env.DB.prepare(
-          'INSERT INTO announcements (id,title,body,date,tag,url,created_at) VALUES (?,?,?,?,?,?,?)'
-        ).bind(id, title, text, date, tag, link, Date.now()).run();
+          'INSERT INTO announcements (id,title,body,date,tag,url,audience,created_at) VALUES (?,?,?,?,?,?,?,?)'
+        ).bind(id, title, text, date, tag, link, audience, Date.now()).run();
         return json({ ok: true, id }, cors);
       }
 
