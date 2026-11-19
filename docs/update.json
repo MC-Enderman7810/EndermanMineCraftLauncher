@@ -1,13 +1,14 @@
 {
-  "version": "1.26.26.22",
-  "releaseDate": "2026-10-31",
+  "version": "1.26.26.23",
+  "releaseDate": "2026-11-19",
   "notes": [
-    "更新清单和更新包改为从 api.emcl.life 获取",
-    "Update check now uses api.emcl.life"
+    "修复公告发布并支持公告类型筛选",
+    "同步 szy 默认皮肤修复",
+    "更新包从 api.emcl.life 获取"
   ],
   "url": "https://www.emcl.life/download.html",
-  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.22.exe?v=22",
-  "sha256": "F79844EEDB7095BC20B16601839336B5D12E9640559EE07CC803C13B0D49705B",
-  "asarUrl": "https://www.emcl.life/downloads/updates/app-1.26.26.22.asar",
-  "asarSha256": "A69ECC94527D9E807A358B634A6989984F24074CCA26A614CE37F6C733503CA1"
+  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.23.exe?v=23",
+  "sha256": "CE694605B2F2264C8A4724DE94719FFE3DB2BBECB100576EE9C0E084587C2F90",
+  "asarUrl": "https://www.emcl.life/downloads/updates/app-1.26.26.23.asar",
+  "asarSha256": "300F458C3CB62DDC60DA4C8834B524678E111625FF73314AE4FD46354B7EB799"
 }
