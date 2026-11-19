@@ -1,14 +1,14 @@
 {
-  "version": "1.26.26.25",
+  "version": "1.26.26.26",
   "releaseDate": "2026-11-19",
   "notes": [
-    "公告发布支持发布版/开发者版",
-    "支持指定玩家/账户目标",
-    "公告发布区域上移"
+    "公告发布支持发布版/开发者版/特供版",
+    "每次更新自动发布公告",
+    "公告支持指定目标"
   ],
   "url": "https://www.emcl.life/download.html",
-  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.25.exe?v=25",
-  "sha256": "266B4FA676D917D1265BD3997ECF88D19B78F879BDB7939E8DA49402AD7D725E",
-  "asarUrl": "https://www.emcl.life/downloads/updates/app-1.26.26.25.asar",
-  "asarSha256": "03A6F9274668D1F840BF9FA8235A3AB586ABD2DBFD50D37270D221F86ED4FA3F"
+  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.26.exe?v=26",
+  "sha256": "D3009645E7F6A3042999159568165CA344788A810B942DD0DE3FDCE316A77815",
+  "asarUrl": "https://www.emcl.life/downloads/updates/app-1.26.26.26.asar",
+  "asarSha256": "DF2D4C442DFBE78EB6367878124FBEDB1545072636D27131D2C88954CFF0D445"
 }
