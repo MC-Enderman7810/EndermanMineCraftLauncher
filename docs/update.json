@@ -1,14 +1,13 @@
 {
-  "version": "1.26.26.21",
+  "version": "1.26.26.22",
   "releaseDate": "2026-10-31",
   "notes": [
-    "桌面端优先读取 api.emcl.life 公告接口",
-    "修复网站发布公告后发布版收不到的问题",
-    "保留 GitHub 公告作为回退"
+    "更新清单和更新包改为从 api.emcl.life 获取",
+    "Update check now uses api.emcl.life"
   ],
   "url": "https://www.emcl.life/download.html",
-  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.21.exe?v=21",
-  "sha256": "C0EB781688FA7EDE2C7C2EC425EB33F344E9625032D56D7B23FAECAD24A6F6C4",
-  "asarUrl": "https://www.emcl.life/downloads/updates/app-1.26.26.21.asar",
-  "asarSha256": "397EFB0C79F481A8F09724D84B4E0D72F8579CE06B345FF1DDB3EC2D4C51AE25"
+  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.22.exe?v=22",
+  "sha256": "F79844EEDB7095BC20B16601839336B5D12E9640559EE07CC803C13B0D49705B",
+  "asarUrl": "https://www.emcl.life/downloads/updates/app-1.26.26.22.asar",
+  "asarSha256": "A69ECC94527D9E807A358B634A6989984F24074CCA26A614CE37F6C733503CA1"
 }

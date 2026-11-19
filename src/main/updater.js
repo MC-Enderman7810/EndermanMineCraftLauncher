@@ -9,7 +9,7 @@ const { fetchJson, downloadFile } = require('./util');
 const { isDev } = require('./channel');
 
 const REPO = 'https://github.com/MC-Enderman7810/EndermanMineCraftLauncher';
-const UPDATE_URL = 'https://www.emcl.life/update.json';
+const UPDATE_URL = 'https://api.emcl.life/api/update';
 const ANNOUNCEMENT_URL = 'https://www.emcl.life/announcements.json';
 const CONTENT_API = 'https://api.github.com/repos/MC-Enderman7810/EndermanMineCraftLauncher/contents/';
 const CACHE_MS = 15 * 60 * 1000;
@@ -50,7 +50,7 @@ function officialUrl(value) {
     const url = new URL(String(value || ''));
     if (url.protocol !== 'https:') return '';
     const host = url.hostname.toLowerCase();
-    if ((host === 'www.emcl.life' || host === 'emcl.life') && url.protocol === 'https:') {
+    if ((host === 'www.emcl.life' || host === 'emcl.life' || host === 'api.emcl.life') && url.protocol === 'https:') {
       return url.toString();
     }
     if (host === 'github.com' && url.pathname.toLowerCase().startsWith('/mc-enderman7810/')) {
@@ -138,7 +138,12 @@ async function checkUpdates(force = false) {
     return updateCache.value;
   }
   try {
-    const data = await readRepoJson('update.json', UPDATE_URL);
+    let data;
+    try {
+      data = await fetchJson(UPDATE_URL, { timeout: 15000, headers: { 'Cache-Control': 'no-cache' } });
+    } catch (apiError) {
+      data = await readRepoJson('update.json', 'https://raw.githubusercontent.com/MC-Enderman7810/EndermanMineCraftLauncher/main/update.json');
+    }
     const latest = String(data.version || '').trim();
     if (!latest) throw new Error('update.json 缺少 version');
     const result = {

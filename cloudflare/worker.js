@@ -19,6 +19,37 @@ export default {
         return Response.redirect('https://www.emcl.life/remote.html', 302);
       }
 
+
+      if (url.pathname === '/api/update' && request.method === 'GET') {
+        const upstream = await fetch('https://www.emcl.life/update.json?t=' + Date.now(), { cf: { cacheTtl: 30 } });
+        if (!upstream.ok) return json({ ok: false, error: 'update manifest unavailable' }, cors, 502);
+        const data = await upstream.json();
+        const toApi = (value) => {
+          try {
+            const u = new URL(String(value || ''));
+            const name = u.pathname.split('/').pop();
+            if (!name) return '';
+            return 'https://api.emcl.life/api/update/download/' + encodeURIComponent(name);
+          } catch { return ''; }
+        };
+        if (data.downloadUrl) data.downloadUrl = toApi(data.downloadUrl);
+        if (data.asarUrl) data.asarUrl = toApi(data.asarUrl);
+        data.source = 'api.emcl.life';
+        return json(data, cors);
+      }
+
+      const updateDownload = url.pathname.match(/^\/api\/update\/download\/([^/]+)$/);
+      if (updateDownload && request.method === 'GET') {
+        const name = decodeURIComponent(updateDownload[1]);
+        if (!/^(EMCL-(Portable|Setup)-[0-9.]+\.exe|app-[0-9.]+\.asar)$/i.test(name)) {
+          return json({ ok: false, error: 'invalid update file' }, cors, 400);
+        }
+        const path = name.toLowerCase().endsWith('.asar')
+          ? 'https://www.emcl.life/downloads/updates/' + encodeURIComponent(name)
+          : 'https://www.emcl.life/downloads/' + encodeURIComponent(name);
+        return Response.redirect(path, 302);
+      }
+
       if (url.pathname === '/api/health') {
         return json({ ok: true, service: 'emcl-api', time: Date.now() }, cors);
       }
@@ -126,6 +157,9 @@ export default {
     }
   }
 };
+
+const BLOCKED_FEEDBACK_EMAILS = new Set(['7891@7891.com']);
+const BLOCKED_FEEDBACK_NAMES = new Set(['lookoutyt']);
 
 function corsHeaders(origin) {
   return {
