@@ -175,7 +175,7 @@
         </div>
         <div class="grid" style="gap:12px;margin-top:10px">
           <label style="display:block;font-size:11px;font-weight:800">发布对象
-            <span style="display:flex;gap:14px;margin-top:6px;font-weight:600"><label><input id="annRelease" type="checkbox" checked> 发布版</label><label><input id="annDev" type="checkbox" checked> 开发者版</label></span>
+            <span style="display:flex;gap:14px;margin-top:6px;font-weight:600"><label><input id="annRelease" type="checkbox" checked> 发布版</label><label><input id="annDev" type="checkbox" checked> 开发者版</label><label><input id="annSianh" type="checkbox" checked> 特供版</label></span>
           </label>
           <label style="display:block;font-size:11px;font-weight:800">指定目标（可选）
             <input id="annTargets" maxlength="500" style="width:100%;margin-top:5px;padding:9px;border:1px solid #D8E4F2;border-radius:8px" placeholder="玩家名/账户 ID，逗号分隔；留空发给全部" />
@@ -378,6 +378,7 @@
       var audience = [];
       if (document.getElementById('annRelease').checked) audience.push('release');
       if (document.getElementById('annDev').checked) audience.push('dev');
+      if (document.getElementById('annSianh').checked) audience.push('sianh');
       var targets = document.getElementById('annTargets').value.split(',').map(function (x) { return x.trim(); }).filter(Boolean);
       if (!title || !body) { setAdminStatus('标题和正文不能为空', true); return; }
       setAdminStatus('正在发布公告…');

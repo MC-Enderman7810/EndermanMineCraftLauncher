@@ -65,7 +65,7 @@ export default {
 
       if (url.pathname === '/api/announcements' && request.method === 'GET') {
         const rows = await env.DB.prepare(
-          'SELECT id,title,body,date,tag,url,audience,created_at FROM announcements ORDER BY date DESC, created_at DESC LIMIT 100'
+          'SELECT id,title,body,date,tag,url,audience,targets,created_at FROM announcements ORDER BY date DESC, created_at DESC LIMIT 100'
         ).all();
         return json({ ok: true, announcements: rows.results || [] }, cors);
       }
@@ -153,12 +153,14 @@ export default {
         const tag = String(body.tag || '公告').slice(0, 20);
         const link = String(body.url || '').slice(0, 500);
         const requestedAudience = Array.isArray(body.audience) ? body.audience : [String(body.audience || 'release')];
-        const audience = requestedAudience.includes('both') || (requestedAudience.includes('dev') && requestedAudience.includes('release'))
-          ? 'both'
-          : (requestedAudience.includes('dev') ? 'dev' : 'release');
+        const targets = (Array.isArray(body.targets) ? body.targets : String(body.targets || '').split(',')).map((x) => String(x).trim()).filter(Boolean).slice(0, 50).join(',');
+        const audienceSet = new Set(requestedAudience.map((x) => String(x).toLowerCase()).filter((x) => ['release', 'dev', 'sianh'].includes(x)));
+        const audience = audienceSet.has('release') && audienceSet.has('dev') && audienceSet.has('sianh')
+          ? 'all'
+          : (audienceSet.has('release') && audienceSet.has('dev') ? 'both' : (audienceSet.size ? Array.from(audienceSet).join(',') : 'release'));
         await env.DB.prepare(
-          'INSERT INTO announcements (id,title,body,date,tag,url,audience,created_at) VALUES (?,?,?,?,?,?,?,?)'
-        ).bind(id, title, text, date, tag, link, audience, Date.now()).run();
+          'INSERT INTO announcements (id,title,body,date,tag,url,audience,targets,created_at) VALUES (?,?,?,?,?,?,?,?,?)'
+        ).bind(id, title, text, date, tag, link, audience, targets, Date.now()).run();
         return json({ ok: true, id }, cors);
       }
 

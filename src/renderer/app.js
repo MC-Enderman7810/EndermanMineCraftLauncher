@@ -2793,9 +2793,11 @@ function openRemoteAnnouncementComposer() {
     body: '<div class="field"><label>标题</label><input class="input" id="remoteAnnTitle" maxlength="80" placeholder="例如：服务器维护通知" /></div>' +
       '<div class="field"><label>正文</label><textarea class="input" id="remoteAnnBody" rows="5" placeholder="公告内容，支持换行"></textarea></div>' +
       '<div class="field"><label>公告类型</label><div class="row" style="flex-wrap:wrap">' + typeBoxes + '</div></div>' +
+      '<div class="field"><label>指定目标（可选）</label><input class="input" id="remoteAnnTargets" placeholder="玩家名/账户 ID，多个用逗号分隔；留空发给全部" /></div>' +
       '<div class="field"><label>发布对象</label><div class="row" style="flex-wrap:wrap">' +
         '<label class="check-line" style="margin-right:14px"><input type="checkbox" name="remoteAnnAudience" value="release" checked> 发布版</label>' +
         '<label class="check-line" style="margin-right:14px"><input type="checkbox" name="remoteAnnAudience" value="dev" checked> 开发者版</label>' +
+        '<label class="check-line" style="margin-right:14px"><input type="checkbox" name="remoteAnnAudience" value="sianh" checked> 特供版</label>' +
       '</div></div>' +
       '<div class="field"><label>置顶</label><label class="check-line"><input type="checkbox" id="remoteAnnPinned" /> 置顶显示</label></div>',
     actions: [
@@ -2809,13 +2811,14 @@ async function publishRemoteAnnouncement() {
   const title = $('remoteAnnTitle') ? $('remoteAnnTitle').value.trim() : '';
   const body = $('remoteAnnBody') ? $('remoteAnnBody').value.trim() : '';
   const types = Array.from(document.querySelectorAll('input[name="remoteAnnType"]:checked')).map((el) => el.value);
+  const targets = $('remoteAnnTargets') ? $('remoteAnnTargets').value.split(',').map((x) => x.trim()).filter(Boolean) : [];
   const audience = Array.from(document.querySelectorAll('input[name="remoteAnnAudience"]:checked')).map((el) => el.value);
   const pinned = $('remoteAnnPinned') ? $('remoteAnnPinned').checked : false;
   if (!title || !body) {
     toast('标题和正文不能为空', 'error');
     return;
   }
-  const res = await api.announcerPublish({ title, body, types, audience, pinned });
+  const res = await api.announcerPublish({ title, body, types, audience, targets, pinned });
   if (!res.ok) {
     toast(res.error || '发布失败', 'error');
     return;
@@ -2860,8 +2863,17 @@ function announcementAccepted(item) {
 }
 
 function announcementAudienceAccepted(item) {
-  const audience = String((item && item.audience) || 'both');
-  return audience === 'both' || (isDeveloper() ? audience === 'dev' : audience === 'release');
+  const audience = String((item && item.audience) || 'both').toLowerCase();
+  const audienceList = audience.split(',').map((x) => x.trim());
+  const audienceOk = audienceList.includes('all') || audienceList.includes('both') ||
+    (isDeveloper() ? audienceList.includes('dev') : audienceList.includes('release'));
+  if (!audienceOk) return false;
+  const targets = String((item && item.targets) || '').split(',').map((x) => x.trim().toLowerCase()).filter(Boolean);
+  if (!targets.length) return true;
+  const account = currentAccount();
+  const names = [account && account.name, account && account.id, state.config && state.config.lastAccountId]
+    .filter(Boolean).map((x) => String(x).toLowerCase());
+  return targets.some((target) => names.includes(target));
 }
 
 function filterAnnouncements(items) {

@@ -126,6 +126,11 @@ try {
   if ($LASTEXITCODE -ne 0) { throw 'Commit failed' }
   git push origin HEAD:main --quiet
   if ($LASTEXITCODE -ne 0) { throw 'Push failed' }
+  try {
+    & node (Join-Path $root 'scripts\publish-update-announcement.js') $newVersion
+    if ($LASTEXITCODE -ne 0) { Write-Log 'Announcement publish failed; release still published.' }
+  } catch { Write-Log ('Announcement publish failed: ' + $_.Exception.Message) }
+
   Write-Log ("Published " + $newVersion)
 } catch {
   Write-Log ('Auto release failed: ' + $_.Exception.Message)

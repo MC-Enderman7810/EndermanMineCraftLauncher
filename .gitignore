@@ -15,3 +15,4 @@ dist-*/
 reports/
 
 docs/com1/
+.announce-secret
