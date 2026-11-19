@@ -58,6 +58,11 @@ export default {
         return await login(request, env, cors);
       }
 
+      if (url.pathname === '/api/session' && request.method === 'GET') {
+        if (!(await isAdmin(request, env))) return json({ ok: false, error: '未登录' }, cors, 401);
+        return json({ ok: true, login: 'admin' }, cors);
+      }
+
       if (url.pathname === '/api/announcements' && request.method === 'GET') {
         const rows = await env.DB.prepare(
           'SELECT id,title,body,date,tag,url,created_at FROM announcements ORDER BY date DESC, created_at DESC LIMIT 100'
@@ -127,6 +132,14 @@ export default {
           'SELECT id,ip,name,host,os,arch,app,version,first_seen,last_seen,hits FROM dev_devices ORDER BY last_seen DESC LIMIT 500'
         ).all();
         return json({ ok: true, devices: rows.results || [] }, cors);
+      }
+
+
+      const announcementMatch = url.pathname.match(/^\/api\/announcements\/([^/]+)$/);
+      if (announcementMatch && request.method === 'DELETE') {
+        if (!(await isAdmin(request, env))) return json({ ok: false, error: '未登录' }, cors, 401);
+        await env.DB.prepare('DELETE FROM announcements WHERE id = ?').bind(announcementMatch[1]).run();
+        return json({ ok: true }, cors);
       }
 
       if (url.pathname === '/api/announcements' && request.method === 'POST') {

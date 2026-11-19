@@ -84,6 +84,12 @@ contextBridge.exposeInMainWorld('emcl', {
   listLocalAnnouncements: () => ipcRenderer.invoke('announcements:local:list'),
   saveLocalAnnouncement: (item) => ipcRenderer.invoke('announcements:local:save', item),
   deleteLocalAnnouncement: (id) => ipcRenderer.invoke('announcements:local:delete', id),
+  announcerStatus: () => ipcRenderer.invoke('announcements:remote:status'),
+  announcerSetToken: (password) => ipcRenderer.invoke('announcements:remote:setToken', password),
+  announcerClearToken: () => ipcRenderer.invoke('announcements:remote:clearToken'),
+  announcerList: () => ipcRenderer.invoke('announcements:remote:list'),
+  announcerPublish: (input) => ipcRenderer.invoke('announcements:remote:publish', input),
+  announcerRemove: (id) => ipcRenderer.invoke('announcements:remote:delete', id),
 
   pingServer: (host, port) => ipcRenderer.invoke('multiplayer:ping', host, port),
   serverList: () => ipcRenderer.invoke('servers:list'),

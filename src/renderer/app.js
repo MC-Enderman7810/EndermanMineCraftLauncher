@@ -569,7 +569,7 @@ function emptyState(text, iconName = 'box') {
 function allAnnouncements() {
   const out = [];
   const seen = new Set();
-  const combined = (state.localAnnouncements || []).concat(state.announcements || []);
+  const combined = filterAnnouncements((state.localAnnouncements || []).concat(state.announcements || []));
   for (const item of combined) {
     const id = String(item.id);
     if (seen.has(id)) continue;
@@ -1830,19 +1830,19 @@ function accountForm() {
 /* ---------------- Settings ---------------- */
 
 function announcerCard() {
-  if (!state.config || state.config.localAdmin !== true) return '';
+  if (!state.config) return '';
   const a = state.announcer || {};
   const ready = a.configured === true && !a.error;
   const items = (state.remoteAnnouncements || []).slice(0, 5);
   return '<div class="card"><div class="card-head"><h3 class="card-title">全网公告发布</h3>' +
     '<span class="small">' + tag(ready ? '已连接' : '未配置', ready ? 'green' : 'orange') + '</span></div>' +
     '<div class="card-subtitle">' + (ready
-      ? '已连接 GitHub @' + esc(a.login || a.repo || '') + '。发布后会写入所有 EMCL 正在读取的公告文件，所有已安装 EMCL 会在下次检查时收到。'
-      : '配置 GitHub Token 后，可在这里直接向所有 EMCL 发布公告。功能只存在于个人版，不进入发布版。') +
+      ? '已连接 api.emcl.life。发布后所有正在运行的 EMCL 会在下次检查（启动时 / 每 6 小时）收到。'
+      : '配置公告发布密码后，可在这里直接向所有 EMCL 发布公告。') +
       (a.error ? '<div class="card-subtitle" style="color:var(--red);margin-top:6px">' + esc(a.error) + '</div>' : '') + '</div>' +
     '<div class="row" style="margin-top:10px;flex-wrap:wrap">' +
       '<button class="btn btn-ghost" data-action="configure-announcer-token">' + icon('settings', 14) +
-        (ready ? '更换 Token' : '配置 Token') + '</button>' +
+        (ready ? '更换密码' : '配置密码') + '</button>' +
       '<button class="btn btn-primary" data-action="compose-remote-announcement"' +
         (ready ? '' : ' disabled') + '>' + icon('plus', 14) + '发布公告</button>' +
       (ready ? '<button class="btn btn-ghost" data-action="refresh-remote-announcements">刷新公告</button>' : '') +
@@ -1854,6 +1854,20 @@ function announcerCard() {
       '<button class="btn btn-danger btn-sm" data-action="delete-remote-announcement" data-id="' +
       esc(x.id) + '">删除</button></div>').join('') + '</div>' : '') +
     '</div>';
+}
+
+function announcementTypeCard() {
+  if (!state.config) return '';
+  const selected = Array.isArray(state.config.announcementTypes)
+    ? state.config.announcementTypes
+    : ['公告', '更新', '维护', '活动', '重要'];
+  return '<div class="card"><div class="card-head"><h3 class="card-title">接收的公告类型</h3></div>' +
+    '<div class="card-subtitle">只显示勾选的类型；全部取消时显示全部公告。</div>' +
+    '<div class="row" style="margin-top:10px;flex-wrap:wrap">' +
+    ['公告', '更新', '维护', '活动', '重要'].map((type) =>
+      '<label class="check-line" style="margin-right:14px"><input type="checkbox" data-action="toggle-announcement-type" data-type="' +
+      esc(type) + '"' + (selected.includes(type) ? ' checked' : '') + '> ' + esc(type) + '</label>').join('') +
+    '</div></div>';
 }
 
 function updateSettingsCard() {
@@ -2165,6 +2179,7 @@ function pageSettings() {
           '</div></div></div>' +
 
       announcerCard() +
+      announcementTypeCard() +
       updateSettingsCard() +
 
       '<div class="card"><div class="card-head"><h3 class="card-title">关于</h3></div>' +
@@ -2540,6 +2555,17 @@ async function handleAction(action, el) {
     case 'compose-local-announcement': openLocalAnnouncementComposer(); break;
     case 'save-local-announcement': await saveLocalAnnouncement(); break;
     case 'delete-local-announcement': await deleteLocalAnnouncement(dataset.id); break;
+    case 'toggle-announcement-type': {
+      const selected = new Set(Array.isArray(state.config.announcementTypes) ? state.config.announcementTypes : []);
+      const type = String(dataset.type || '');
+      if (!type) break;
+      if (selected.has(type)) selected.delete(type); else selected.add(type);
+      await api.patchConfig({ announcementTypes: Array.from(selected) });
+      state.config.announcementTypes = Array.from(selected);
+      await loadAnnouncements(true);
+      render();
+      break;
+    }
     case 'configure-announcer-token': openAnnouncerTokenModal(); break;
     case 'save-announcer-token': await saveAnnouncerToken(); break;
     case 'clear-announcer-token': await clearAnnouncerToken(); break;
@@ -2585,7 +2611,7 @@ async function refreshAll() {
       api.listAnnouncements(true)
     ]);
     state.update = update;
-    state.announcements = (announcements && announcements.items) || [];
+    state.announcements = filterAnnouncements((announcements && announcements.items) || []);
     state.announcementError = announcements && announcements.ok === false
       ? (announcements.error || '公告刷新失败') : '';
     if (unseenPopupAnnouncements().length) scheduleAnnouncementPopup();
@@ -2690,7 +2716,7 @@ function openLocalAnnouncementComposer() {
 }
 
 async function loadAnnouncerStatus() {
-  if (!state.config || state.config.localAdmin !== true) return;
+  if (!state.config) return;
   try {
     const s = await api.announcerStatus();
     state.announcer = s || { configured: false, login: '', repo: '', error: '' };
@@ -2714,16 +2740,16 @@ async function loadRemoteAnnouncements() {
 function openAnnouncerTokenModal() {
   const a = state.announcer || {};
   openModal({
-    title: '配置全网公告 Token',
-    desc: '需要一个 GitHub Fine-grained Token，权限只勾选该仓库的 Contents: Read and write。Token 会使用 Windows DPAPI 加密后保存在本机。',
+    title: '配置公告发布密码',
+    desc: '输入 EMCL 公告发布密码，用于登录 api.emcl.life。密码不会写入公告内容。',
     body: '<div class="field"><label>GitHub Token</label>' +
-      '<input class="input" id="announcerTokenInput" type="password" placeholder="github_pat_..." />' +
-      '<div class="card-subtitle">仓库：MC-Enderman7810/EndermanMineCraftLauncher。不要把 Token 发给别人。</div></div>' +
+      '<input class="input" id="announcerTokenInput" type="password" placeholder="公告发布密码" />' +
+      '<div class="card-subtitle">发布接口：api.emcl.life。不要把密码发给别人。</div></div>' +
       (a.error ? '<div class="card-subtitle" style="color:var(--red)">' + esc(a.error) + '</div>' : ''),
     actions: [
-      ...(a.configured ? [{ label: '清除 Token', kind: 'ghost', action: 'clear-announcer-token' }] : []),
+      ...(a.configured ? [{ label: '清除密码', kind: 'ghost', action: 'clear-announcer-token' }] : []),
       { label: '取消', kind: 'ghost', action: 'close-modal' },
-      { label: '保存并验证', kind: 'primary', action: 'save-announcer-token' }
+      { label: '登录并验证', kind: 'primary', action: 'save-announcer-token' }
     ]
   });
 }
@@ -2732,39 +2758,42 @@ async function saveAnnouncerToken() {
   const input = $('announcerTokenInput');
   const token = input ? input.value.trim() : '';
   if (!token) {
-    toast('请输入 GitHub Token', 'error');
+    toast('请输入公告发布密码', 'error');
     return;
   }
   const res = await api.announcerSetToken(token);
   if (!res.ok) {
-    toast(res.error || 'Token 验证失败', 'error');
+    toast(res.error || '登录失败', 'error');
     return;
   }
   closeModal();
   await loadAnnouncerStatus();
-  toast('公告 Token 已保存', 'success');
+  toast('公告发布密码已验证', 'success');
 }
 
 async function clearAnnouncerToken() {
-  if (!confirm('清除本机保存的公告 Token？')) return;
+  if (!confirm('清除本机保存的公告发布密码？')) return;
   await api.announcerClearToken();
   closeModal();
   await loadAnnouncerStatus();
-  toast('Token 已清除');
+  toast('公告发布密码已清除');
 }
 
 function openRemoteAnnouncementComposer() {
   if (!state.announcer || state.announcer.configured !== true) {
-    toast('请先配置 Token', 'error');
+    toast('请先配置公告发布密码', 'error');
     return;
   }
+  const typeBoxes = ['公告', '更新', '维护', '活动', '重要'].map((type) =>
+    '<label class="check-line" style="margin-right:14px"><input type="checkbox" name="remoteAnnType" value="' + esc(type) + '"' +
+    (type === '公告' ? ' checked' : '') + '> ' + esc(type) + '</label>').join('');
   openModal({
     title: '向所有 EMCL 发布公告',
-    desc: '发布后会立即写入云端公告文件。所有已安装 EMCL 会在下次检查（启动时 / 每 6 小时）收到。',
+    desc: '发布后写入 api.emcl.life，所有正在运行的 EMCL 会在下次检查（启动时 / 每 6 小时）收到。',
     body: '<div class="field"><label>标题</label><input class="input" id="remoteAnnTitle" maxlength="80" placeholder="例如：服务器维护通知" /></div>' +
       '<div class="field"><label>正文</label><textarea class="input" id="remoteAnnBody" rows="5" placeholder="公告内容，支持换行"></textarea></div>' +
-      '<div class="grid-2"><div class="field"><label>标签</label><input class="input" id="remoteAnnTag" value="公告" maxlength="20" /></div>' +
-      '<div class="field"><label>置顶</label><label class="check-line"><input type="checkbox" id="remoteAnnPinned" /> 置顶显示</label></div></div>',
+      '<div class="field"><label>公告类型</label><div class="row" style="flex-wrap:wrap">' + typeBoxes + '</div></div>' +
+      '<div class="field"><label>置顶</label><label class="check-line"><input type="checkbox" id="remoteAnnPinned" /> 置顶显示</label></div>',
     actions: [
       { label: '取消', kind: 'ghost', action: 'close-modal' },
       { label: '发布到所有 EMCL', kind: 'primary', action: 'publish-remote-announcement' }
@@ -2775,13 +2804,13 @@ function openRemoteAnnouncementComposer() {
 async function publishRemoteAnnouncement() {
   const title = $('remoteAnnTitle') ? $('remoteAnnTitle').value.trim() : '';
   const body = $('remoteAnnBody') ? $('remoteAnnBody').value.trim() : '';
-  const tagValue = $('remoteAnnTag') ? $('remoteAnnTag').value.trim() : '公告';
+  const types = Array.from(document.querySelectorAll('input[name="remoteAnnType"]:checked')).map((el) => el.value);
   const pinned = $('remoteAnnPinned') ? $('remoteAnnPinned').checked : false;
   if (!title || !body) {
     toast('标题和正文不能为空', 'error');
     return;
   }
-  const res = await api.announcerPublish({ title, body, tag: tagValue, pinned });
+  const res = await api.announcerPublish({ title, body, types, pinned });
   if (!res.ok) {
     toast(res.error || '发布失败', 'error');
     return;
@@ -2809,10 +2838,30 @@ async function refreshRemoteAnnouncements() {
   toast('公告已刷新');
 }
 
+const ANNOUNCEMENT_TYPES = ['公告', '更新', '维护', '活动', '重要'];
+
+function acceptedAnnouncementTypes() {
+  const list = state.config && Array.isArray(state.config.announcementTypes)
+    ? state.config.announcementTypes.map((x) => String(x))
+    : [];
+  return list.length ? list : ANNOUNCEMENT_TYPES.slice();
+}
+
+function announcementAccepted(item) {
+  const selected = acceptedAnnouncementTypes();
+  if (!selected.length) return true;
+  const tags = String((item && (item.tag || item.type)) || '公告').split(',').map((x) => x.trim());
+  return tags.some((x) => selected.includes(x));
+}
+
+function filterAnnouncements(items) {
+  return (Array.isArray(items) ? items : []).filter(announcementAccepted);
+}
+
 async function loadAnnouncements(force = false) {
   try {
     const result = await api.listAnnouncements(force);
-    state.announcements = result.items || [];
+    state.announcements = filterAnnouncements(result.items || []);
     state.announcementError = result.ok ? '' : (result.error || '');
     if (unseenPopupAnnouncements().length) scheduleAnnouncementPopup();
     render();
@@ -4410,7 +4459,7 @@ async function patchSetting(key, value) {
 
   api.onAnnouncements((result) => {
     if (!result || !result.ok) return;
-    state.announcements = result.items || [];
+    state.announcements = filterAnnouncements(result.items || []);
     if (unseenPopupAnnouncements().length) scheduleAnnouncementPopup();
     render();
   });

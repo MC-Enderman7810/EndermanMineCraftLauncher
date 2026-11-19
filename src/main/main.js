@@ -36,6 +36,7 @@ const modpack = require('./modpack');
 const { exists, ensureDir, formatBytes } = require('./util');
 const java = require('./java');
 const updater = require('./updater');
+const createAnnouncer = require('./announcer');
 const skin = require('./skin');
 const recommend = require('./recommend');
 const { ServerManager } = require('./servers');
@@ -1002,6 +1003,36 @@ function registerIpc() {
     } catch (e) {
       return { ok: false, error: e.message };
     }
+  });
+
+  ipcMain.handle('announcements:remote:status', async () => {
+    try { return { ok: true, ...(await announcer.status()) }; }
+    catch (e) { return { ok: false, configured: false, error: e.message }; }
+  });
+
+  ipcMain.handle('announcements:remote:setToken', async (event, password) => {
+    try { return { ok: true, ...(await announcer.setToken(password)) }; }
+    catch (e) { return { ok: false, error: e.message }; }
+  });
+
+  ipcMain.handle('announcements:remote:clearToken', async () => {
+    try { return await announcer.clearToken(); }
+    catch (e) { return { ok: false, error: e.message }; }
+  });
+
+  ipcMain.handle('announcements:remote:list', async () => {
+    try { return await announcer.list(); }
+    catch (e) { return { ok: false, error: e.message, items: [] }; }
+  });
+
+  ipcMain.handle('announcements:remote:publish', async (event, input) => {
+    try { return await announcer.publish(input || {}); }
+    catch (e) { return { ok: false, error: e.message }; }
+  });
+
+  ipcMain.handle('announcements:remote:delete', async (event, id) => {
+    try { return await announcer.remove(id); }
+    catch (e) { return { ok: false, error: e.message }; }
   });
 
   ipcMain.handle('announcements:local:delete', async (event, id) => {

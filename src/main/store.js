@@ -107,6 +107,8 @@ class Store {
     out.msClientId = APPROVED_MS_CLIENT_ID;
     out.msAuthority = 'entra';
     if (!Array.isArray(out.seenAnnouncements)) out.seenAnnouncements = [];
+    if (!Array.isArray(out.announcementTypes)) out.announcementTypes = defaults.announcementTypes.slice();
+    out.announcementTypes = out.announcementTypes.map((x) => String(x)).filter(Boolean);
     if (!Array.isArray(out.multiplayerServers)) out.multiplayerServers = [];
     return out;
   }
