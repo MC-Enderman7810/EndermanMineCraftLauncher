@@ -1,14 +1,14 @@
 {
-  "version": "1.26.26.27",
+  "version": "1.26.26.28",
   "releaseDate": "2026-11-21",
   "notes": [
-    "修复公告类型默认值",
-    "修复全新配置启动失败",
-    "公告支持发布版/开发者版/特供版"
+    "新增深色模式",
+    "外观模式支持浅色/深色/跟随系统",
+    "修复公告类型默认值"
   ],
   "url": "https://www.emcl.life/download.html",
-  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.27.exe?v=27",
-  "sha256": "E0231DED81010FA02E22149CC904A759F4DF4AEE4292E8E279CE4237F43173E5",
-  "asarUrl": "https://www.emcl.life/downloads/updates/app-1.26.26.27.asar",
-  "asarSha256": "17BFE2994D4D0B00B087AC6B40EB0FEE73831CF930B3D8E158510BB5D392CC43"
+  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.28.exe?v=28",
+  "sha256": "74DB30C7669A324E61C40DB1BD7E5EFD1F846595D210F4745D530E286BBD1951",
+  "asarUrl": "https://www.emcl.life/downloads/updates/app-1.26.26.28.asar",
+  "asarSha256": "158FB9469D247CC09A821A52EA4181E6A3C1497C700690D2BC8E6066B8D60606"
 }

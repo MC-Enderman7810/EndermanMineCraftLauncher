@@ -417,6 +417,7 @@ function displayVersion() {
 function render() {
   if (!state.config) return;
   applyAccent(state.config.accent);
+  applyColorMode(state.config.colorMode || 'light');
   const oldScroll = $('content').scrollTop;
   renderNav();
   renderTopbar();
@@ -531,6 +532,12 @@ function renderTasks() {
       '<div class="progress"><i style="width:' + (t.state === 'error' ? 100 : t.percent) + '%"></i></div>' +
       '</div>';
   }).join('');
+}
+
+function applyColorMode(mode) {
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const resolved = mode === 'dark' || (mode === 'system' && prefersDark) ? 'dark' : 'light';
+  document.documentElement.dataset.theme = resolved;
 }
 
 function applyAccent(color) {
@@ -2169,6 +2176,13 @@ function pageSettings() {
           '<option value="ru-RU"' + (c.language === 'ru-RU' ? ' selected' : '') + '>Русский</option>' +
         '</select>' +
         '<div class="card-subtitle">开发者版先提供多种语言。切换后界面会重新加载。</div></div></div>' +
+
+      '<div class="card"><div class="card-head"><h3 class="card-title">外观模式</h3></div>' +
+        '<div class="field"><select class="select" data-change="colorMode">' +
+          '<option value="light"' + ((c.colorMode || 'light') === 'light' ? ' selected' : '') + '>浅色</option>' +
+          '<option value="dark"' + (c.colorMode === 'dark' ? ' selected' : '') + '>深色</option>' +
+          '<option value="system"' + (c.colorMode === 'system' ? ' selected' : '') + '>跟随系统</option>' +
+        '</select><div class="card-subtitle">深色模式会同步切换窗口、卡片、输入框和弹窗配色。</div></div></div>' +
 
       '<div class="card"><div class="card-head"><h3 class="card-title">主题</h3><span class="small muted">蓝色为主</span></div>' +
         '<div class="setting-row"><div class="setting-info"><div class="setting-title">强调色</div>' +
@@ -4264,6 +4278,10 @@ function bind() {
         render();
       } else if (key === 'maxMemory' || key === 'minMemory') {
         await patchSetting(key, Number(el.value));
+      } else if (key === 'colorMode') {
+        await api.patchConfig({ colorMode: el.value });
+        state.config.colorMode = el.value;
+        applyColorMode(el.value);
       } else if (key === 'language') {
         const lang = ['zh-CN', 'zh-TW', 'en-US', 'ja-JP', 'ko-KR', 'fr-FR', 'ru-RU'].includes(el.value)
           ? el.value : 'zh-CN';
@@ -4327,6 +4345,7 @@ async function patchSetting(key, value) {
     const res = await api.patchConfig({ [key]: value });
     state.config = res.config;
     applyAccent(state.config.accent);
+    applyColorMode(state.config.colorMode || 'light');
     if (key === 'gameDir') toast('游戏目录已更新');
   } catch (e) {
     toast(e.message || '保存失败', 'error');
