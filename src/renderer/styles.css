@@ -860,3 +860,32 @@ html[data-theme="dark"] .server-hint.active { background: #12314C; color: #7FC4F
 html[data-theme="dark"] .log-box { background: #08111A; }
 html[data-theme="dark"] .feedback-chip:hover, html[data-theme="dark"] .chip { background: #1B2C3D; color: var(--text); border-color: var(--line); }
 html[data-theme="dark"] ::-webkit-scrollbar-thumb { background: #3A4F64; }
+
+/* dark surfaces override */
+html[data-theme="dark"] .card,
+html[data-theme="dark"] .panel,
+html[data-theme="dark"] .surface,
+html[data-theme="dark"] .content-card,
+html[data-theme="dark"] .stat-card,
+html[data-theme="dark"] .quick-card,
+html[data-theme="dark"] .home-card,
+html[data-theme="dark"] .launcher-center,
+html[data-theme="dark"] .settings-section,
+html[data-theme="dark"] .work-list,
+html[data-theme="dark"] .work-detail,
+html[data-theme="dark"] .list-row,
+html[data-theme="dark"] .resource-card,
+html[data-theme="dark"] .version-card,
+html[data-theme="dark"] .modal { background: var(--card) !important; color: var(--text) !important; border-color: var(--line) !important; }
+html[data-theme="dark"] .card *, html[data-theme="dark"] .panel *, html[data-theme="dark"] .stat-card *, html[data-theme="dark"] .quick-card *, html[data-theme="dark"] .home-card * { border-color: var(--line); }
+html[data-theme="dark"] .card-subtitle, html[data-theme="dark"] .stat-label, html[data-theme="dark"] .quick-desc, html[data-theme="dark"] .cell-detail { color: var(--text-2) !important; }
+html[data-theme="dark"] .card-title, html[data-theme="dark"] .stat-value, html[data-theme="dark"] .quick-title { color: var(--text) !important; }
+
+/* dark wildcard surfaces */
+html[data-theme="dark"] [class*="card"],
+html[data-theme="dark"] [class*="panel"],
+html[data-theme="dark"] [class*="stat"],
+html[data-theme="dark"] [class*="quick"],
+html[data-theme="dark"] [class*="surface"] { background-color: var(--card) !important; color: var(--text) !important; border-color: var(--line) !important; }
+html[data-theme="dark"] [class*="card"] *, html[data-theme="dark"] [class*="panel"] *, html[data-theme="dark"] [class*="stat"] *, html[data-theme="dark"] [class*="quick"] * { color: inherit; }
+html[data-theme="dark"] [class*="card"] .card-subtitle, html[data-theme="dark"] [class*="stat"] .stat-label, html[data-theme="dark"] [class*="quick"] .quick-desc { color: var(--text-2) !important; }
