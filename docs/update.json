@@ -1,14 +1,14 @@
 {
-  "version": "1.26.26.26",
-  "releaseDate": "2026-11-19",
+  "version": "1.26.26.27",
+  "releaseDate": "2026-11-21",
   "notes": [
-    "公告发布支持发布版/开发者版/特供版",
-    "每次更新自动发布公告",
-    "公告支持指定目标"
+    "修复公告类型默认值",
+    "修复全新配置启动失败",
+    "公告支持发布版/开发者版/特供版"
   ],
   "url": "https://www.emcl.life/download.html",
-  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.26.exe?v=26",
-  "sha256": "D3009645E7F6A3042999159568165CA344788A810B942DD0DE3FDCE316A77815",
-  "asarUrl": "https://www.emcl.life/downloads/updates/app-1.26.26.26.asar",
-  "asarSha256": "DF2D4C442DFBE78EB6367878124FBEDB1545072636D27131D2C88954CFF0D445"
+  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.27.exe?v=27",
+  "sha256": "E0231DED81010FA02E22149CC904A759F4DF4AEE4292E8E279CE4237F43173E5",
+  "asarUrl": "https://www.emcl.life/downloads/updates/app-1.26.26.27.asar",
+  "asarSha256": "17BFE2994D4D0B00B087AC6B40EB0FEE73831CF930B3D8E158510BB5D392CC43"
 }
