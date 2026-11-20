@@ -2198,6 +2198,7 @@ function pageSettings() {
 
       '<div class="card"><div class="card-head"><h3 class="card-title">关于</h3></div>' +
         '<div class="kv"><span class="k">版本</span><span class="v">' + esc(displayVersion()) + '</span></div>' +
+        '<div class="kv"><span class="k">开发人员</span><span class="v">末影哥、szy</span></div>' +
         '<div class="kv"><span class="k">应用</span><span class="v">EMCL' + (isDeveloper() ? ' 开发者版本' : '') + '</span></div>' +
         '<div class="kv"><span class="k">全名</span><span class="v">Enderman MineCraft Launcher' + (isDeveloper() ? '（开发者版本）' : '') + '</span></div>' +
         (isDeveloper() ? '<div class="kv"><span class="k">版本类型</span><span class="v">Developer Edition</span></div>' : '') +
