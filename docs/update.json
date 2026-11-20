@@ -1,14 +1,14 @@
 {
-  "version": "1.26.26.28",
+  "version": "1.26.26.29",
   "releaseDate": "2026-11-21",
   "notes": [
     "新增深色模式",
-    "外观模式支持浅色/深色/跟随系统",
+    "深色模式覆盖首页卡片、设置和输入框",
     "修复公告类型默认值"
   ],
   "url": "https://www.emcl.life/download.html",
-  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.28.exe?v=28",
-  "sha256": "74DB30C7669A324E61C40DB1BD7E5EFD1F846595D210F4745D530E286BBD1951",
-  "asarUrl": "https://www.emcl.life/downloads/updates/app-1.26.26.28.asar",
-  "asarSha256": "158FB9469D247CC09A821A52EA4181E6A3C1497C700690D2BC8E6066B8D60606"
+  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.29.exe?v=29",
+  "sha256": "06E6716C51EFEBCF3CA2F4E9BF42010DFFC7132043823AB3464307E8A0B24551",
+  "asarUrl": "https://www.emcl.life/downloads/updates/app-1.26.26.29.asar",
+  "asarSha256": "D5D8A75954B899E905796FC7CD8284B4302376263CE527F2F47C1178E9FBB73F"
 }
