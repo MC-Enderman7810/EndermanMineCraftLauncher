@@ -903,3 +903,10 @@ html[data-theme="dark"] .account-mini { color: #aab9c9 !important; }
 html[data-theme="dark"] .nav-item.active { background: #16324d !important; color: #7fc4ff !important; }
 html[data-theme="dark"] .account-mini { background: transparent !important; }
 html[data-theme="dark"] .titlebar-brand, html[data-theme="dark"] .page-title { color: #e8f1fb !important; }
+
+/* Szy panorama hero */
+.hero { background-image: linear-gradient(90deg, rgba(7,22,36,.82) 0%, rgba(10,40,68,.52) 48%, rgba(10,35,58,.22) 100%), url("assets/home-panorama.png"); background-size: cover; background-position: center; }
+.hero::before { opacity: .22; }
+.hero::after { display: none; }
+.hero h2 { font-size: 32px; }
+.hero .hero-sub { max-width: 620px; }

@@ -114,7 +114,7 @@ const state = {
 };
 
 const PAGE_META = {
-  home: { title: '主页', subtitle: '启动、概览与快捷操作' },
+  home: { title: '首页', subtitle: '启动、概览与快捷操作' },
   versions: { title: '版本管理', subtitle: '下载、安装加载器、导入游戏' },
   resources: { title: '下载', subtitle: '游戏版本 · 模组 · 光影 · 资源包 · 数据包' },
   modpacks: { title: '整合包', subtitle: '导入 PCL2 / Modrinth / CurseForge 整合包' },
