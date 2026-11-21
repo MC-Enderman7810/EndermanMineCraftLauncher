@@ -889,3 +889,17 @@ html[data-theme="dark"] [class*="quick"],
 html[data-theme="dark"] [class*="surface"] { background-color: var(--card) !important; color: var(--text) !important; border-color: var(--line) !important; }
 html[data-theme="dark"] [class*="card"] *, html[data-theme="dark"] [class*="panel"] *, html[data-theme="dark"] [class*="stat"] *, html[data-theme="dark"] [class*="quick"] * { color: inherit; }
 html[data-theme="dark"] [class*="card"] .card-subtitle, html[data-theme="dark"] [class*="stat"] .stat-label, html[data-theme="dark"] [class*="quick"] .quick-desc { color: var(--text-2) !important; }
+
+/* dark shell */
+html[data-theme="dark"] .sidebar,
+html[data-theme="dark"] .app-shell > .sidebar,
+html[data-theme="dark"] .titlebar,
+html[data-theme="dark"] .topbar,
+html[data-theme="dark"] .page-header,
+html[data-theme="dark"] #content,
+html[data-theme="dark"] .content { background-color: #101b27 !important; border-color: #26384a !important; }
+html[data-theme="dark"] .nav-item,
+html[data-theme="dark"] .account-mini { color: #aab9c9 !important; }
+html[data-theme="dark"] .nav-item.active { background: #16324d !important; color: #7fc4ff !important; }
+html[data-theme="dark"] .account-mini { background: transparent !important; }
+html[data-theme="dark"] .titlebar-brand, html[data-theme="dark"] .page-title { color: #e8f1fb !important; }
