@@ -187,7 +187,8 @@ async function completeChain(token, clientId, authority = 'live') {
   }
   if (!res.ok) throw new Error('读取 Minecraft 档案失败：HTTP ' + res.status);
   const profile = await res.json();
-  const skin = profile.skins && profile.skins[0];
+  const skins = Array.isArray(profile.skins) ? profile.skins : [];
+  const skin = skins.find((item) => String(item.state || '').toUpperCase() === 'ACTIVE') || skins.find((item) => !item.state);
   return {
     id: randomId('ms'),
     kind: 1,
@@ -197,7 +198,7 @@ async function completeChain(token, clientId, authority = 'live') {
     refreshToken: token.refresh_token,
     server: '',
     expiresAt: Date.now() + (Math.max(60, mc.expires_in || 86400) - 60) * 1000,
-    skinModel: skin && skin.variant === 'slim' ? 'slim' : 'steve',
+    skinModel: skin && String(skin.variant).toLowerCase() === 'slim' ? 'slim' : 'steve',
     avatarSeed: profile.name,
     authority: authorityOf(authority)
   };
