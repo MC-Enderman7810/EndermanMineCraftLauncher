@@ -478,10 +478,12 @@ else{W.addEventListener("load",arm,false);}
   }
   .homeLink:hover{color:var(--ink);background:#EDE8DC;transform:translateY(-1px);}
 
-  /* ---------- 暂停提示胶囊（画面上不挡操作，pointer-events:none） ---------- */
+  /* ---------- 暂停提示胶囊（画面上不挡操作，pointer-events:none） ----------
+     放在底部中央而不是顶部：暂停瞬间往往同时弹出「乘客返回出发站」的 toast，
+     toast 在顶部，两者会叠在一起。底部中央正好是顶栏与底部工具栏之间的空档。 */
   #pauseChip{
-    position:fixed;left:50%;top:calc(52px + env(safe-area-inset-top));
-    transform:translate(-50%,-8px);z-index:15;
+    position:fixed;left:50%;bottom:calc(72px + env(safe-area-inset-bottom));
+    transform:translate(-50%,8px);z-index:15;
     background:rgba(42,42,42,.9);color:#fff;font-size:12.5px;font-weight:700;
     padding:7px 15px;border-radius:999px;pointer-events:none;
     opacity:0;transition:opacity .22s ease,transform .22s ease;
@@ -515,7 +517,7 @@ else{W.addEventListener("load",arm,false);}
        送达 / 时间 / 线路 / 备用列车 全部保留 */
     #hud .right .stat.opt-stat{display:none;}
     .brandImg{width:152px;}
-    #pauseChip{font-size:11.5px;padding:6px 12px;top:calc(46px + env(safe-area-inset-top));}
+    #pauseChip{font-size:11.5px;padding:6px 12px;bottom:calc(66px + env(safe-area-inset-bottom));}
   }
 
   /* ---------- 缩放控制 ---------- */
