@@ -220,7 +220,16 @@ else{W.addEventListener("load",arm,false);}
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#F5F1E8">
-<link rel="icon" type="image/png" href="icon.png"><title>Metro Engineer · 地铁规划师</title>
+<title>Metro Engineer · 地铁规划师</title>
+<meta name="description" content="Metro Engineer（地铁规划师）：拖拽站点连成地铁线路，把乘客送到目的地，别让任何一站爆满。EMCL 出品的小游戏。">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="EMCL">
+<meta property="og:title" content="Metro Engineer · 地铁规划师">
+<meta property="og:description" content="拖拽站点连成地铁线路，别让任何一站爆满。">
+<meta property="og:url" content="https://www.emcl.life/toy/">
+<meta property="og:image" content="https://www.emcl.life/toy/icon.png">
+<meta name="twitter:card" content="summary">
+<link rel="icon" type="image/png" href="icon.png">
 <style>
   :root{
     --bg:#F5F1E8;
@@ -448,6 +457,45 @@ else{W.addEventListener("load",arm,false);}
   .cta.pixel:hover{transform:translateY(-2px);box-shadow:0 7px 0 #000;}
   .cta.pixel:active{transform:translateY(3px);box-shadow:0 2px 0 #000;}
 
+  /* ---------- 开始界面补充信息：本地纪录 / 操作提示 / 回站链接 ---------- */
+  .menuMeta{
+    margin:15px 0 0;font-size:12.5px;color:var(--ink-soft);
+    display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;
+    font-variant-numeric:tabular-nums;
+  }
+  .menuMeta b{color:var(--ink);font-weight:800;}
+  .menuMeta .sep{opacity:.3;}
+  .menuHint{
+    margin:7px 0 0;font-size:11.5px;line-height:1.5;color:var(--ink-soft);
+    opacity:.78;letter-spacing:.01em;
+  }
+  /* 「返回首页」刻意做得克制：低对比、小尺寸，不和主按钮抢视线 */
+  .homeLink{
+    display:inline-block;margin:16px 0 0;padding:5px 11px;border-radius:9px;
+    font-size:11.5px;font-weight:700;color:var(--ink-soft);text-decoration:none;
+    border:1px solid rgba(0,0,0,.07);background:rgba(0,0,0,.02);
+    transition:.14s;letter-spacing:.02em;
+  }
+  .homeLink:hover{color:var(--ink);background:#EDE8DC;transform:translateY(-1px);}
+
+  /* ---------- 暂停提示胶囊（画面上不挡操作，pointer-events:none） ---------- */
+  #pauseChip{
+    position:fixed;left:50%;top:calc(52px + env(safe-area-inset-top));
+    transform:translate(-50%,-8px);z-index:15;
+    background:rgba(42,42,42,.9);color:#fff;font-size:12.5px;font-weight:700;
+    padding:7px 15px;border-radius:999px;pointer-events:none;
+    opacity:0;transition:opacity .22s ease,transform .22s ease;
+    box-shadow:0 6px 18px rgba(0,0,0,.18);white-space:nowrap;
+  }
+  #pauseChip.show{opacity:1;transform:translate(-50%,0);}
+
+  /* ---------- 结算卡：纪录行 ---------- */
+  .bestrow{
+    margin:0 0 16px;font-size:12.5px;font-weight:700;color:var(--ink-soft);
+    font-variant-numeric:tabular-nums;letter-spacing:.02em;
+  }
+  .bestrow.isnew{color:#C2410C;font-size:13.5px;}
+
   /* ---------- 提示条 ---------- */
   #toast{
     position:fixed;left:50%;top:74px;transform:translate(-50%,-14px);
@@ -463,6 +511,11 @@ else{W.addEventListener("load",arm,false);}
     #zoomctl{right:10px;gap:6px;}
     .zbtn{width:38px;height:38px;font-size:16px;}
     #zLabel{width:38px;font-size:10px;}
+    /* 手机上顶栏会挤成一坨：隐掉「隧道」这条次要读数（占宽最大），
+       送达 / 时间 / 线路 / 备用列车 全部保留 */
+    #hud .right .stat.opt-stat{display:none;}
+    .brandImg{width:152px;}
+    #pauseChip{font-size:11.5px;padding:6px 12px;top:calc(46px + env(safe-area-inset-top));}
   }
 
   /* ---------- 缩放控制 ---------- */
@@ -615,7 +668,7 @@ else{W.addEventListener("load",arm,false);}
   </div>
   <div class="right">
     <div class="stat">线路 <b id="uLines">0/3</b></div>
-    <div class="stat">隧道 <b id="uTunnels">0</b></div>
+    <div class="stat opt-stat">隧道 <b id="uTunnels">0</b></div>
     <div class="stat">备用列车 <b id="uPool">0</b></div>
     <button class="hbtn" id="bgmBtn">🎵 BGM</button>
     <button class="hbtn" id="muteBtn">🔊 音效</button>
@@ -634,6 +687,8 @@ else{W.addEventListener("load",arm,false);}
 </div>
 
 <div id="toast"></div>
+<!-- 暂停提示：只在暂停时淡入；pointer-events:none，不拦暂停状态下的改线操作 -->
+<div id="pauseChip" aria-live="polite">⏸ 已暂停 · 按空格继续</div>
 
 <div id="zoomctl">
   <button class="zbtn" id="zIn" title="放大">＋</button>
@@ -875,6 +930,54 @@ function startBGM(){
   const b = el('bgmBtn'); if (b) b.textContent = bgmMuted ? '🔇 BGM' : '🎵 BGM';
 }
 function stopBGM(){ if (bgmEl){ try { bgmEl.pause(); } catch(e){} } }
+
+/* =========================================================
+   4b. 本地存档：最高纪录 + 偏好（静音 / 新手提示只看一次）
+   网页版刷新就重来，留个纪录是必要的。全部读写都 try 守卫 ——
+   file:// 或隐私模式下 localStorage 会直接抛异常，不能让它拖垮游戏。
+   ========================================================= */
+const SAVE_KEY = 'metroEngineer.v1';
+const Save = {
+  best: { normal: 0, crazy: 0 },
+  muted: false,
+  bgmMuted: false,
+  seenIntro: false,
+  load(){
+    try{
+      if (typeof localStorage === 'undefined') return;
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) return;
+      const d = JSON.parse(raw);
+      if (!d || typeof d !== 'object') return;
+      if (d.best && typeof d.best === 'object'){
+        this.best.normal = Math.max(0, Math.floor(+d.best.normal) || 0);
+        this.best.crazy  = Math.max(0, Math.floor(+d.best.crazy)  || 0);
+      }
+      this.muted     = !!d.muted;
+      this.bgmMuted  = !!d.bgmMuted;
+      this.seenIntro = !!d.seenIntro;
+    }catch(e){}
+  },
+  save(){
+    try{
+      if (typeof localStorage === 'undefined') return;
+      localStorage.setItem(SAVE_KEY, JSON.stringify({
+        best: this.best, muted: this.muted, bgmMuted: this.bgmMuted, seenIntro: this.seenIntro
+      }));
+    }catch(e){}
+  },
+  bestOf(crazy){ return crazy ? this.best.crazy : this.best.normal; },
+  // 只有真的更高才写盘；返回是否破纪录
+  record(crazy, score){
+    const k = crazy ? 'crazy' : 'normal';
+    if (score > this.best[k]){ this.best[k] = score; this.save(); return true; }
+    return false;
+  }
+};
+Save.load();
+// 把存档里的偏好套回运行时
+Snd.muted = Save.muted;
+bgmMuted  = Save.bgmMuted;
 
 /* =========================================================
    5. 游戏状态
@@ -3048,11 +3151,13 @@ el('muteBtn').onclick = ()=>{
   Snd.muted = !Snd.muted;
   el('muteBtn').textContent = Snd.muted ? '🔇 静音' : '🔊 音效';
   if (!Snd.muted) Snd.init();
+  Save.muted = Snd.muted; Save.save();     // 静音偏好记住，下次进来还是静音
 };
 el('bgmBtn').onclick = ()=>{
   bgmMuted = !bgmMuted;
   if (bgmEl) bgmEl.muted = bgmMuted;
   el('bgmBtn').textContent = bgmMuted ? '🔇 BGM' : '🎵 BGM';
+  Save.bgmMuted = bgmMuted; Save.save();
 };
 el('zIn').onclick   = ()=> zoomAt(W/2, H/2, 1.2);
 el('zOut').onclick  = ()=> zoomAt(W/2, H/2, 1/1.2);
@@ -3062,6 +3167,11 @@ function togglePause(){
   if (G.mode!=='play') return;
   G.paused = !G.paused;
   el('btnPause').textContent = G.paused ? '继续' : '暂停';
+  // 画面上给一个明确的暂停信号：只改按钮文字的话，玩家容易以为游戏卡住了
+  const chip = el('pauseChip');
+  if (chip && chip.classList){
+    if (G.paused) chip.classList.add('show'); else chip.classList.remove('show');
+  }
   if (G.paused){
     // 进入编辑模式：先把在途乘客全部送回各自出发站。
     // 这样玩家改线（拖拽/删线/加线）时，不会有乘客被留在旧路径或已删除的线路上。
@@ -3217,6 +3327,13 @@ function startGame(crazy){
   spawnQuiet = false;
   renderSlots();
   Snd.init();
+  // 新局一律收起暂停胶囊（从暂停态直接重开时不会残留）
+  const _pchip = el('pauseChip'); if (_pchip && _pchip.classList) _pchip.classList.remove('show');
+  // 第一次玩给一条上手引导，看过一次就不再打扰
+  if (!Save.seenIntro){
+    Save.seenIntro = true; Save.save();
+    setTimeout(()=>{ if (G.mode==='play' && !G.paused) toast('按住某个站点，拖到另一个站点就能连出第一条线路'); }, 1500);
+  }
   // BGM：仅疯狂大都市模式开局播放（正常模式不播）
   if (G.crazy) startBGM(); else stopBGM();
   // BGM 静音按钮也只有疯狂模式才有（正常模式根本不播 BGM，按钮无意义）
@@ -3235,6 +3352,12 @@ function gameOver(failed){
   const m = Math.floor(G.elapsed/60), s = Math.floor(G.elapsed%60);
   const mm = String(m).padStart(2,'0'), ss = String(s).padStart(2,'0');
   const rank = getRank(G.delivered);
+  // 纪录：写盘只在破纪录时发生；无论破没破，都算出「本模式最高」用于展示
+  const isNewBest = Save.record(G.crazy, G.delivered);
+  const bestNow = Save.bestOf(G.crazy);
+  const bestRow = isNewBest
+    ? '<div class="bestrow isnew">🏆 新纪录！'+G.delivered+' 人（'+ (G.crazy?'疯狂':'普通') +'模式）</div>'
+    : '<div class="bestrow">'+ (G.crazy?'疯狂':'普通') +'模式最高 '+bestNow+' 人</div>';
   // 疯狂大都市模式：结算栏侧边用回旋针夹着「疯狂大都市模式」卡片
   const crazyTag = G.crazy ?
     '<div class="crazytag" aria-hidden="true">'+
@@ -3261,6 +3384,7 @@ function gameOver(failed){
         '<div><b>'+mm+':'+ss+'</b><small>运营时长</small></div>'+
         '<div><b>'+G.lines.length+'</b><small>线路数</small></div>'+
       '</div>'+
+      bestRow+
       '<div class="ctarow">'+
         '<button class="cta" id="ovEnter">铁路系统总览</button>'+
         '<button class="cta alt" id="again">再来一次</button>'+
@@ -3575,15 +3699,37 @@ function fitPixelTitle(){
 
 function menu(){
   stopBGM();                                  // 回到开始界面不再播 BGM
+  // 回到菜单时收起暂停胶囊（结算 → 再来一次 的路径也不会残留）
+  const _pc = el('pauseChip'); if (_pc && _pc.classList) _pc.classList.remove('show');
+
+  // 纪录行：两种模式分开记，避免疯狂模式的高分把普通模式的纪录永久压死
+  const bn = Save.best.normal, bc = Save.best.crazy;
+  const parts = [];
+  if (bn) parts.push('普通最高 <b>'+bn+'</b>');
+  if (bc) parts.push('疯狂最高 <b>'+bc+'</b>');
+  const metaHtml = parts.length
+    ? '<div class="menuMeta">'+parts.join('<span class="sep">·</span>')+'</div>'
+    : '<div class="menuMeta">本地还没有纪录，先跑一局</div>';
+
   el('card').innerHTML =
     '<div id="titleHost"></div>'+
     '<button class="cta pixel" id="go">开始游戏</button>'+
-    '<button class="cta crazy" id="crazyBtn">疯狂大都市模式!<span class="newbadge">新!</span></button>';
+    '<button class="cta crazy" id="crazyBtn">疯狂大都市模式!<span class="newbadge">新!</span></button>'+
+    metaHtml+
+    '<div class="menuHint">从任意站点按住拖到另一个站点即可连线 · 滚轮缩放 · 空格暂停</div>'+
+    // 返回首页：只在开始界面出现，进游戏后随卡片一起消失，不会误点
+    '<a class="homeLink" id="homeLink" href="https://www.emcl.life/">← 返回 EMCL 首页</a>';
   fitPixelTitle();
   el('overlay').classList.remove('reveal','fadeout');
   el('overlay').classList.add('show');
   document.getElementById('go').onclick = ()=> startGame(false);
   document.getElementById('crazyBtn').onclick = ()=> startGame(true);
+
+  // 静音状态按存档回显（默认 HTML 里是「开」）
+  const _mb = el('muteBtn');
+  if (_mb) _mb.textContent = Snd.muted ? '🔇 静音' : '🔊 音效';
+  const _bb = el('bgmBtn');
+  if (_bb) _bb.textContent = bgmMuted ? '🔇 BGM' : '🎵 BGM';
 }
 
 /* 遮罩淡出：保留 display:flex 让 opacity 过渡能播放，过渡结束（或兜底超时）后
