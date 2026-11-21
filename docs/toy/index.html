@@ -1,0 +1,3724 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><script>(function(){try{
+var W=window;if(W.__TOY_PERF__){return;}
+var P=W.performance;if(!P||!P.getEntriesByType){return;}
+var M={fw:[],sent:false};W.__TOY_PERF__=M;
+M.pnow=function(){try{return P.now?P.now():(Date.now()-M.t0);}catch(e){return 0;}};
+M.head=Math.round(P.now?P.now():0);
+M.t0=Math.round((P.timeOrigin!==undefined&&P.timeOrigin!==null)?P.timeOrigin:
+ ((P.timing&&P.timing.navigationStart)||Date.now()));
+M.sid=(W.crypto&&W.crypto.randomUUID)?W.crypto.randomUUID():
+ (Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,10));
+M.fcp=undefined;
+M.readFCP=function(){try{
+ if(M.fcp!==undefined){return M.fcp;}
+ var es=P.getEntriesByType("paint")||[];
+ for(var i=0;i<es.length;i++){
+  if(es[i].name==="first-contentful-paint"){M.fcp=Math.round(es[i].startTime);return M.fcp;}}
+}catch(e){}
+return M.fcp;};
+try{var po=new W.PerformanceObserver(function(l){try{
+ var es=l.getEntries();for(var i=0;i<es.length;i++){
+  if(es[i].name==="first-contentful-paint"&&M.fcp===undefined){M.fcp=Math.round(es[i].startTime);
+   try{if(M.onFCP){M.onFCP();}}catch(e){}}}
+}catch(e){}});
+try{po.observe({type:"paint",buffered:true});}catch(e){po.observe({entryTypes:["paint"]});}
+}catch(e){}
+M.probe=function(){try{
+ var hit=[];var d=document;
+ var add=function(k){if(hit.indexOf(k)<0){hit.push(k);}};
+ if(W.unityInstance||W.UnityLoader||W.createUnityInstance){add("unity");}
+ if(W.vm||W.Scratch||W.ScratchVM){add("scratch");}
+ if(W.cc||W.cocos){add("cocos");}
+ if(W.Godot){add("godot");}
+ if(W.PIXI){add("pixi");}
+ if(W.Phaser){add("phaser");}
+ if(W.THREE){add("three");}
+ if(W.BABYLON){add("babylon");}
+ if(W.WebAssembly&&W.Module&&(W.Module.asm||W.Module.wasmBinary||W._malloc)){add("wasm");}
+ if(W.Vue||d.querySelector&&d.querySelector("[data-v-app]")){add("vue");}
+ if(W.React||W.ReactDOM){add("react");}
+ for(var i=0;i<hit.length;i++){if(M.fw.indexOf(hit[i])<0){M.fw.push(hit[i]);}}
+}catch(e){}};
+M.kind=function(){try{
+ var cv=document.getElementsByTagName?document.getElementsByTagName("canvas"):[];
+ var engine=["unity","scratch","cocos","godot","pixi","phaser","three","babylon"];
+ var hasEngine=false;
+ for(var i=0;i<engine.length;i++){if(M.fw.indexOf(engine[i])>=0){hasEngine=true;break;}}
+ if(cv&&cv.length>0){return hasEngine?"canvas-engine":"canvas";}
+ return hasEngine?"dom-engine":"dom";
+}catch(e){return "unknown";}};
+M.collect=function(withKind){try{
+ var nav=(P.getEntriesByType("navigation")||[])[0]||{};
+ var o={toy_id:M.toyID,render_mode:M.renderMode,layer:M.layer,
+  session_id:M.sid,time_origin:M.t0};
+ var put=function(k,v){try{var x=Math.round(v||0);if(x>0){o[k]=x;}}catch(e){}};
+ put("ttfb",nav.responseStart);put("dcl",nav.domContentLoadedEventEnd);
+ put("load",nav.loadEventEnd);put("doc_bytes",nav.decodedBodySize);
+ put("head_ms",M.head);put("transfer_bytes",nav.transferSize);
+ put("encoded_bytes",nav.encodedBodySize);
+ if(withKind){M.probe();o.kind=M.kind();o.fw=M.fw.join(",");}
+ var fcp=M.readFCP();
+ if(fcp!==undefined){o.fcp=fcp;}
+ if(M.fcpEst!==undefined){o.fcp_est=M.fcpEst;}
+ if(M.selfArmed){put("ff_self",M.ffSelf);o.ff_self_src=M.ffSrc||(M.selfDone?"none":"pending");}
+ return o;
+}catch(e){return null;}};
+}catch(e){}})();(function(){try{
+var W=window;var M=W.__TOY_PERF__;if(!M){return;}
+var P=W.performance;if(!P){return;}
+M.fcpEst=undefined;
+M.armEst=function(){try{
+ if(M.estArmed){return;}M.estArmed=true;
+ if(!W.MutationObserver){return;}
+ var D=document;
+ var SKIP={SCRIPT:1,STYLE:1,LINK:1,META:1,HEAD:1,TITLE:1,NOSCRIPT:1,TEMPLATE:1};
+ var INK={IMG:1,SVG:1,VIDEO:1,INPUT:1,BUTTON:1,TEXTAREA:1,SELECT:1};
+ var vis=function(n){try{var s=W.getComputedStyle(n);
+  return !s||(s.display!=="none"&&s.visibility!=="hidden"&&s.opacity!=="0");
+ }catch(e){return true;}};
+ var scan=function(n,dep){try{
+  if(dep>14){return false;}
+  if(n.nodeType===3){return /\S/.test(n.nodeValue||"");}
+  if(n.nodeType!==1){return false;}
+  if(SKIP[n.tagName]){return false;}
+  if(!vis(n)){return false;}
+  if(INK[n.tagName]){return true;}
+  try{var s=W.getComputedStyle(n);
+   if(s&&s.backgroundImage&&s.backgroundImage!=="none"){return true;}}catch(e){}
+  var c=n.childNodes||[];
+  for(var i=0;i<c.length;i++){if(scan(c[i],dep+1)){return true;}}
+  return false;
+ }catch(e){return false;}};
+ var anc=function(n){try{var p=n.parentNode;
+  while(p&&p.nodeType===1){if(SKIP[p.tagName]||!vis(p)){return false;}p=p.parentNode;}
+  return true;
+ }catch(e){return true;}};
+ var ink=function(n){try{
+  if(!n||!D.body){return false;}
+  if(n!==D.body&&(!D.body.contains||!D.body.contains(n))){return false;}
+  if(!anc(n)){return false;}
+  return scan(n,0);
+ }catch(e){return false;}};
+ var now=function(){try{return Math.round(P.now?P.now():(Date.now()-M.t0));}catch(e){return 0;}};
+ var mark=function(){try{
+  if(M.fcpEst!==undefined){return;}
+  var set=function(){try{if(M.fcpEst===undefined){M.fcpEst=now();}}catch(e){}};
+  if(W.requestAnimationFrame){W.requestAnimationFrame(function(){try{setTimeout(set,0);}catch(e){set();}});}
+  else{setTimeout(set,16);}
+ }catch(e){}};
+ var both=function(){try{mark();if(M.selfMark){M.selfMark();}}catch(e){}};
+ var mo=new W.MutationObserver(function(rs){try{
+  for(var i=0;i<rs.length;i++){
+   var a=rs[i].addedNodes||[];
+   for(var j=0;j<a.length;j++){if(ink(a[j])){both();mo.disconnect();return;}}
+   if(rs[i].type==="characterData"&&ink(rs[i].target)){both();mo.disconnect();return;}}
+ }catch(e){}});
+ mo.observe(D,{childList:true,subtree:true,characterData:true});
+}catch(e){}};
+}catch(e){}})();(function(){try{
+var W=window;var M=W.__TOY_PERF__;if(!M){return;}
+var P=W.performance;if(!P){return;}
+M.ffSelf=undefined;M.ffSrc=undefined;M.cvs=[];
+var hit=function(src){try{
+ if(M.ffSelf!==undefined){return;}
+ M.ffSelf=Math.round(M.pnow());M.ffSrc=src;M.unhookCtx();
+ try{if(M.onSelf){M.onSelf();}}catch(e){}
+}catch(e){}};
+M.unhookCtx=function(){try{
+ var H=W.HTMLCanvasElement;
+ if(M.gcOrig&&H&&H.prototype&&H.prototype.getContext===M.gcWrap){H.prototype.getContext=M.gcOrig;}
+ M.gcOrig=null;M.gcWrap=null;M.cvs=[];
+}catch(e){}};
+M.selfMark=function(){try{
+ if(M.ffSelf!==undefined||!W.requestAnimationFrame){return;}
+ W.requestAnimationFrame(function(){try{
+  W.requestAnimationFrame(function(){try{hit("raf2");}catch(e){}});
+ }catch(e){}});
+}catch(e){}};
+M.armSelf=function(){try{
+ if(M.selfArmed){return;}M.selfArmed=true;
+ var H=W.HTMLCanvasElement;
+ if(!H||!H.prototype||typeof H.prototype.getContext!=="function"){return;}
+ var orig=H.prototype.getContext;
+ M.gcOrig=orig;
+ M.gcWrap=function(t){
+  var r=orig.apply(this,arguments);
+  try{if(r&&M.cvs.length<8){
+   var dup=false;
+   for(var i=0;i<M.cvs.length;i++){if(M.cvs[i].c===this){dup=true;break;}}
+   if(!dup){M.cvs.push({c:this,t:(""+t).toLowerCase(),x:r,bad:false});}}}catch(e){}
+  return r;};
+ H.prototype.getContext=M.gcWrap;
+}catch(e){}};
+M.probeCanvas=function(round){try{
+ if(M.ffSelf!==undefined){return;}
+ var D=document;var gl=false;var tainted=false;
+ for(var i=0;i<M.cvs.length;i++){
+  var q=M.cvs[i];var cv=q.c;var x=q.x;
+  if(q.t.indexOf("webgl")>=0||q.t.indexOf("webgpu")>=0){gl=true;continue;}
+  if(q.bad||q.t!=="2d"||!x||!x.getImageData||!cv){continue;}
+  if(D.body&&D.body.contains&&!D.body.contains(cv)){continue;}
+  if(!cv.clientWidth||!cv.clientHeight||!cv.width||!cv.height){continue;}
+  var w=cv.width,h=cv.height;
+  var pts=[[w>>1,h>>1],[0,0],[w-1,h-1],[w>>2,h>>2]];
+  var p=pts[(round||0)%pts.length];
+  try{
+   var d=x.getImageData(p[0],p[1],1,1).data;
+   if(d[3]!==0||d[0]!==0||d[1]!==0||d[2]!==0){hit("pixel");return;}
+  }catch(er){q.bad=true;if(er&&er.name==="SecurityError"){tainted=true;}}
+ }
+ if(M.ffSrc===undefined){if(gl){M.ffSrc="gl-blind";}else if(tainted){M.ffSrc="tainted";}}
+}catch(e){}};
+}catch(e){}})();(function(){try{
+var W=window;var M=W.__TOY_PERF__;if(!M){return;}
+var NS="toy-shell-ability";
+M.toyID=54724762270720;M.renderMode=2;
+M.layer="content";
+M.armEst();M.armSelf();
+try{var pn=0;var pt=M.pnow();var pdone=function(){try{clearInterval(pk);}catch(e){}
+ try{if(M.unhookCtx){M.unhookCtx();}}catch(e){}
+ M.selfDone=true;try{if(M.onSelf){M.onSelf();}}catch(e){}};
+var pk=setInterval(function(){try{
+ M.probeCanvas(pn);
+ if(M.ffSelf!==undefined||++pn>=12||
+  (M.pnow()-pt)>=3600){pdone();}
+}catch(e){pdone();}},300);}catch(e){}
+M.seq=0;
+var flush=function(rs,up){try{
+ if(up==="self"){if(M.sent3){return;}M.sent3=true;}
+ else if(up){if(M.sent2){return;}M.sent2=true;}
+ else{if(M.sent){return;}M.sent=true;}
+ var o=M.collect(true);if(!o){return;}
+ o.flush_reason=up?(up==="self"?"self":"up"):rs;o.seq=++M.seq;o.ns=NS;o.type="perf";
+ M.pendingOut=(o.ff_self_src==="pending");
+ if(W.parent&&W.parent!==W){W.parent.postMessage(o,"*");}
+}catch(e){}};
+try{var n=0;var tk=setInterval(function(){try{M.probe();if(++n>8||M.done){clearInterval(tk);}}catch(e){}},400);}catch(e){}
+var arm=function(){try{
+ var waited=0;
+ var stop=function(t){try{M.done=true;clearInterval(t);}catch(e){}};
+ var tick=setInterval(function(){try{
+  waited+=300;
+  if(M.readFCP()!==undefined){stop(tick);flush("fcp",M.sent);return;}
+  if(M.fcpEst!==undefined){flush("est",false);}
+  if(waited>=5000){stop(tick);flush("bound",false);}
+ }catch(e){stop(tick);flush("err",false);}},300);
+ M.onFCP=function(){try{
+  if(!M.sent||M.sent2){return;}
+  stop(tick);flush("fcp",true);
+ }catch(e){}};
+ M.onSelf=function(){try{
+  if(!M.sent||M.sent3||!M.pendingOut){return;}
+  flush("self","self");
+ }catch(e){}};
+}catch(e){flush("err",false);}};
+if(document.readyState==="complete"){arm();}
+else{W.addEventListener("load",arm,false);}
+}catch(e){}})();</script><!-- desktop port: anti-embed redirect removed -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#F5F1E8">
+<link rel="icon" type="image/png" href="icon.png"><title>Metro Engineer · 地铁规划师</title>
+<style>
+  :root{
+    --bg:#F5F1E8;
+    --ink:#2A2A2A;
+    --ink-soft:#6B6558;
+    --panel:rgba(255,255,255,.82);
+    --line:#DAD3C4;
+    --red:#D7263D;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;height:100%;overflow:hidden;background:var(--bg);}
+  body{
+    font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+    color:var(--ink);
+    user-select:none;
+    -webkit-user-select:none;
+  }
+  #stage{position:fixed;inset:0;}
+  canvas{display:block;width:100%;height:100%;touch-action:none;cursor:crosshair;}
+
+  /* ---------- HUD ---------- */
+  #hud{
+    position:fixed;top:0;left:0;right:0;
+    display:flex;align-items:flex-start;justify-content:space-between;
+    padding:calc(10px + env(safe-area-inset-top)) 14px 10px 14px;
+    pointer-events:none;gap:10px;
+  }
+  #hud .left{display:flex;flex-direction:column;gap:4px;align-items:flex-start;}
+  #hud .right{display:flex;align-items:center;gap:6px;pointer-events:auto;flex-wrap:wrap;justify-content:flex-end;}
+  .stat{
+    background:var(--panel);border:1px solid rgba(0,0,0,.06);
+    border-radius:10px;padding:3px 9px;font-size:12px;color:var(--ink-soft);
+    display:flex;align-items:baseline;gap:4px;backdrop-filter:blur(6px);
+    box-shadow:0 1px 2px rgba(0,0,0,.04);
+  }
+  .stat b{font-size:15px;color:var(--ink);font-weight:800;font-variant-numeric:tabular-nums;}
+  .bigscore b{font-size:26px;line-height:1;}
+  .hbtn{
+    pointer-events:auto;border:1px solid rgba(0,0,0,.08);background:var(--panel);
+    color:var(--ink);border-radius:10px;font-size:12.5px;font-weight:700;
+    padding:6px 11px;cursor:pointer;transition:.12s;backdrop-filter:blur(6px);
+    font-family:inherit;
+  }
+  .hbtn:hover{background:#fff;transform:translateY(-1px);}
+  .hbtn:active{transform:translateY(0);}
+  .hbtn.off{opacity:.45;cursor:not-allowed;transform:none;}
+
+  /* ---------- 底部线路栏 ---------- */
+  #bottom{
+    position:fixed;left:0;right:0;bottom:0;
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:8px 12px calc(10px + env(safe-area-inset-bottom)) 12px;
+    pointer-events:none;flex-wrap:wrap;
+  }
+  #slots{display:flex;gap:7px;pointer-events:auto;flex-wrap:wrap;position:relative;}
+  .slot{
+    width:42px;height:42px;border-radius:12px;background:var(--panel);
+    border:1px solid rgba(0,0,0,.07);display:flex;align-items:center;justify-content:center;
+    cursor:pointer;transition:.14s;position:relative;
+    box-shadow:0 1px 3px rgba(0,0,0,.05);
+  }
+  .slot .dot{width:18px;height:18px;border-radius:50%;transition:.14s;}
+  .slot .nt{
+    position:absolute;bottom:3px;right:4px;font-size:9.5px;font-weight:800;
+    color:var(--ink-soft);font-variant-numeric:tabular-nums;
+  }
+  .slot.locked{opacity:.34;cursor:default;}
+  .slot.sel{transform:translateY(-4px);box-shadow:0 6px 14px rgba(0,0,0,.14);border-color:rgba(0,0,0,.16);}
+  .slot.sel .dot{transform:scale(1.22);}
+  .slot.empty .dot{background:transparent!important;border:2px dashed #C9C1B0;}
+  /* 新增路线时从对应槽位上方弹出的小对话框 */
+  .newline-pop{
+    position:absolute;z-index:30;pointer-events:none;
+    padding:5px 11px;border-radius:10px;font-size:12.5px;font-weight:800;white-space:nowrap;
+    color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.18);
+    transform:translate(-50%,-100%);opacity:0;
+    animation:nlp-in .28s cubic-bezier(.2,.9,.3,1.3) forwards;
+  }
+  .newline-pop::after{
+    content:'';position:absolute;left:50%;top:100%;transform:translateX(-50%);
+    border:6px solid transparent;border-top-color:inherit;
+  }
+  /* 淡出：必须用「另一段动画」覆盖 nlp-in —— animation-fill-mode:forwards 的填充值
+     优先级高于普通样式声明，若只写 opacity:0;transition，淡出不会生效（气泡会硬消失）。 */
+  .newline-pop.out{animation:nlp-out .26s ease forwards;}
+  @keyframes nlp-in{
+    from{opacity:0;transform:translate(-50%,-86%) scale(.7);}
+    to{opacity:1;transform:translate(-50%,-100%) scale(1);}
+  }
+  @keyframes nlp-out{
+    from{opacity:1;transform:translate(-50%,-100%) scale(1);}
+    to{opacity:0;transform:translate(-50%,-100%) scale(.88);}
+  }
+  #actions{display:flex;gap:7px;pointer-events:auto;}
+
+  /* ---------- 覆盖层 ---------- */
+  #overlay{
+    position:fixed;inset:0;display:none;align-items:center;justify-content:center;
+    background:rgba(245,241,232,.82);backdrop-filter:blur(7px);z-index:20;padding:20px;
+    /* 点击「开始游戏」后遮罩淡出、露出底下已渲染好的游戏世界 = 画面淡入 */
+    opacity:1;transition:opacity .6s ease;
+  }
+  #overlay.show{display:flex;}
+  #overlay.fadeout{opacity:0;}   /* 淡出中：保留 display:flex 直到过渡结束再隐藏 */
+  /* 结算态：遮罩不挡视线（要看清镜头推近的爆满站），
+     爆满站被安排在屏幕中上方，结算卡停靠屏幕底部 —— 完全不遮挡爆满站 */
+  #overlay.reveal{
+    background:rgba(245,241,232,.28);backdrop-filter:blur(1.5px);
+    align-items:flex-end;justify-content:center;padding:0 20px 5vh;
+  }
+  #overlay.reveal .card{
+    max-width:520px;margin:0 auto;
+    border-radius:22px;
+    box-shadow:0 24px 70px rgba(0,0,0,.24);
+  }
+  /* 结算卡分批滑出：标题 → 荣誉(含礼炮) → 数据+按钮 */
+  .card .stage{ opacity:0; animation:stageIn .55s cubic-bezier(.16,.84,.3,1) both; }
+  .card .st-head { animation-delay:.06s; }
+  .card .st-rank { animation-delay:.42s; }
+  .card .st-stats{ animation-delay:.82s; }
+  @keyframes stageIn{
+    from{opacity:0; transform:translateY(30px);}
+    to  {opacity:1; transform:translateY(0);}
+  }
+  .card{
+    background:#fff;border-radius:20px;padding:26px 28px;max-width:440px;width:100%;
+    box-shadow:0 20px 60px rgba(0,0,0,.16);text-align:center;
+    position:relative;            /* 供「疯狂大都市模式」回旋针卡片绝对定位 */
+  }
+  .card h1{margin:0 0 4px;font-size:30px;font-weight:900;letter-spacing:-.02em;}
+  .card h1 span{color:var(--red);}
+  .card .sub{margin:0 0 18px;color:var(--ink-soft);font-size:13px;}
+  .cta{
+    background:var(--ink);color:#fff;border:0;border-radius:12px;
+    padding:12px 34px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;
+    transition:.14s;letter-spacing:.02em;
+  }
+  .cta:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.18);}
+  .cta.alt{background:#EDE8DC;color:var(--ink);margin-left:8px;}
+  /* 疯狂大都市模式按钮：灰色底 + 白字，右上角「新!」爆炸形淡红徽标 */
+  .cta.crazy{
+    position:relative;display:block;background:#878D95;color:#fff;margin:14px auto 0;
+    font-size:16px;padding:13px 30px;letter-spacing:.06em;
+    box-shadow:0 6px 18px rgba(0,0,0,.18);
+  }
+  .cta.crazy:hover{background:#767C84;transform:translateY(-2px);}
+  .cta.crazy .newbadge{
+    position:absolute;top:-13px;right:-13px;width:40px;height:40px;
+    display:flex;align-items:center;justify-content:center;
+    background:#F4A59A;color:#B23A2E;font-size:12px;font-weight:900;
+    transform:rotate(-14deg);
+    clip-path:polygon(50% 0%,61% 22%,83% 12%,75% 36%,98% 35%,78% 50%,95% 73%,68% 66%,75% 97%,52% 78%,28% 95%,33% 66%,8% 73%,24% 50%,2% 35%,25% 36%,16% 12%,40% 22%);
+    box-shadow:0 2px 6px rgba(0,0,0,.22);
+  }
+  .finalrow{display:flex;justify-content:center;gap:14px;margin:14px 0 20px;}
+  .finalrow div{flex:1;}
+  .finalrow b{display:block;font-size:28px;font-weight:900;font-variant-numeric:tabular-nums;}
+  .finalrow small{font-size:11.5px;color:var(--ink-soft);}
+
+  /* ---------- 开始界面：METRO ENGINEER 像素标题 ----------
+     不引外部字体（单文件零依赖），直接用「5×7 点阵字库 + box-shadow 画像素」，
+     每个字母是一个 1 个像素大小的 span，用 box-shadow 把该字母的所有亮格点「印」出来。
+     底板用深色，白色 ENGINEER 才看得见（也像地铁站铭牌）。 */
+  .pixelTitle{
+    /* 注意：--px 由 pixelTitle() 内联写入（元素尺寸与阴影步进必须同源），
+       这里不要再声明 --px，否则会与 JS 不同步导致像素之间出现缝隙。 */
+    display:flex;align-items:flex-start;justify-content:center;
+    gap:var(--px);
+    background:#141A22;
+    border-radius:12px;
+    padding:18px 16px;
+    margin:0 0 16px;
+    box-shadow:inset 0 0 0 2px #2C3A48, inset 0 0 26px rgba(0,0,0,.55), 0 8px 22px rgba(0,0,0,.22);
+    /* 兜底：任何情况下都不允许深色面板溢出卡片（溢出就会变成一块难看的黑框） */
+    max-width:100%;
+    box-sizing:border-box;
+  }
+  /* 窄屏收紧留白（padX 必须与 JS 的 titlePadX() 保持一致，否则宽度公式会算错） */
+  @media(max-width:420px){
+    .pixelTitle{padding:14px 10px;}
+  }
+  /* 两行排版（窄屏）：把词间空隙撑成 100% 宽，ENGINEER 自动落到第二行。
+     这样手机上也保住 px=4 的大字母，而不必缩到不可读的 px=2。 */
+  .pixelTitle.two{flex-wrap:wrap;row-gap:calc(var(--px)*2);justify-content:center;}
+  .pixelTitle.two .pxgap{flex:0 0 100%;width:100%;height:0;}
+  /* 关键：box-shadow 复制的是**整个元素盒**，所以画「一个像素」的元素本身必须正好是 px×px。
+     但那样 flex 只会按 px 排版 → 字母互相重叠、底部溢出面板。
+     所以拆成两层：.pxbox 只负责占位（5×7 字模盒子），.px 负责画像素（px×px）。 */
+  .pixelTitle .pxbox{
+    width:calc(var(--px)*5);
+    height:calc(var(--px)*7);
+    position:relative;
+    flex:0 0 auto;
+  }
+  .pixelTitle .px{
+    position:absolute;left:0;top:0;
+    width:var(--px);height:var(--px);
+  }
+  .pixelTitle .pxgap{width:calc(var(--px)*4);}
+  /* HUD 左上角复用同一套像素标题，只把像素尺寸缩小（由 JS 传 px=3）。
+     注意 --px 不要再在这里声明 —— 元素尺寸与阴影步进必须同源，否则像素间会出现缝隙。
+     另外 px 不得低于 3：2px 时字母仅 10×14px，点阵的 1px 细笔画会糊成一团。 */
+  .pixelTitle.mini{
+    padding:8px 10px;border-radius:8px;margin:0;
+    box-shadow:inset 0 0 0 1.5px #2C3A48, 0 3px 10px rgba(0,0,0,.18);
+  }
+  /* HUD 左上角标题改用预渲染位图（内嵌 data URI，保持单文件零外部资源）。
+     pixelated = 缩放时用最近邻，避免像素字被插值糊掉；圆角按需求设置。 */
+  .brandImg{
+    display:block;
+    width:190px;height:auto;
+    border-radius:8px;
+    image-rendering:pixelated;
+    image-rendering:crisp-edges;
+    box-shadow:0 3px 10px rgba(0,0,0,.18);
+  }
+  /* 街机按键风：实心硬投影 + 大写字距；圆角与卡片(20px)/标题面板(12px)协调 */
+  .cta.pixel{
+    border-radius:12px;
+    padding:13px 30px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    box-shadow:0 5px 0 #000;
+  }
+  .cta.pixel:hover{transform:translateY(-2px);box-shadow:0 7px 0 #000;}
+  .cta.pixel:active{transform:translateY(3px);box-shadow:0 2px 0 #000;}
+
+  /* ---------- 提示条 ---------- */
+  #toast{
+    position:fixed;left:50%;top:74px;transform:translate(-50%,-14px);
+    background:rgba(42,42,42,.92);color:#fff;font-size:13px;font-weight:600;
+    padding:8px 16px;border-radius:10px;opacity:0;pointer-events:none;transition:.25s;z-index:30;
+  }
+  #toast.show{opacity:1;transform:translate(-50%,0);}
+
+  @media(max-width:560px){
+    .slot{width:38px;height:38px;border-radius:11px;}
+    .pixelTitle.mini{padding:6px 7px;}
+    .bigscore b{font-size:21px;}
+    #zoomctl{right:10px;gap:6px;}
+    .zbtn{width:38px;height:38px;font-size:16px;}
+    #zLabel{width:38px;font-size:10px;}
+  }
+
+  /* ---------- 缩放控制 ---------- */
+  #zoomctl{
+    position:fixed;right:14px;top:50%;transform:translateY(-50%);z-index:15;
+    display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:auto;
+  }
+  .zbtn{
+    width:42px;height:42px;border-radius:12px;background:var(--panel);
+    border:1px solid rgba(0,0,0,.08);color:var(--ink);font-size:19px;font-weight:800;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;
+    backdrop-filter:blur(6px);box-shadow:0 1px 3px rgba(0,0,0,.05);
+    font-family:inherit;transition:.12s;line-height:1;
+  }
+  .zbtn:hover{background:#fff;transform:translateY(-1px);}
+  .zbtn:active{transform:translateY(0);}
+  #zLabel{
+    font-size:11px;font-weight:800;color:var(--ink-soft);background:var(--panel);
+    border:1px solid rgba(0,0,0,.06);border-radius:8px;padding:2px 0;width:42px;
+    text-align:center;font-variant-numeric:tabular-nums;
+  }
+
+  /* ---------- 通用隐藏 ---------- */
+  .hidden{display:none !important;}
+
+  /* ---------- 结算：荣誉称号配色（铜 / 银 / 金 / 金闪） ---------- */
+  .rankbadge{
+    display:inline-block;margin:2px 0 6px;padding:7px 20px;border-radius:999px;
+    font-size:21px;font-weight:900;letter-spacing:.02em;
+    box-shadow:0 4px 14px rgba(0,0,0,.12), inset 0 1px 0 rgba(255,255,255,.35);
+  }
+  .rank-bronze{
+    background:linear-gradient(180deg,#E8A45C,#B5733A);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    -webkit-text-fill-color:transparent;
+  }
+  .rank-silver{
+    background:linear-gradient(180deg,#EEF2F6,#9AA6B2);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    -webkit-text-fill-color:transparent;
+  }
+  .rank-gold{
+    background:linear-gradient(180deg,#FFE79A,#E0A531);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    -webkit-text-fill-color:transparent;
+  }
+  /* 金闪：流光金色渐变 */
+  .rank-goldflash{
+    background:linear-gradient(90deg,#FFD700,#FFF6C2,#FFD700,#FFFBE6,#FFD700);
+    background-size:220% auto;
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    -webkit-text-fill-color:transparent;
+    animation:goldflash 1.6s linear infinite;
+  }
+  @keyframes goldflash{ to{ background-position:220% center; } }
+  .ctarow{display:flex;justify-content:center;gap:10px;margin-top:4px;flex-wrap:wrap;}
+
+  /* ---------- 结算：疯狂大都市模式的「回旋针 + 卡片」侧边装饰 ---------- */
+  .crazytag{
+    position:absolute;top:-26px;right:34px;z-index:6;width:152px;
+    transform:rotate(5deg);pointer-events:none;
+  }
+  /* 回旋针必须压在卡片之上（z-index 高于 .tag），否则会被卡片实底盖住只剩一小截 */
+  .crazytag .clip{
+    position:absolute;top:-9px;left:-5px;width:34px;height:84px;z-index:2;
+    filter:drop-shadow(0 1px 1px rgba(0,0,0,.32));
+  }
+  .crazytag .tag{
+    position:relative;z-index:1;margin-top:20px;
+    background:#FBF3DD;border:1px solid #E6C66B;border-radius:8px;
+    padding:9px 10px;text-align:center;
+    font-size:12px;font-weight:800;color:#6b5417;letter-spacing:.02em;white-space:nowrap;
+    box-shadow:0 7px 18px rgba(0,0,0,.22);
+  }
+
+  /* ---------- 铁路系统总览模式 ---------- */
+  body.ov #hud, body.ov #bottom, body.ov #zoomctl{ display:none; }
+  #ovbar{
+    position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:18;
+    display:flex;align-items:center;gap:14px;
+    background:var(--panel);backdrop-filter:blur(6px);
+    border:1px solid rgba(0,0,0,.08);border-radius:14px;
+    padding:8px 14px;box-shadow:0 4px 16px rgba(0,0,0,.10);
+  }
+  .ov-title{font-size:15px;font-weight:900;letter-spacing:.04em;color:var(--ink);}
+  .ov-actions{display:flex;gap:8px;}
+  #infoPanel{
+    position:fixed;top:72px;right:14px;z-index:18;width:268px;max-height:calc(100% - 96px);
+    overflow:auto;background:var(--panel);backdrop-filter:blur(6px);
+    border:1px solid rgba(0,0,0,.08);border-radius:16px;padding:14px 16px;
+    box-shadow:0 8px 26px rgba(0,0,0,.16);font-size:13px;color:var(--ink);
+    transition:transform .28s cubic-bezier(.2,.7,.2,1), opacity .28s cubic-bezier(.2,.7,.2,1);
+  }
+  /* 总览模式下点空白：数据栏滑出视野（便于整体布局截图） */
+  #infoPanel.gone{
+    transform:translateX(calc(100% + 24px));
+    opacity:0;pointer-events:none;
+  }
+  #infoPanel .ip-head{font-size:15px;font-weight:900;margin-bottom:4px;}
+  #infoPanel .ip-sum{font-size:12px;color:var(--ink-soft);margin-bottom:10px;}
+  #infoPanel .ip-sum b{color:var(--ink);font-weight:800;}
+  #infoPanel .ip-hint{font-size:12.5px;line-height:1.6;color:var(--ink-soft);}
+  #infoPanel .ip-title{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:900;margin-bottom:2px;}
+  #infoPanel .ip-dot{width:14px;height:14px;border-radius:50%;background:var(--ink);display:inline-block;}
+  #infoPanel .ip-sub{font-size:12px;color:var(--ink-soft);margin-bottom:8px;}
+  #infoPanel .ip-metric{display:flex;justify-content:space-between;align-items:baseline;
+    padding:7px 0;border-top:1px solid rgba(0,0,0,.06);}
+  #infoPanel .ip-metric:first-of-type{border-top:0;}
+  #infoPanel .ip-metric span{color:var(--ink-soft);}
+  #infoPanel .ip-metric b{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;}
+  /* 切换选中站点/线路时，数据栏淡入 + 轻微横移 */
+  #infoPanel.swap{ animation: ipSwap .30s cubic-bezier(.2,.7,.2,1) both; }
+  @keyframes ipSwap{
+    from{ opacity:0; transform:translateX(16px); }
+    to  { opacity:1; transform:translateX(0); }
+  }
+  /* 热力图开关按钮：按下回弹动效 + 开启态高亮 */
+  #ovHeat.pop{ animation: btnPop .28s ease; }
+  @keyframes btnPop{
+    0%{ transform:scale(1); } 45%{ transform:scale(.92); } 100%{ transform:scale(1); }
+  }
+  #ovHeat.on{
+    background:linear-gradient(180deg,#ff7a59,#ef4444);
+    color:#fff;border-color:rgba(239,68,68,.5);
+    box-shadow:0 4px 14px rgba(239,68,68,.35);
+  }
+  /* 顶层特效画布：彩带礼炮，盖在结算卡之上 */
+  #fx{position:fixed;inset:0;z-index:25;pointer-events:none;}
+  /* 过场幕布：进入/返回铁路系统总览时擦过屏幕（z 高于结算卡，低于礼炮） */
+  #ovtrans{
+    position:fixed;inset:0;z-index:22;pointer-events:none;
+    background:linear-gradient(115deg,#F4EFE6 0%,#ECE4D2 52%,#F4EFE6 100%);
+    transform:translateX(120%);will-change:transform;
+  }
+  #ovtrans.go{ animation:ovReveal .52s cubic-bezier(.76,0,.24,1) both; }
+  @keyframes ovReveal{
+    0%  { transform:translateX(0); }       /* 立即满屏覆盖，挡住场景切换的瞬间 */
+    100%{ transform:translateX(-120%); }   /* 向左擦出，露出新场景 */
+  }
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="cv"></canvas></div>
+
+<div id="hud">
+  <div class="left">
+    <div id="brandPixel"></div>
+    <div class="stat bigscore"><b id="uDeliver">0</b> 已送达</div>
+    <div class="stat"><span id="uClock">00:00</span> · 第 <b id="uDay">1</b> 天</div>
+  </div>
+  <div class="right">
+    <div class="stat">线路 <b id="uLines">0/3</b></div>
+    <div class="stat">隧道 <b id="uTunnels">0</b></div>
+    <div class="stat">备用列车 <b id="uPool">0</b></div>
+    <button class="hbtn" id="bgmBtn">🎵 BGM</button>
+    <button class="hbtn" id="muteBtn">🔊 音效</button>
+  </div>
+</div>
+
+<div id="bottom">
+  <div id="slots"></div>
+  <div id="actions">
+    <button class="hbtn" id="btnTrain">＋ 列车</button>
+    <button class="hbtn" id="btnTrainMinus">－ 列车</button>
+    <button class="hbtn" id="btnDel">删除所选线路</button>
+    <button class="hbtn" id="btnPause">暂停</button>
+    <button class="hbtn" id="btnSpeed">×1</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<div id="zoomctl">
+  <button class="zbtn" id="zIn" title="放大">＋</button>
+  <div id="zLabel">100%</div>
+  <button class="zbtn" id="zReset" title="复位视角">⤢</button>
+  <button class="zbtn" id="zOut" title="缩小">－</button>
+</div>
+
+<div id="overlay" class="show">
+  <div class="card" id="card"></div>
+</div>
+<!-- 过场幕布：进入 / 返回铁路系统总览时的擦屏动画 -->
+<div id="ovtrans"></div>
+
+<!-- 铁路系统总览模式：顶栏（标题 / 热力图开关 / 返回结算） -->
+<div id="ovbar" class="hidden">
+  <div class="ov-title">铁路系统总览</div>
+  <div class="ov-actions">
+    <button class="hbtn" id="ovHeat">热力图：关</button>
+    <button class="hbtn" id="ovBack">返回结算</button>
+  </div>
+</div>
+<!-- 铁路系统总览模式：右侧详情面板 -->
+<div id="infoPanel" class="hidden"></div>
+<!-- 顶层特效画布（彩带礼炮），盖在结算卡之上，独立一层、不参与世界变换 -->
+<canvas id="fx"></canvas>
+
+<script>
+(function(){
+"use strict";
+
+/* =========================================================
+   0. 基础工具
+   ========================================================= */
+const rand  = (a,b)=> a + Math.random()*(b-a);
+const pick  = a => a[(Math.random()*a.length)|0];
+const clamp = (v,a,b)=> v<a?a:(v>b?b:v);
+const lerp  = (a,b,t)=> a + (b-a)*t;
+const dist  = (ax,ay,bx,by)=> Math.hypot(ax-bx, ay-by);
+const TAU = Math.PI*2;
+// back-out：末端轻微过冲后回落，给「弹出/跳跃」的手感（峰值约 +10%）
+function backOut(t){ const c1=1.70158, c3=c1+1, u=t-1; return 1 + c3*u*u*u + c1*u*u; }
+
+/* =========================================================
+   1. 配置
+   ========================================================= */
+const CFG = {
+  stationR      : 13,     // 站点半径
+  lineW         : 7,      // 线路粗细
+  trainCap      : 8,      // 单列车载客量（任何图形乘客皆可载）
+  stationCap    : 8,      // 站点排队达到此值即「满」，开始读秒
+  trainSpeed    : 118,    // px / 秒
+  dwell         : 0.5,    // 停站时间
+  overcrowdSec  : 35,     // 拥挤爆表时限（读秒时长，归零即失败）
+  maxLines      : 12,
+  startLines    : 3,
+  // 注意：站点**没有数量上限**（原 maxStations 已移除）。
+  // spawnStation 找不到满足「不压河 + 不贴脸」的点时会返回 null，那一轮就不生成 —— 这是安全的。
+  startStations : 4,
+  hitStation    : 27,
+  hitLine       : 11,
+  tunnelCapStart: 3,       // 开局隧道容量（最多同时存在的隧道段数）
+  tunnelCapStep : 40,      // 每过这么多秒，隧道容量 +1
+  tunnelCapMax  : 16,      // 隧道容量上限
+  // —— 机场 ——
+  airportCap    : 16,      // 机场站排队上限（普通站是 stationCap=8）
+  planeLoad     : 8,       // 每架飞机抵达时给机场带来的乘客数
+  planeFirst    : 12,      // 开局第一架飞机的延迟（秒）
+  planeGapMin   : 16, planeGapMax : 26,   // 后续飞机间隔（秒）
+  airportGapMin : 55, airportGapMax: 80,  // 每隔多久新增一座机场（秒）
+  maxAirports   : 4,       // 机场总数上限
+  planeFlySec   : 3.6,     // 飞机单程（画面外↔机场）飞行时长（秒）—— 要慢，看得清
+  planeDwellSec : 0.55,    // 落地卸客的停留时长（秒），卸完再飞走
+};
+
+// 列车缓入缓出：靠近/刚离开车站时减速，区间中部全速
+// 列车加减速：出站加速 EASE_ACC、进站减速 EASE_DEC（减速距离比加速长 → 刹车更明显），
+// 速度下限 EASE_MIN —— 到站前平滑滑行、缓缓停下。
+// 参数都是量化扫出来的，取值经过**三轮**用户反馈调整（每轮都实测「末18px均速 / 100px→到站耗时」）：
+//   ① DEC=84 / MIN=0.13 太滑，最后 100px 要爬 2.52s → 用户报「入站太慢」；
+//   ② DEC=60 / MIN=0.22（1.62s / 末速 26）→ 用户报「再快一点」；
+//   ③ DEC=46 / MIN=0.34（1.25s / 末速 40）→ 用户报「再快一点」；
+//   ④ 现值 DEC=40 / MIN=0.45：**1.10s、末段均速 53px/s（比③快 32%）**，
+//      且 53/118 = 45% 巡航速度 —— 刹车依然清晰可见，
+//      不会退回「满速冲进站再硬停」。别再往上加 MIN，否则看起来像没有减速。
+const EASE_ACC = 34, EASE_DEC = 40, EASE_MIN = 0.45;
+function smoothstep(x){ x = clamp(x,0,1); return x*x*(3-2*x); }
+
+// 线色 / 线名：**必须与 CFG.maxLines 同步**（maxLines=12 → 12 组）。
+// 每 25 送达解锁 1 条线，开局 3 条，所以第 12 条要到 225 人送达才解锁。
+const COLORS = ['#D7263D','#1F6FEB','#F0C419','#2F9E44','#B5651D','#F06BA8','#28407A','#6A4FB0','#00A0A0','#8A8F98','#C2410C','#FF8C00'];
+const COLOR_NAMES = ['红线','蓝线','黄线','绿线','棕线','粉线','深蓝线','紫线','青线','灰线','橘红线','橙线'];
+// 路线用完时，从「孤立站」拖出的是「仅插入」灰线：可并入已有路线，不能新建路线
+const INSERT_GRAY = '#9aa4b2';
+
+// 常用图形 / 稀有图形
+const COMMON = ['circle','triangle','square'];
+const RARE   = ['star','diamond'];
+
+/* =========================================================
+   2. Canvas
+   ========================================================= */
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+// 顶层特效画布（彩带礼炮）：独立一层，盖在结算卡之上，不参与世界变换
+// （无头测试桩的 canvas 没有 getContext，需保护，避免初始化抛错）
+const fxc = document.getElementById('fx');
+const fctx = (fxc && fxc.getContext) ? fxc.getContext('2d') : null;
+let W=0, H=0, DPR=1;
+
+// 相机：屏幕像素 = 世界坐标 * scale + (camx, camy)
+const cam = { x:0, y:0, scale:1 };
+const CAM_MIN = 0.5, CAM_MAX = 2.5;
+let camTween = null;      // 结束时的镜头推近缓动
+function toWorld(p){ return { x:(p.x - cam.x)/cam.scale, y:(p.y - cam.y)/cam.scale }; }
+
+function resize(){
+  DPR = Math.min(window.devicePixelRatio||1, 2);
+  // WebView / 隐藏 iframe 在布局完成前可能给出 0 宽高。不兜底的话
+  // buildRiver() 的段长会变成 0，while 循环永不推进 -> 首屏直接卡死。
+  W = Math.max(1, window.innerWidth || 0);
+  H = Math.max(1, window.innerHeight || 0);
+  cv.width  = Math.round(W*DPR);
+  cv.height = Math.round(H*DPR);
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  if (fctx){ fxc.width = Math.round(W*DPR); fxc.height = Math.round(H*DPR); fctx.setTransform(DPR,0,0,DPR,0,0); }
+  if (!river) buildRiver();   // 河流只在开局构建一次：窗口尺寸变化 / 缩放平移都不得改变其形状
+  // 开始界面的像素标题宽度依赖窗口尺寸 —— 变窄/变宽后要重新挑一个不溢出的像素边长
+  if (G.mode==='menu') fitPixelTitle();
+}
+window.addEventListener('resize', resize);
+
+/* =========================================================
+   3. 图形绘制
+   ========================================================= */
+/* 飞机轮廓（机头朝 -y 方向的归一化顶点，乘以 r 后绕 (x,y) 旋转 ang）。
+   机场站用它当标志；飞行动画也复用它，只是尺寸更大、并按航向旋转。 */
+const PLANE_PTS = [
+  [0,-0.95],[0.18,-0.50],[0.18,-0.15],[0.80,0.25],[0.80,0.42],[0.17,0.24],
+  [0.15,0.70],[0.52,0.88],[0.52,0.95],[0,0.72],[-0.52,0.95],[-0.52,0.88],
+  [-0.15,0.70],[-0.17,0.24],[-0.80,0.42],[-0.80,0.25],[-0.18,-0.15],[-0.18,-0.50]
+];
+function planePath(c, x, y, r, ang){
+  const ca = Math.cos(ang||0), sa = Math.sin(ang||0);
+  c.beginPath();
+  for (let i=0;i<PLANE_PTS.length;i++){
+    const px = PLANE_PTS[i][0]*r, py = PLANE_PTS[i][1]*r;
+    const rx = x + px*ca - py*sa, ry = y + px*sa + py*ca;
+    i ? c.lineTo(rx,ry) : c.moveTo(rx,ry);
+  }
+  c.closePath();
+}
+
+function shapePath(c, shape, x, y, r, rot){
+  rot = rot||0;
+  c.beginPath();
+  if (shape==='airport'){ planePath(c, x, y, r*1.02, rot); return; }
+  if (shape==='circle'){ c.arc(x,y,r,0,TAU); return; }
+  if (shape==='square'){
+    const s = r*0.86;
+    c.rect(x-s, y-s, s*2, s*2);
+    return;
+  }
+  if (shape==='star'){
+    for (let i=0;i<10;i++){
+      const rr = (i%2) ? r*0.44 : r*1.02;
+      const a = -Math.PI/2 + i*Math.PI/5;
+      const px = x + Math.cos(a)*rr, py = y + Math.sin(a)*rr;
+      i ? c.lineTo(px,py) : c.moveTo(px,py);
+    }
+    c.closePath(); return;
+  }
+  const n = shape==='triangle' ? 3 : shape==='diamond' ? 4 : 5;
+  for (let i=0;i<n;i++){
+    const a = -Math.PI/2 + rot + i*TAU/n;
+    const px = x + Math.cos(a)*r, py = y + Math.sin(a)*r;
+    i ? c.lineTo(px,py) : c.moveTo(px,py);
+  }
+  c.closePath();
+}
+// diamond 用「顶点朝上」的正菱形，square 用正交正方形，两者必须能一眼区分
+function shapeRot(shape){ return 0; }
+
+/* =========================================================
+   4. 音效
+   ========================================================= */
+const Snd = {
+  ac:null, muted:false,
+  init(){
+    if (this.ac) { if (this.ac.state==='suspended') this.ac.resume(); return; }
+    try { this.ac = new (window.AudioContext||window.webkitAudioContext)(); } catch(e){}
+  },
+  tone(f,dur,type,vol){
+    if (!this.ac || this.muted) return;
+    const t = this.ac.currentTime;
+    const o = this.ac.createOscillator(), g = this.ac.createGain();
+    o.type = type||'sine'; o.frequency.setValueAtTime(f,t);
+    g.gain.setValueAtTime(vol||0.05,t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+    o.connect(g); g.connect(this.ac.destination);
+    o.start(t); o.stop(t+dur+0.03);
+  },
+  board(){ this.tone(660,0.07,'triangle',0.035); },
+  deliver(){ this.tone(990,0.09,'triangle',0.05); this.tone(1320,0.07,'sine',0.03); },
+  warn(){ this.tone(180,0.22,'square',0.045); },
+  over(){ this.tone(150,0.5,'sawtooth',0.09); this.tone(100,0.8,'sine',0.07); },
+  newline(){ this.tone(520,0.1,'sine',0.05); this.tone(780,0.12,'sine',0.045); },
+  // 新站点落成：短促的上行两音（G4→D5），配合出场的轻微跳跃
+  station(){ this.tone(392,0.06,'sine',0.04); this.tone(587,0.09,'sine',0.03); },
+  // 飞机抵达机场：下行两音（F#5→C#5），像客机降落时的提示音
+  plane(){ this.tone(740,0.13,'sine',0.042); this.tone(554,0.18,'sine',0.034); },
+  // 站点接入线路：16 音五声音阶逐级上行（C5→C8，跨 3 个八度），
+  // 一次拖拽连多个站时就是一串清脆的上行音；叠一层八度泛音让音色更「灵动」。
+  connect(step){
+    const scale = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50, 1174.66, 1318.51,
+                   1567.98, 1760.00, 2093.00, 2349.32, 2637.02, 3135.96, 3520.00, 4186.01];
+    const f = scale[clamp(step|0, 0, scale.length-1)];
+    this.tone(f,   0.09, 'triangle', 0.05);
+    this.tone(f*2, 0.05, 'sine',     0.022);
+  }
+};
+
+/* =========================================================
+   4b. 背景音乐（BGM）：仅「疯狂大都市模式」播放
+   - 用 HTMLAudioElement 直接 loop，省去手写 WebAudio 调度；
+   - 自动播放策略要求用户手势后才能响 —— 开始按钮的 click 刚好是手势，所以 startGame 里 startBGM() 合法；
+   - 无头回归环境没有 Audio 构造器，必须 typeof 守卫，否则 new Audio 抛 ReferenceError。
+   ========================================================= */
+const BGM_SRC = 'concretebgm.mp3';
+let bgmEl = null, bgmMuted = false;
+function startBGM(){
+  if (typeof Audio === 'undefined') return;
+  try {
+    if (!bgmEl){ bgmEl = new Audio(BGM_SRC); bgmEl.loop = true; bgmEl.volume = 0.45; }
+    bgmEl.muted = bgmMuted;
+    const p = bgmEl.play();
+    if (p && p.catch) p.catch(()=>{});   // 自动播放被拦截时静默失败，不阻塞游戏
+  } catch(e){}
+  const b = el('bgmBtn'); if (b) b.textContent = bgmMuted ? '🔇 BGM' : '🎵 BGM';
+}
+function stopBGM(){ if (bgmEl){ try { bgmEl.pause(); } catch(e){} } }
+
+/* =========================================================
+   5. 游戏状态
+   ========================================================= */
+const G = {
+  mode:'menu',            // menu | play | over
+  paused:false,
+  speed:1,
+  crazy:false,            // 疯狂大都市模式：开局 8 站/全解锁/超快生成/2 列车/灰背景/BGM
+  stations:[], lines:[],
+  unlockedLines:CFG.startLines,
+  trainPool:0,
+  delivered:0,
+  elapsed:0,
+  passengerTimer:0,
+  stationTimer:0,
+  planeTimer:0,        // 下一架飞机抵达倒计时（秒）
+  airportTimer:0,      // 下一座机场落成倒计时（秒）
+  planes:[],           // 在途飞机（世界坐标飞行，抵达后给机场加乘客）
+  stationOffChance:0.45,  // 新站点生成在视野外的概率（其余在屏内）
+  passengerInterval:3.4,
+  selected:null,
+  selEntity:null,        // 总览模式选中的 {type:'station'|'line', ref}
+  heatmap:false,        // 总览模式：客流压力热力图开关
+  nextStationId:0,
+  nextRes:0,
+  tunnelCap:3,
+  anims:[],              // 上下客动效（世界坐标的小图形，补间绘制）
+};
+/* =========================================================
+   6. 站点 / 线路 / 列车
+   ========================================================= */
+function makeStation(shape,x,y){
+  return { id:G.nextStationId++, shape, x, y, queue:[], over:0, pulse:0, born:0, shake:0,
+    ring:0,               // 接入线路时的扩散涟漪（1→0，纯视觉）
+    // 统计埋点（铁路系统总览模式用）：spawn=始发乘客, delivered=本站送达,
+    // transfer=本站换乘量, boarded=本站上车数, peak=峰值排队, wait*=平均等待
+    stats:{ spawn:0, delivered:0, transfer:0, boarded:0, peak:0, waitSum:0, waitCount:0 } };
+}
+
+function allShapesOnNetwork(){
+  const s = new Set();
+  for (const st of G.stations) s.add(st.shape);
+  return [...s];
+}
+// 机场站 vs 普通站：排队上限不同（机场 16、普通 8）。
+// **凡是判断「站点是否满」的地方都必须用这个，不能再用裸 CFG.stationCap**，
+// 否则机场会被当成 8 容量，8 个乘客就开始读秒爆站。
+function stationCapOf(st){ return st.shape==='airport' ? CFG.airportCap : CFG.stationCap; }
+function isAirport(st){ return st.shape==='airport'; }
+function airports(){ return G.stations.filter(isAirport); }
+
+// 判断点相对河流在「哪一侧」：以河流在该 x 处的中心高度（riverYAt）为界，
+// 上方为 +1、下方为 -1。这是用户直觉的「河的两岸」，且不受河流弯曲（局部走向翻转）影响。
+function riverSide(x,y){
+  if (!river) return 0;
+  return y < riverYAt(x) ? 1 : -1;
+}
+
+// 河道回避的最后兜底：在采样盒的若干水平行上**密集扫描**离河足够远的点。
+// 河道活动带被限制在 H*0.16~0.84，所以贴着采样盒上下边缘的行必然「离河」且「分属两岸」：
+//   盒顶行 → 一定在河之上(side+1)；盒底行 → 一定在河之下(side-1)。
+// 因此只要带上 side参数沿对应边缘行扫描，几乎必然能同时满足「不压河」+「在目标侧」，
+// 让「开局两岸都有站」与「站点不压河」两个需求不再互相牺牲。
+// 同样必须满足 minGapHard（不与已有站点靠太近）—— 漏了这个会让兜底路径贴脸。
+// box 允许超出屏幕（视野外生成）：此时上下边缘行也落在屏幕之外，照样可用。
+// 万一找不到就返回 null —— 宁可不生成站点，也绝不让站点压在河上或挤成一团。
+function riverClearFallback(clearance, side, minGapHard, box, outsideOnly, reach){
+  const gap = minGapHard || 0;
+  const lim = (reach === undefined) ? Infinity : reach;   // 可达性上限（Infinity=不限）
+  const B = box || { x0:26, x1:W-26, y0:26, y1:H-26 };
+  const rowF = [0, 0.05, 0.10, 0.14, 0.86, 0.90, 0.95, 1];
+  const rows = rowF.map(f => B.y0 + (B.y1 - B.y0)*f);
+  for (let k=0;k<rows.length;k++){
+    const y = rows[k];
+    for (let i=0;i<120;i++){
+      const x = B.x0 + Math.random()*(B.x1 - B.x0);
+      if (side && riverSide(x,y)!==side) continue;
+      // outsideOnly：只接受真正落在屏幕之外的点（视野外生成的补找用）
+      if (outsideOnly && x>0 && x<W && y>0 && y<H) continue;
+      if (distToRiver(x,y) < clearance) continue;
+      if (distToNetwork(x,y) > lim) continue;   // ★ 离现有路网太远，接不上 → 跳过
+      if (gap > 0){
+        let ok = true;
+        for (const s of G.stations){ if (dist(x,y,s.x,s.y) < gap){ ok = false; break; } }
+        if (!ok) continue;
+      }
+      return {x,y};
+    }
+  }
+  return null;
+}
+
+// 新站点的「可达性」上限：离最近已有站/线太远就接不上，等于白送一个孤岛。
+// 用「一屏对角线」作硬上限 —— 玩家转个画面就能看到并接上，符合用户需求
+// 「新增站点至少要和已有线路能在同一个画面内」。超出的候选直接淘汰。
+function netReachLimit(){
+  return Math.hypot(W, H);
+}
+// 点到「最近已有站点」与「所有已有线路」中较近者的距离（都还没有则为 Infinity）。
+// 新站只要能碰到的最近目标够近，就一定接得上（拖一条线过去即可）。
+function distToNetwork(x, y){
+  let best = Infinity;
+  for (const s of G.stations){
+    const d = dist(x, y, s.x, s.y);
+    if (d < best) best = d;
+  }
+  for (const L of G.lines){
+    for (let i=0;i<L.stations.length-1;i++){
+      const d = segDist(x, y, L.stations[i], L.stations[i+1]);
+      if (d < best) best = d;
+    }
+  }
+  return best;
+}
+
+// side 可选：传入 +1 / -1 时**优先**把站点放在河流该侧（用于保证开局两侧都有站）。
+//
+// 硬约束：站点绝不与河道重合。dR < clearance 的候选直接淘汰，**任何回退档位都必须是「离河合格」的**。
+// 可逐级放宽的只有 ① 与其它站的间距 ② 目标侧 side —— 绝不为了凑位置而把站点放到河上。
+// （血泪：旧实现回退链含 sideAny/any —— sideAny 收集的正是「离河不合格」的候选、
+//  any 则完全不过滤河，地图一拥挤就必然回落到压河的点上。）
+//
+// 间距两级（用户要求「新站点不要与已有站点靠得太近」）：
+//   minGap     = stationR*7.5 (≈98) 目标间距，首选档必须满足；
+//   minGapHard = stationR*4.5 (≈58) 绝对下限，**任何档位（含构造式兜底）都不得突破**。
+// 之前没有 Hard 下限，地图拥挤时 `gapBest` 档会把站塞到贴脸；现在最坏情况也有 58px 保底。
+//
+// allowOff=true 时允许生成到**视野之外**（用户需求）：
+//   **四周无限制**（左右上下都是）—— 采样盒随运营时间持续向外扩张，
+//   且只接受真正落在屏幕外的点。配合 drawEdgeHints 的边缘箭头指路。
+//   为了保证「生成的站一定追得到」，updatePan 里的平移**不再设上限**（原先是 ±2200px）。
+//   开局 4 个站必须传 false（否则开局就没法玩）。
+// 视野外生成半径：开局约 420px，每秒 +16px，封顶 4200px（约 4.5 分钟后铺满）。
+// 有上限而不是无限，是为了坐标不至于飘到浮点精度外；玩家实际感受上就是「地图一直变大」。
+function offSpread(){
+  return 420 + Math.min(G.elapsed*16, 4200);
+}
+// 开局那一批初始站点是「一次性铺开」的（4 个同时落地），若逐个播音会 4 声叠成一声闷响。
+// 用这个标志让它们安静地随河流入场一起出现；只有游戏过程中「新站点生成」才播音。
+let spawnQuiet = false;
+function spawnStation(shape, side, allowOff){
+  const M = Math.max(56, Math.min(W,H)*0.09);
+  const clearance = (river ? river.w/2 : 0) + CFG.stationR + 18;   // 离河硬约束
+  const minGap     = Math.round(CFG.stationR * 7.5);   // ≈98：目标间距
+  const minGapHard = Math.round(CFG.stationR * 4.5);   // ≈58：绝对下限，永不突破
+  // 屏内可生成范围（沿用原逻辑，避开上下 HUD）
+  const inX0 = M+10, inX1 = W-M-10, inY0 = M+70, inY1 = H-M-110;
+  // 允许视野外时的采样盒：四周对称地扩到 offSpread()，没有固定边界
+  const R = allowOff ? Math.round(offSpread()) : 0;
+  // 屏内生成时，兜底扫描的盒子：比主采样区**略宽**，正好把河道活动带 [H*0.16, H*0.84] 夹在中间。
+  // 上下两行因此必然「离河」且分属两岸（保证「两岸都有站」在极端河形下也能成立），
+  // 同时又避开了顶部 HUD 与底部按钮条（不能像早先那样落到 y≈26 被 HUD 挡住）。
+  const box = allowOff
+    ? { x0:-R, x1:W+R, y0:-R, y1:H+R }        // 四周无限制（左右上下对称扩张）
+    : { x0:Math.max(10, inX0-40), x1:Math.min(W-10, inX1+40),
+        y0:Math.max(64, inY0-60), y1:Math.min(H-96, inY1+60) };
+  let first=null;                             // 首个「离河+不挤+在目标侧」的候选
+  let best=null, bestScore=-1;                // 同上但取评分最高
+  let gapBest=null, gapBestScore=-1;          // 离河+在目标侧，间距在 [Hard, minGap) 之间
+  let offBest=null, offBestScore=-1;          // 离河即可，侧别不限（间距仍守 Hard）
+  // ★ 可达性约束（用户需求）：新站必须离已有路网足够近，否则玩家根本接不上，
+  // 等于白送一个孤岛。开局还没有任何站点/线路时不设限（reach=Infinity）。
+  const reach = (G.stations.length || G.lines.length) ? netReachLimit() : Infinity;
+  for (let i=0;i<260;i++){
+    const x = allowOff ? rand(box.x0, box.x1) : rand(inX0, inX1);
+    const y = allowOff ? rand(box.y0, box.y1) : rand(inY0, inY1);
+    // 要视野外生成，就必须**真的在画布之外**。
+    // 注意用整个画布矩形判定（0..W / 0..H），不要用内缩的可玩区 ——
+    // 否则会落在顶部 HUD / 底部按钮条那些「屏幕上看得见、但在可玩区之外」的带状区域里。
+    if (allowOff && x>0 && x<W && y>0 && y<H) continue;
+    let dmin = 1e9;
+    for (const s of G.stations) dmin = Math.min(dmin, dist(x,y,s.x,s.y));
+    const edge = Math.min(x, W-x, y, H-y);
+    const dR = distToRiver(x,y);
+    if (dR < clearance) continue;              // ★ 硬约束：离河不合格直接淘汰，永不作为回退
+    if (dmin < minGapHard) continue;          // ★ 硬约束：贴脸直接淘汰（连兜底档都不给机会）
+    const dNet = distToNetwork(x, y);
+    if (dNet > reach) continue;                // ★ 硬约束：离现有路网太远，接不上 → 淘汰
+    const onSide = side ? riverSide(x,y)===side : true;
+    // 视野外的点给一点分数奖励，让它更容易被选中（否则边缘惩罚会把它全部挤掉）
+    const outside = (x<0 || x>W || y<0 || y>H) ? 60 : 0;
+    const score = Math.min(edge,160)*0.30 + Math.min(dR,200)*0.45 - Math.max(0,dmin-minGap)*0.04 + outside;
+    if (dmin < minGap){                        // 离河OK但未达目标间距 → 记入放宽档
+      if (onSide && score>gapBestScore){ gapBestScore=score; gapBest={x,y}; }
+      if (score>offBestScore){ offBestScore=score; offBest={x,y}; }
+      continue;
+    }
+    // 离河 + 不挤：首选档（尽量满足 side）
+    if (onSide){
+      if (!first) first={x,y};
+      if (score>bestScore){ bestScore=score; best={x,y}; }
+    }
+    if (score>offBestScore){ offBestScore=score; offBest={x,y}; }
+  }
+  // 回退链：每一档都保证「离河合格」，逐级放宽 间距 → 侧别，绝不落到河上。
+  // 指定 side 时，先沿该侧边缘行做构造式扫描（几乎必然成功且保证在目标侧），
+  // 最后才退到不分侧的 offBest —— 这样「两岸都有站」和「不压河」可以同时成立。
+  const pos = side
+    ? (best || first || gapBest || riverClearFallback(clearance, side, minGapHard, box, false, reach) || offBest || riverClearFallback(clearance, null, minGapHard, box, false, reach))
+    : (best || first || gapBest || offBest || riverClearFallback(clearance, null, minGapHard, box, false, reach));
+  if (!pos) return null;                      // 实在找不到干净点就不生成（宁缺毋越）
+  // 兜底扫描可能命中画布内的点（构造式扫描按整行扫，不区分屏内屏外）。
+  // allowOff 时补找一次真正画布外的点；找不到就接受这个点 —— 宁可位置不够理想，也别让这一轮不生成。
+  if (allowOff && pos.x>0 && pos.x<W && pos.y>0 && pos.y<H){
+    const out = riverClearFallback(clearance, side, minGapHard, box, true, reach);
+    if (out) pos.x = out.x, pos.y = out.y;
+  }
+  const st = makeStation(shape, pos.x, pos.y);
+  st.born = 0;
+  G.stations.push(st);
+  if (!spawnQuiet) Snd.station();     // 新站点落成提示音（开局那批静音，见上）
+  return st;
+}
+
+function createLine(){
+  const used = new Set(G.lines.map(l=>l.colorIdx));
+  let idx = -1;
+  for (let i=0;i<G.unlockedLines;i++){ if(!used.has(i)){ idx=i; break; } }
+  if (idx<0) return null;
+  const L = {
+    colorIdx:idx, color:COLORS[idx], name:COLOR_NAMES[idx],
+    stations:[], trains:[], path:null, stationDist:[], length:0,
+    variant: idx%2, born:0,
+    stats:{ rides:0, transfer:0 }   // 客流量(rides) / 换乘量(transfer 到站本线的换乘乘客)
+  };
+  G.lines.push(L);
+  return L;
+}
+
+/* 删除一条线路。
+   删线前必须先把两样东西归还，否则玩家会白白损失：
+   ① 车上**在途乘客** → 送回「上一个站点」（否则乘客凭空蒸发）；
+   ② 该线**从备用池调来的**列车 → 归还 `G.trainPool`（否则白送的车没了）。
+   **注意 ② 只还「从备用池调来的」列车**：建线时附赠的那辆（`addTrain(L,true,false)` 的 fromPool=false）
+   不是从池子里买的，还回去等于「建线→删线」凭空刷车（可无限循环）。
+   `removeLine` 是删线的唯一出口（删除按钮 / Delete 键 / 拖拽摘端点 / 撤销新建都走它），
+   所以把「不丢东西」收在这里最稳妥。
+   返回值：{ passengers, trains } 供调用方提示（trains = 实际归还辆数）。 */
+function removeLine(L){
+  let returned = 0;
+  for (const t of L.trains){
+    if (!t.pass || t.pass.length===0) continue;
+    const back = prevStationOf(L, t);
+    // 正常情况都能定位到上一个站；定位不到才退回「出发站」，最后兜底随机站
+    if (back) returned += dumpTrainPassengersTo(t, back);
+    else if (!dumpTrainPassengers(t)) returned += dumpTrainPassengersTo(t, pick(G.stations));
+  }
+  // 只归还「从备用池调来的」列车（玩家送满 15 人赚来的，不该随删线消失）。
+  // 建线附赠的那辆不算 —— 否则「建线→删线」可以无限刷车。
+  const trains = L.trains ? L.trains.filter(t => t.fromPool).length : 0;
+  if (trains) G.trainPool += trains;
+  if (returned) clearAnims();          // 车已不存在，残留的上下客动画要清掉（同时恢复 _hid）
+  const i = G.lines.indexOf(L);
+  if (i>=0) G.lines.splice(i,1);
+  if (G.selected===L) G.selected = G.lines[0]||null;
+  reachClear();
+  return { passengers: returned, trains };
+}
+
+/* ---- 八向折线：A→B 走「斜线 + 直线」两段 ---- */
+/* 八向折线：A→B 只能由「水平 / 垂直 / 45°斜线」组合而成。
+   血泪坑（用户报「路线总是自动取最短直线」+「列车轨迹与显示不一致」）：
+   1) 45° (adx≈ady) 若用 m=min(adx,ady) 构造折点，mid 恰好等于端点，
+      第一段归零、整段退化成直线 —— 45° 必须走 L 形。
+   2) 尺寸很小的段（min<8）若直接返回直线，斜率不是 1:1，会出现非八向线段。
+      因此只要两个轴都超过阈值，一律走 L 形或斜+直组合，绝不返回斜线。 */
+function octSegment(A,B,flip){
+  const dx=B.x-A.x, dy=B.y-A.y;
+  const adx=Math.abs(dx), ady=Math.abs(dy);
+  if (adx<2 && ady<2) return [A,B];            // 退化点
+  if (adx<2 || ady<2) return [A,B];             // 水平 / 垂直，本就是八向直线
+  if (Math.abs(adx-ady) < 2){
+    // 45°：L 形折线。flip 决定先横后竖还是先竖后横
+    return flip ? [A, {x:B.x, y:A.y}, B] : [A, {x:A.x, y:B.y}, B];
+  }
+  const m = Math.min(adx,ady);
+  if (adx>ady){
+    // 斜段(45°) + 直段(水平)
+    const mid = flip
+      ? { x:A.x + Math.sign(dx)*m, y:B.y }
+      : { x:B.x - Math.sign(dx)*m, y:A.y };
+    return [A,mid,B];
+  } else {
+    // 斜段(45°) + 直段(垂直)
+    const mid = flip
+      ? { x:B.x, y:A.y + Math.sign(dy)*m }
+      : { x:A.x, y:B.y - Math.sign(dy)*m };
+    return [A,mid,B];
+  }
+}
+
+function buildPath(L){
+  const st = L.stations;
+  if (st.length<2){ L.path=null; L.length=0; L.stationDist=[]; return; }
+  // 1) 逐段用 octSegment 展开为折点，同时记录每个站点落在哪个折点索引上
+  const raw = [{x:st[0].x, y:st[0].y}];
+  const stIdx = [0];                       // stationDist[i] 对应 raw[stIdx[i]]
+  for (let i=1;i<st.length;i++){
+    const A = {x:st[i-1].x, y:st[i-1].y};
+    const B = {x:st[i].x,   y:st[i].y};
+    const seg = octSegment(A,B, ((L.variant + i) % 2) === 0);
+    for (let k=1;k<seg.length;k++) raw.push({x:seg[k].x, y:seg[k].y});
+    stIdx.push(raw.length-1);
+  }
+  // 2) 清理冗余折点：重复点、极短折返尖角、几乎共线的冗余拐点
+  //    remap[i] = 原始折点 i 清理后对应的新索引
+  const pts = [];
+  const remap = new Array(raw.length).fill(0);
+  for (let i=0;i<raw.length;i++){
+    const p = raw[i];
+    const n = pts.length;
+    if (n >= 1){
+      const q = pts[n-1];
+      if (dist(q.x,q.y,p.x,p.y) < 1.5){ remap[i] = n-1; continue; }   // 重复点
+      if (n >= 2){
+        const o = pts[n-2];
+        // 退化尖角：o->q 与 q->p 都极短 => q 是折返噪声，用 p 替换 q
+        if (dist(o.x,o.y,q.x,q.y) < 2.0 && dist(q.x,q.y,p.x,p.y) < 2.0){
+          pts[n-1] = p; remap[i] = n-1; continue;
+        }
+      }
+    }
+    pts.push({x:p.x, y:p.y});
+    remap[i] = pts.length-1;
+  }
+  // 3) 弧长表 + 站点弧长
+  const cum = [0];
+  for (let i=1;i<pts.length;i++)
+    cum.push(cum[i-1] + dist(pts[i-1].x,pts[i-1].y, pts[i].x,pts[i].y));
+  const sd = stIdx.map(i => cum[Math.max(0,Math.min(cum.length-1, remap[i]))]);
+  L.path = pts; L.length = cum[cum.length-1]; L.stationDist = sd;
+}
+
+function posAt(L,d){
+  const pts = L.path;
+  if (!pts || pts.length<2) return null;
+  d = clamp(d, 0, L.length);
+  let acc = 0;
+  for (let i=1;i<pts.length;i++){
+    const a=pts[i-1], b=pts[i];
+    const seg = dist(a.x,a.y,b.x,b.y);
+    if (acc+seg >= d || i===pts.length-1){
+      const t = seg>1e-6 ? (d-acc)/seg : 0;
+      return { x:lerp(a.x,b.x,t), y:lerp(a.y,b.y,t), a:Math.atan2(b.y-a.y, b.x-a.x) };
+    }
+    acc += seg;
+  }
+  return { x:pts[0].x, y:pts[0].y, a:0 };
+}
+
+// noGrant=true 时**不赠车**（拖拽过程中用）：
+// 一次拖拽连多站会在 pointermove 里反复 rebuildLine，若那时就赠车，
+// 列车会在「线路还没画完」时就被置为 move 并开动，等松手时它们早已离开两端，
+// 「新线两列分别从起点/终点出发」就看不到了。所以赠车推迟到 endDrag。
+function rebuildLine(L, noGrant){
+  buildPath(L);
+  reachClear();
+  if (L.stations.length<2){ L.trains.length = 0; return; }
+  for (const t of L.trains){
+    t.dist = clamp(t.dist, 0, L.length);
+    t.state = 'move';
+    t.next = null;          // 路径变了，下一站索引作废，重新按方向推导
+  }
+  // 线路首次成型时附赠**一列车**（从起点站出发）。
+  // 早期版本是两列（起点/终点各一列相向而行），用户后来要求改为「每条线路最开始默认只有一个列车」。
+  // 想加车走「备用列车」：每送达 15 人得 1 列，或用 T / 加列车按钮从备用池调。
+  if (!noGrant && L.trains.length===0){
+    addTrain(L, true, false);                       // 起点出发一列
+    if (G.crazy) addTrain(L, true, true);           // 疯狂模式：再加一列从终点出发（默认 2 列车）
+  }
+}
+
+/* ---------- 换乘可达性（BFS，带缓存） ---------- */
+let reachCache = new Map();
+function reachClear(){ reachCache.clear(); }
+
+function canReach(start, destShape, excludeLine, maxHops){
+  const key = start.id + '|' + destShape + '|' + (excludeLine ? excludeLine.colorIdx : -1);
+  if (reachCache.has(key)) return reachCache.get(key);
+  const res = bfsReach(start, destShape, excludeLine, maxHops||6);
+  reachCache.set(key, res);
+  return res;
+}
+
+function bfsReach(start, destShape, excludeLine, maxHops){
+  const seen = new Set([start.id]);
+  let frontier = [[start,0]];
+  while (frontier.length){
+    const next = [];
+    for (const [cur,h] of frontier){
+      if (h>0 && cur.shape===destShape) return true;
+      if (h>=maxHops) continue;
+      for (const L of G.lines){
+        if (L===excludeLine || L.stations.length<2) continue;
+        if (L.stations.indexOf(cur)<0) continue;
+        for (const nb of L.stations){
+          if (!seen.has(nb.id)){ seen.add(nb.id); next.push([nb,h+1]); }
+        }
+      }
+    }
+    frontier = next;
+  }
+  return false;
+}
+
+/* 乘客能否登上线路 L：本线直达，或先坐到某个站点再换乘 */
+function canBoard(L, st, dest){
+  for (const T of L.stations) if (T.shape===dest) return true;
+  for (const T of L.stations){
+    if (T===st) continue;
+    if (canReach(T, dest, L)) return true;
+  }
+  return false;
+}
+
+/* 新增一列车。
+   free=true 表示这是「建线时附赠」的车，不消耗备用池；free=false 是玩家从备用池调的车。
+   **必须用 fromPool 标记区分**：removeLine 归还备用池时只还 fromPool 的那些，
+   否则「建线→删线」能凭空刷车（附赠的车又回到池里，无限循环）。
+   默认从线路起点站（dist=0）发车，并在该站上下客。 */
+function addTrain(L, free, fromEnd){
+  if (!L || L.stations.length<2) return false;
+  if (!free){
+    if (G.trainPool<=0) return false;
+    G.trainPool--;
+  }
+  const startDist = fromEnd ? L.length : 0;
+  const dir = fromEnd ? -1 : 1;
+  const t = { dist:startDist, dir, state:'dwell', dwell:0.7, pass:[], x:0, y:0, a:0, lastDist:startDist, next:null, fromPool:!free };
+  const p = posAt(L, startDist);
+  if (p){ t.x=p.x; t.y=p.y; t.a=p.a; }
+  // 必须初始化平滑朝向：否则初始 dwell 期间 t.ang 为 undefined，
+  // drawTrains 的 ctx.rotate(undefined) 会得到 NaN 变换，车头凭空消失 0.7s
+  t.ang = t.a;
+  // 终点站发车时，next 指向起点方向的第一站（updateTrains 推导兜底也可，这里显式设好避免首帧用错方向）
+  t.next = fromEnd ? L.stations.length-2 : 1;
+  L.trains.push(t);
+  handleArrival(t, L, fromEnd ? L.stations.length-1 : 0);
+  return true;
+}
+
+/* =========================================================
+   上下客动效
+   =========================================================
+   乘客的逻辑状态是瞬时切换的（进队列 / 进出口袋），但视觉上让它「走」过去：
+   在两个位置之间补间一小段弧线，图形从站点滑进车厢 / 从车厢滑回站点。
+   动效只是纯视觉层（G.anims），不参与任何游戏判定；`drawAnims` 在 drawTrains 之后绘制。 */
+const ANIM_IN = 0.34;   // 上车耗时（秒）
+const ANIM_OUT = 0.40;  // 下车耗时（秒）
+
+// 车厢内第 i 个座位的世界坐标（与 drawTrains 的 4 列 × 2 排布局保持一致）
+function trainSeatPos(t, i){
+  const COLS = 4, dx = 6.0, dy = 3.8;
+  const col = i % COLS, row = (i / COLS) | 0;
+  const lx = -((COLS-1)*dx)/2 + col*dx;
+  const ly = row===0 ? -dy : dy;
+  const a  = (t.ang==null ? (t.a||0) : t.ang);
+  const c = Math.cos(a), s = Math.sin(a);
+  return { x: t.x + lx*c - ly*s, y: t.y + lx*s + ly*c };
+}
+// 站点队列里第 i 个乘客的显示位置（与 drawPassengers 的环形布局保持一致）
+function queueSlotPos(st, i){
+  const ring = CFG.stationR + 8.5;
+  const idx = i % 8;
+  const a = -Math.PI/2 + idx*(TAU/8);
+  return { x: st.x + Math.cos(a)*ring, y: st.y + Math.sin(a)*ring };
+}
+// 压入一段补间动画。kind: 'in' 上车 / 'out' 下车
+// ref = 对应乘客。若该乘客此刻已经出现在「最终位置」的绘制列表里（车厢座位 / 站点队列），
+// 就给 ref 打 _hid 暂时藏起来，等动画结束再恢复 —— 否则会出现「座位上已经有人，
+// 同时还有一个在滑动」的重影。hide=false 用于「已从列表移除」的下车场景（无需藏）。
+function addAnim(kind, shape, x0,y0, x1,y1, ref, hide){
+  if (G.anims.length > 160){                   // 防御：避免动画堆积
+    const old = G.anims.shift();               // 被挤掉的动画也要恢复 _hid，否则乘客会永久隐身
+    if (old && old.ref) old.ref._hid = false;
+  }
+  if (ref && hide) ref._hid = true;
+  G.anims.push({ kind, shape, x0,y0, x1,y1, t:0, dur: kind==='in' ? ANIM_IN : ANIM_OUT, ref });
+}
+
+function updateAnims(dt){
+  const A = G.anims;
+  for (let i=A.length-1;i>=0;i--){
+    A[i].t += dt;
+    if (A[i].t >= A[i].dur){
+      if (A[i].ref) A[i].ref._hid = false;        // 动画播完 → 恢复常规绘制
+      A.splice(i,1);
+    }
+  }
+}
+
+function drawAnims(){
+  for (const a of G.anims){
+    const k = clamp(a.t / a.dur, 0, 1);
+    // 上车用 ease-in（由慢到快，像被吸进车厢）；下车用 ease-out（由快到慢，像走下来）
+    const e = a.kind==='in' ? (k*k) : (1 - (1-k)*(1-k));
+    const x = lerp(a.x0, a.x1, e);
+    const y = lerp(a.y0, a.y1, e);
+    // 走一段小弧线，避免直线滑动太机械
+    const lift = Math.sin(k*Math.PI) * 7;
+    const r   = a.kind==='in' ? lerp(4.6, 2.6, k) : lerp(2.6, 4.6, k);
+    ctx.save();
+    ctx.globalAlpha = a.kind==='in' ? (0.45 + 0.55*k) : (1 - 0.25*k);
+    ctx.fillStyle = '#2A2A2A';
+    shapePath(ctx, a.shape, x, y - lift, r, shapeRot(a.shape));
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+/* ---- 到站：先下客（含换乘），再上客 ---- */
+function handleArrival(t, L, idx){
+  const st = L.stations[idx];
+  if (!st) return;
+
+  // 下车 / 换乘
+  for (let i=t.pass.length-1;i>=0;i--){
+    const p = t.pass[i];
+    if (p.dest === st.shape){
+      // 动效：从车厢座位滑向站点中心（然后被站点吸收）。人已从车厢移除，无需 _hid
+      const sp = trainSeatPos(t, i);
+      addAnim('out', p.dest, sp.x, sp.y, st.x, st.y, p, false);
+      t.pass.splice(i,1);
+      G.delivered++;
+      st.stats.delivered++;
+      st.pulse = 1;
+      onDelivered();
+      Snd.deliver();
+      continue;
+    }
+    // 本线已无法直达目的地，但换乘别的线可以 —— 下车等候
+    if (!L.stations.some(T=>T.shape===p.dest) && canReach(st, p.dest, L)){
+      const sp = trainSeatPos(t, i);
+      t.pass.splice(i,1);
+      p.avoid = L.colorIdx;
+      st.queue.push(p);
+      // 动效：从车厢座位滑到它在队列里的新位置（会进队列，故需 _hid 防止重影）
+      const qp = queueSlotPos(st, st.queue.length-1);
+      addAnim('out', p.dest, sp.x, sp.y, qp.x, qp.y, p, true);
+    }
+  }
+
+  // 上车：能直达、或能靠本线接上换乘网络的乘客
+  let boarded = false;
+  for (let i=0;i<st.queue.length && t.pass.length < CFG.trainCap; i++){
+    const p = st.queue[i];
+    if (p.avoid === L.colorIdx) continue;
+    if (canBoard(L, st, p.dest)){
+      const qp = queueSlotPos(st, i);          // 动效起点：它在队列中的位置
+      st.queue.splice(i,1); i--;
+      p.avoid = null;
+      // 统计：换乘(上一程与本线不同色) / 线路客流量 / 本站上车 / 平均等待
+      const isTransfer = (p.lastLine!=null && p.lastLine!==L.colorIdx);
+      if (isTransfer){ st.stats.transfer++; L.stats.transfer++; }
+      L.stats.rides++;
+      st.stats.boarded++;
+      if (p.spawnTime!=null){ st.stats.waitSum += (G.elapsed - p.spawnTime); st.stats.waitCount++; }
+      p.lastLine = L.colorIdx;
+      t.pass.push(p);
+      const tp = trainSeatPos(t, t.pass.length-1);   // 动效终点：它在车厢里的座位
+      addAnim('in', p.dest, qp.x, qp.y, tp.x, tp.y, p, true);
+      boarded = true;
+    }
+  }
+  if (boarded) Snd.board();
+}
+
+/* ---- 把列车上的在途乘客送回「出发站」 ----
+   两个用途共用：
+   ① 减少列车时 —— 车厢被撤掉，乘客不能凭空消失，退回出发站；
+   ② 进入暂停（编辑模式）时 —— 先把在途乘客清空，玩家再改线，
+      这样改线过程中不会有乘客被留在旧路径 / 旧线路上。
+   乘客对象带 from（spawnPassenger 里记录）；缺 from 的（例如旧存档/注入的）
+   回退到随机一个站，保证不丢乘客。 */
+function dumpTrainPassengers(t){
+  let n = 0;
+  for (const p of t.pass){
+    const home = (p.from && p.from.queue) ? p.from
+               : (G.stations.length ? pick(G.stations) : null);
+    if (home){ p.avoid = null; home.queue.push(p); n++; }
+  }
+  t.pass.length = 0;
+  return n;
+}
+// 乘客被「撤回」时同步清掉残留的上下行动画，避免动画飞回一个已经不存在的座位
+function clearAnims(){ for (const a of G.anims) if (a.ref) a.ref._hid = false; G.anims.length = 0; }
+function dumpAllPassengers(){
+  let n = 0;
+  for (const L of G.lines) for (const t of L.trains) n += dumpTrainPassengers(t);
+  clearAnims();
+  return n;
+}
+
+/* 列车「上一个站点」= 它最近停靠/出发的那个站。
+   用 t.lastDist 定位：updateTrains 在到站时和离开停站时都会把 lastDist 更新为当前站位，
+   所以它始终指向「上一个站」，而不是车头前方那个还没到的站。 */
+function prevStationOf(L, t){
+  const sd = L.stationDist;
+  if (!sd || !sd.length) return null;
+  const ref = (t.lastDist!=null) ? t.lastDist : t.dist;
+  let bi = 0, bd = 1e9;
+  for (let i=0;i<sd.length;i++){
+    const d = Math.abs(sd[i] - ref);
+    if (d < bd){ bd = d; bi = i; }
+  }
+  return L.stations[bi] || null;
+}
+// 把某列车上的乘客全部退回**指定站点**（删线时用：回到上一个站，而非出发站）
+function dumpTrainPassengersTo(t, st){
+  if (!st) return 0;
+  let n = 0;
+  for (const p of t.pass){
+    p.avoid = null;      // 原线路已消失，不必再回避任何颜色
+    st.queue.push(p);
+    n++;
+  }
+  t.pass.length = 0;
+  return n;
+}
+
+function onDelivered(){
+  const n = G.delivered;
+  let unlockedAt = -1;                       // 本步刚解锁的线路索引（用于弹「新增路线!」）
+  if (n % 25 === 0 && G.unlockedLines < CFG.maxLines){
+    G.unlockedLines++;
+    unlockedAt = G.unlockedLines-1;
+    toast('解锁新线路：' + COLOR_NAMES[unlockedAt]);
+    Snd.newline();
+  }
+  if (n % 15 === 0){
+    G.trainPool++;
+    toast('获得 1 列备用列车');
+    Snd.newline();
+  }
+  renderSlots();
+  if (unlockedAt >= 0) showNewLinePopup(unlockedAt);   // 解锁新线路：在对应槽位上方弹「新增路线!」
+}
+
+/* =========================================================
+   7. 更新
+   ========================================================= */
+const TRAIN_TURN = 7;   // 列车车头转向角速度（弧度/秒）：越小转弯越平滑、越大越锐利
+
+function updateTrains(dt){
+  for (const L of G.lines){
+    if (!L.path || L.stations.length<2) continue;
+    const sd = L.stationDist;
+    for (const t of L.trains){
+      if (t.state==='dwell'){
+        t.dwell -= dt;
+        if (t.dwell<=0){ t.state='move'; t.lastDist = t.dist; }
+      } else {
+        // 显式记录「下一个要停靠的站索引」，到站时才推进 —— 不用距离反推，
+        // 否则减速时一步跨过判定窗口会跳过中间站。
+        if (t.next==null || t.next < 0 || t.next >= L.stations.length){
+          // 仅在发车 / 线路重建后推导一次：找当前 dist 方向上的第一站
+          t.next = -1;
+          if (t.dir>0){
+            for (let i=0;i<sd.length;i++){ if (sd[i] > t.dist + 0.5){ t.next = i; break; } }
+            if (t.next<0) t.next = sd.length-1;
+          } else {
+            for (let i=sd.length-1;i>=0;i--){ if (sd[i] < t.dist - 0.5){ t.next = i; break; } }
+            if (t.next<0) t.next = 0;
+          }
+        }
+        const target = sd[t.next];
+
+        // 缓入缓出：靠近目标站减速（ease-out），刚离开上一站加速（ease-in）
+        const dToNext = Math.abs(target - t.dist);
+        const dSince  = Math.abs(t.dist - (t.lastDist!=null ? t.lastDist : t.dist));
+        // 缓入缓出：靠近目标站平滑减速（ease-out），刚离开上一站平滑加速（ease-in）。
+        // 两端都用 smoothstep 曲线，中途过渡顺滑；下限 EASE_MIN 保证能 creeps 到站不卡死。
+        const fAcc = Math.max(smoothstep(dSince  / EASE_ACC), EASE_MIN);
+        const fDec = Math.max(smoothstep(dToNext / EASE_DEC), EASE_MIN);
+        const mul = Math.min(fAcc, fDec);
+        const sp = CFG.trainSpeed * (G.crazy ? 2.0 : 1);   // 疯狂模式列车速度翻倍
+        let nd = t.dist + t.dir * sp * mul * dt;
+        // 端点钳制：绝不越过目标站
+        if (t.dir>0) nd = Math.min(nd, target);
+        else         nd = Math.max(nd, target);
+
+        if (Math.abs(nd - target) < 0.5){
+          // 到站（含中间站）：停靠、上下客
+          t.dist = target;
+          handleArrival(t, L, t.next);
+          t.lastDist = target;
+          t.state = 'dwell'; t.dwell = CFG.dwell;
+          // 到端点则折返，否则推进到下一站
+          if (t.dir>0 && t.next >= L.stations.length-1) t.dir = -1;
+          else if (t.dir<0 && t.next <= 0) t.dir = 1;
+          t.next = t.dir>0 ? t.next+1 : t.next-1;
+          if (t.next >= L.stations.length || t.next < 0) t.next = null;
+        } else {
+          t.dist = nd;
+        }
+      }
+      const p = posAt(L, t.dist);
+      if (p){
+        t.x=p.x; t.y=p.y; t.a=p.a;
+        // 平滑转向：车头朝向朝目标方向（沿线路切线）做限角速度旋转插值，
+        // 拐角处不再瞬间硬折，而是平滑甩过去
+        if (t.ang == null) t.ang = t.a;
+        else {
+          let d = t.a - t.ang;
+          d = Math.atan2(Math.sin(d), Math.cos(d));   // 归一化到 [-π,π] 最近角差
+          const step = TRAIN_TURN * dt;
+          t.ang += (Math.abs(d) <= step) ? d : (d > 0 ? step : -step);
+        }
+      }
+    }
+  }
+}
+
+function updateStations(dt){
+  for (const st of G.stations){
+    if (st.queue.length > st.stats.peak) st.stats.peak = st.queue.length;
+    if (st.born<1) st.born = Math.min(1, st.born + dt*3);
+    if (st.pulse>0) st.pulse = Math.max(0, st.pulse - dt*2.6);
+    if (st.shake>0) st.shake = Math.max(0, st.shake - dt*2);
+
+    // 保险：若队列里已有到达目的地的乘客，直接送达
+    for (let i=st.queue.length-1;i>=0;i--){
+      if (st.queue[i].dest===st.shape){ st.queue.splice(i,1); G.delivered++; st.stats.delivered++; onDelivered(); }
+    }
+
+    const cap = stationCapOf(st);          // 机场 16 / 普通 8
+    if (st.queue.length >= cap){
+      st.over += dt;
+      if (st.over > CFG.overcrowdSec*0.45) st.shake = 1;
+      if (st.over >= CFG.overcrowdSec){ gameOver(st); return; }
+    } else {
+      st.over = Math.max(0, st.over - dt*1.6);
+    }
+  }
+}
+
+function updateSpawn(dt){
+  // 乘客（站点人数增长速度）：疯狂模式间隔更短、随时间加速更狠、且更大概率成批到达
+  G.passengerInterval = G.crazy ? Math.max(0.55, 1.8 - G.elapsed/300) : Math.max(1.5, 4.2 - G.elapsed/120);
+  G.passengerTimer -= dt;
+  if (G.passengerTimer<=0){
+    G.passengerTimer = G.passengerInterval;
+    const batch = G.crazy ? (Math.random()<0.5 ? 2 : 1) : (G.elapsed>90 && Math.random()<0.22 ? 2 : 1);
+    for (let i=0;i<batch;i++) spawnPassenger();
+  }
+  // 新站点：OFF_CHANCE 概率生成到**视野之外**（配合 drawEdgeHints 的边缘箭头提示），
+  // 让世界感觉比屏幕更大。开局 4 站不参与（startGame 里不传 allowOff）。
+  // 站点**没有数量上限**（用户需求）：地图会一直扩张，需要玩家持续把线铺出去。
+  // 疯狂模式站点增长超快（间隔从 9~15s 压到 2.5~4s）。
+  G.stationTimer -= dt;
+  if (G.stationTimer<=0){
+    G.stationTimer = G.crazy ? rand(2.5,4.0) : rand(9,15);
+    spawnStation(makeRandomShape(), 0, Math.random() < G.stationOffChance);
+  }
+  // 新机场：随游戏推进逐步落成（到上限为止）。机场不由 makeRandomShape 产出，
+  // 只走这条通道，数量才可控。
+  G.airportTimer -= dt;
+  if (G.airportTimer<=0){
+    if (airports().length < CFG.maxAirports){
+      const st = spawnStation('airport', 0, Math.random() < G.stationOffChance);
+      if (st) toast('新机场落成');
+    }
+    G.airportTimer = rand(CFG.airportGapMin, CFG.airportGapMax);
+  }
+  // 飞机：定时飞抵某座机场，落地后给该机场带来一批乘客
+  G.planeTimer -= dt;
+  if (G.planeTimer<=0){
+    G.planeTimer = rand(CFG.planeGapMin, CFG.planeGapMax);
+    spawnPlane();
+  }
+}
+
+function makeRandomShape(){
+  const rareChance = clamp((G.elapsed-40)/240, 0, 0.22);
+  if (Math.random() < rareChance){
+    // 稀有图形全网络最多各 2 个
+    const used = {};
+    for (const s of G.stations) used[s.shape] = (used[s.shape]||0)+1;
+    const avail = RARE.filter(s => (used[s]||0) < 2);
+    if (avail.length) return pick(avail);
+  }
+  // 保证三种常用图形都存在
+  const have = new Set(G.stations.map(s=>s.shape));
+  const miss = COMMON.filter(s=>!have.has(s));
+  if (miss.length) return pick(miss);
+  return pick(COMMON);
+}
+
+/* 乘客按**轮流**方式分配到各站点（round-robin）。
+   旧实现是 `pick(G.stations)` 随机挑 —— 站点一多就必然出现「有的站很久不来人」的空档，
+   玩家会觉得某些站被冷落、地图上很不均匀。现在用游标逐站轮转，
+   保证**每个站点都在持续增加乘客**（每轮每个站各 +1）。
+   游标只在成功取到站后前进；本轮不产生乘客的站下一轮仍会被轮到，不会被跳过。 */
+let spawnCursor = 0;
+function spawnPassenger(){
+  if (G.stations.length<2) return;
+  const n = G.stations.length;
+  const st = G.stations[spawnCursor];
+  spawnCursor = (spawnCursor + 1) % n;
+  // ★ 机场站不自己产生乘客 —— 它的乘客只能由「飞机飞抵」带来（见 planeArrive）。
+  // 游标照常前进（本轮轮空，下一轮仍轮到后面的站，不会打乱均分节奏）。
+  if (isAirport(st)) return;
+  const shapes = allShapesOnNetwork().filter(s => s !== st.shape);
+  if (!shapes.length) return;
+  // 距离越远的站点被选为目的地权重略高
+  const weights = shapes.map(s => {
+    let w=1;
+    for (const o of G.stations) if (o.shape===s) w = Math.max(w, dist(st.x,st.y,o.x,o.y)/160);
+    return w;
+  });
+  const total = weights.reduce((a,b)=>a+b,0);
+  let r = Math.random()*total, dest = shapes[0];
+  for (let i=0;i<shapes.length;i++){ r -= weights[i]; if (r<=0){ dest = shapes[i]; break; } }
+  // from 记录「出发站」：减少列车 / 暂停编辑时把在途乘客原路退回这里
+  st.queue.push({ dest, avoid:null, from: st, lastLine:null, spawnTime:G.elapsed });
+  st.stats.spawn++;
+  if (st.queue.length === stationCapOf(st)) { Snd.warn(); st.shake = 1; }
+}
+
+/* =========================================================
+   机场 / 飞机
+   ---------------------------------------------------------
+   机场站是「客流入口」而不是普通站点：
+   · 它**不参与** spawnPassenger 的轮转生成（上面已经 return）——
+     机场的乘客只能由飞机飞抵带来（planeArrive），否则机场会和普通站一样自己长人。
+   · 飞机落地带来 CFG.planeLoad(=8) 个乘客，这些人的目的地是网络里的其他图形
+     （他们从机场进城），所以机场是持续输出的压力源，容量也因此给到 16。
+   · 反过来其他站点会自然产生「想去机场」的乘客：allShapesOnNetwork() 包含
+     'airport' 这个形状，spawnPassenger 选目的地时会选中它 —— 无需额外处理。
+   ========================================================= */
+// 起飞/降落的出发点：以机场为圆心、按给定方向拉到视野之外（世界坐标，缩放/平移都成立）
+function planeStartDist(){ return Math.max(W, H) / Math.max(cam.scale, 0.001) * 0.75 + 500; }
+// 两个方向的夹角（0~π）
+function angSep(a,b){ const d = Math.abs(a-b) % TAU; return d>Math.PI ? TAU-d : d; }
+/* 挑一个航向：尽量与 avoid 拉开至少 minSep 弧度。
+   ① 同一架飞机的「进场方向」和「离场方向」必须明显不同（否则看起来是原路倒退）；
+   ② 相邻两次飞行的进场方向也要错开（lastPlaneAng），否则每架都从同一边飞来很单调。 */
+let lastPlaneAng = null;
+function pickPlaneAngle(avoid, minSep){
+  const sep = minSep==null ? 1.15 : minSep;         // ≈66°
+  let a = Math.random()*TAU;
+  for (let i=0;i<14;i++){
+    if (avoid==null || angSep(a, avoid) >= sep) return a;
+    a = Math.random()*TAU;
+  }
+  return avoid==null ? a : avoid + Math.PI;         // 兜底：反向
+}
+
+function spawnPlane(){
+  const aps = airports();
+  if (!aps.length) return null;
+  const st = pick(aps);
+  const R = planeStartDist();
+  const inAng = pickPlaneAngle(lastPlaneAng);       // 与上一架的进场方向错开
+  lastPlaneAng = inAng;
+  const pl = {
+    st,
+    phase: 'in',                 // 'in' 进场 → 'dwell' 卸客停留 → 'out' 离场
+    ax: st.x, ay: st.y,          // 机场位置（离场段要用，站点位置是固定的）
+    sx: st.x + Math.cos(inAng)*R, sy: st.y + Math.sin(inAng)*R,
+    tx: st.x, ty: st.y,
+    inAng,
+    outAng: pickPlaneAngle(inAng, 1.7),   // ≈97°：离场方向与进场明显不同
+    t: 0,
+    dur: CFG.planeFlySec * (0.9 + Math.random()*0.25)
+  };
+  G.planes.push(pl);
+  return pl;
+}
+// 卸客完毕 → 转向离场段（从机场飞向另一个方向的画面外）
+function startPlaneOut(pl){
+  const R = planeStartDist();
+  pl.phase = 'out';
+  pl.sx = pl.ax; pl.sy = pl.ay;
+  pl.tx = pl.ax + Math.cos(pl.outAng)*R;
+  pl.ty = pl.ay + Math.sin(pl.outAng)*R;
+  pl.t = 0;
+  pl.dur = CFG.planeFlySec * (0.85 + Math.random()*0.3);
+}
+function updatePlanes(dt){
+  for (let i=G.planes.length-1;i>=0;i--){
+    const pl = G.planes[i];
+    if (pl.phase==='dwell'){                        // 停在机场上卸客，短暂停留
+      pl.t += dt/CFG.planeDwellSec;
+      if (pl.t>=1) startPlaneOut(pl);
+      continue;
+    }
+    pl.t += dt/pl.dur;
+    if (pl.t>=1){
+      if (pl.phase==='in'){
+        planeArrive(pl.st);                         // 落地卸客
+        pl.phase='dwell'; pl.t=0;                   // 然后停留一下再飞走
+      } else {
+        G.planes.splice(i,1);                       // 离场段结束：飞出画面，移除
+      }
+    }
+  }
+}
+function planeArrive(st){
+  if (!st || !st.queue) return;
+  const dests = allShapesOnNetwork().filter(s => s !== 'airport');
+  if (!dests.length) return;                    // 网络上还没有别的目的地，本架空跑
+  for (let i=0;i<CFG.planeLoad;i++){
+    st.queue.push({ dest: pick(dests), avoid:null, from: st, lastLine:null, spawnTime:G.elapsed });
+    st.stats.spawn++;
+  }
+  st.ring = 1; st.pulse = 0.8;                  // 落地涟漪 + 轻微弹动
+  Snd.plane();
+  if (st.queue.length >= stationCapOf(st)){ Snd.warn(); st.shake = 1; }
+}
+function drawPlanes(){
+  for (const pl of G.planes){
+    let x, y, ang, fade = 1;
+    if (pl.phase==='dwell'){
+      // 停在机场上卸客：位置就是机场，机头保持进场时的朝向
+      x = pl.ax; y = pl.ay;
+      ang = Math.atan2(pl.ay-pl.sy, pl.ax-pl.sx) + Math.PI/2;
+    } else {
+      const k = clamp(pl.t, 0, 1);
+      // 进场 easeOut（减速落到机场）/ 离场 easeIn（加速飞离），比来回同速自然
+      const e = pl.phase==='in' ? 1-Math.pow(1-k,3) : k*k;
+      x = pl.sx + (pl.tx-pl.sx)*e;
+      y = pl.sy + (pl.ty-pl.sy)*e;
+      ang = Math.atan2(pl.ty-pl.sy, pl.tx-pl.sx) + Math.PI/2;
+      // 从画面外淡入 / 飞出画面淡出
+      fade = pl.phase==='in' ? Math.min(1, k/0.10)
+                             : (k<0.78 ? 1 : Math.max(0, (1-k)/0.22));
+    }
+    ctx.save();
+    ctx.globalAlpha = fade*0.96;
+    ctx.fillStyle = 'rgba(42,42,42,.15)';                    // 投影
+    planePath(ctx, x+3, y+4, 13, ang); ctx.fill();
+    ctx.fillStyle = '#FFFFFF';
+    planePath(ctx, x, y, 13, ang); ctx.fill();
+    ctx.lineWidth = 2.2;
+    ctx.strokeStyle = '#17548F';
+    ctx.lineJoin='round';
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+/* =========================================================
+   8. 渲染
+   ========================================================= */
+let river = null;
+/* 河流「入场延伸」进度：0→1，1 = 已完全展开。
+   纯视觉动效 —— 只影响 drawRiver 画到第几个折点，**绝不改 river.pts 本身**，
+   否则会破坏「渲染与几何共用同一份数据」这个根基（隧道判定/站点离河/线路求交都依赖它）。 */
+let riverIn = 1;
+const RIVER_IN_SEC = 0.95;      // 入场时长（秒）
+let heatmapAlpha = 0;           // 热力图淡入淡出进度（0~1），开关切换时平滑过渡
+
+/* 折线圆角化：把每个拐角换成一段二次贝塞尔曲线，得到「圆滑弯曲」的河道。
+   为什么不用 ctx.quadraticCurveTo？因为河流还要参与碰撞/求交/隧道判定，
+   渲染与几何必须是同一份数据 —— 否则又会回到「轨迹与显示不一致」的 bug。
+   所以这里把曲线**采样成密集折线**，渲染和几何都用它。 */
+function smoothPolyline(pts, radius, steps){
+  if (pts.length < 3) return pts.slice();
+  const out = [ { x:pts[0].x, y:pts[0].y } ];
+  for (let i=1;i<pts.length-1;i++){
+    const V = pts[i], A = pts[i-1], B = pts[i+1];
+    const dA = dist(A.x,A.y,V.x,V.y), dB = dist(V.x,V.y,B.x,B.y);
+    if (dA < 1e-6 || dB < 1e-6) continue;
+    const r = Math.min(radius, dA*0.45, dB*0.45);
+    if (r < 1.5){ out.push({ x:V.x, y:V.y }); continue; }
+    // 沿两条边各退 r，得到曲线起止点；顶点本身作为贝塞尔控制点
+    const P0 = { x: V.x + (A.x-V.x)/dA*r, y: V.y + (A.y-V.y)/dA*r };
+    const P2 = { x: V.x + (B.x-V.x)/dB*r, y: V.y + (B.y-V.y)/dB*r };
+    out.push(P0);
+    for (let s=1;s<steps;s++){
+      const t = s/steps, mt = 1-t;
+      out.push({
+        x: mt*mt*P0.x + 2*mt*t*V.x + t*t*P2.x,
+        y: mt*mt*P0.y + 2*mt*t*V.y + t*t*P2.y,
+      });
+    }
+    out.push(P2);
+  }
+  const last = pts[pts.length-1];
+  out.push({ x:last.x, y:last.y });
+  return out;
+}
+
+// 河流：先按「航向惯性」生成河道骨架（决定走向与拐弯位置），
+// 再把拐角圆角化，得到圆滑弯曲的河道。
+//
+// 关键：**航向要有惯性**。每段独立随机取斜率只会得到「抖动噪声」，整体仍近似直线；
+// 真实河道是一段持续朝某个方向流（reach），然后明显拐弯（bend）。
+//
+// 用「向基准线回归」防止河道漂出屏幕。左右延伸到 FAR 之外，视为无限。
+function buildRiver(){
+  const FAR = 4000;                       // 左右各延伸 4000px，视为无限
+  const left = -FAR, right = W + FAR;
+  const baseY = H * rand(0.44, 0.62);      // 河道基准线
+  const lo = H*0.16, hi = H*0.84;          // 允许摆动的上下限（留出上下游戏区）
+
+  const pts = [{ x:left, y:baseY }];
+  let x = left, y = baseY;
+  // 当前航向（角度，正=向下）。开局随机选一个明显方向，避免起手就是水平
+  let heading = (Math.random()<0.5 ? -1 : 1) * rand(12, 26);
+  // 保底拐弯：连续若干段没拐就强制转向，避免出现「一条长斜线贯穿全屏」
+  let sinceTurn = 0, turnAfter = 2 + ((Math.random()*2)|0);
+
+  let guard = 0;
+  while (x < right && guard++ < 4000){
+    // 段长：长河段(reach) 与 短河段 混合。
+    // 段不能太长 —— 否则可视区内可能只落在一个河段上，看不出走向变化。
+    // 下限必须与 W 解耦：left/right 是绝对 ±4000，若步长随 W 等比缩到 0，
+    // 窄容器下循环次数会从 ~230 次暴涨到十几万次甚至永不终止。
+    const longRun = Math.random() < 0.5;
+    const segLen = longRun
+      ? rand(Math.max(60, W*0.08), Math.max(120, W*0.16))
+      : rand(Math.max(24, W*0.03), Math.max(56, W*0.07));
+    const x1 = Math.min(x + segLen, right);
+    const seg = x1 - x;
+
+    // ① 惯性漂移
+    heading += rand(-6, 6);
+    heading = clamp(heading, -36, 36);
+
+    // ② 向基准线连续弱回归：让河道始终在画面中部摆动，避免停在边缘变平。
+    //    注意符号 —— y 大于 baseY 表示偏「下」，需要负坡度拉上去。
+    const off = clamp((y - baseY) / (H*0.30), -1.5, 1.5);
+    heading -= off * rand(6, 11);
+    heading = clamp(heading, -36, 36);
+
+    // ③ 拐弯。必须放在回归「之后」—— 否则回归会把刚转向的航向又翻回去，
+    //    导致全程无弯（实测会出现「一条长斜线贯穿全屏」，转折数=0）。
+    //    - 保底拐弯（连续 turnAfter 段没拐）：强制换向，保证画面里真有弯
+    //    - 随机拐弯：方向任取（若也强制换向会退化成规律锯齿）
+    sinceTurn++;
+    const mustTurn = sinceTurn >= turnAfter;
+    if (mustTurn || Math.random() < 0.34){
+      const cur = Math.sign(heading) || (Math.random()<0.5 ? 1 : -1);
+      const sign = mustTurn ? -cur : (Math.random()<0.5 ? 1 : -1);
+      heading = sign * rand(17, 34);      // 转角下限抬高，避免「弯了但看不出来」
+      sinceTurn = 0;
+      turnAfter = 2 + ((Math.random()*2)|0);
+    }
+
+    // ④ 贴边强制回拉（优先级最高，压过拐弯）
+    if (y < lo) heading =  Math.abs(heading);
+    if (y > hi) heading = -Math.abs(heading);
+    heading = clamp(heading, -36, 36);
+
+    let y1 = y + Math.tan(heading*Math.PI/180) * seg;
+    // 软约束：越界时折回，而不是硬钳成水平线（硬钳会让河道卡在边上全平）
+    if (y1 < lo) y1 = lo + (y1 - lo) * -0.35;
+    if (y1 > hi) y1 = hi + (y1 - hi) * -0.35;
+    y1 = clamp(y1, lo, hi);
+
+    pts.push({ x:x1, y:y1 });
+    x = x1; y = y1;
+  }
+  // 右端无限延伸
+  if (pts[pts.length-1].x < right) pts.push({ x:right, y:y });
+
+  // 拐角圆角化 -> 圆滑弯曲（曲线已采样成折线，渲染与几何共用同一份数据）
+  const smooth = smoothPolyline(pts, H*0.075, 8);
+
+  river = { pts: smooth, w: clamp(H*0.052, 24, 44) };
+  riverIn = 0;                            // 每次生成新河道都播一次「延伸入场」
+  // 河流换了形状，所有线路的「隧道片段」缓存必须作废
+  for (const L of G.lines){ L._rpRiver=null; L._rpPieces=null; }
+}
+
+// 点到河流折线的最短距离（用于让站点避开河流）
+function distToRiver(x,y){
+  if (!river) return 1e9;
+  let dmin = 1e9;
+  for (let i=1;i<river.pts.length;i++){
+    dmin = Math.min(dmin, segDist(x,y, river.pts[i-1], river.pts[i]));
+  }
+  return dmin;
+}
+
+function drawRiver(){
+  if (!river) return;
+  // 入场延伸：只画到推进中的「河头」为止。
+  // river.pts 是 x 单调递增的（buildRiver 从左 march 到右），所以按 x 切一刀即可，
+  // 左右各留 160px 余量，保证刚露头和收尾时都在屏外，看不到断口。
+  let head = null;
+  if (riverIn < 1){
+    const e = 1 - Math.pow(1-riverIn, 3);          // easeOutCubic：起手快、收尾稳
+    head = -160 + (W + 320) * e;
+  }
+  ctx.save();
+  ctx.strokeStyle = '#CBE2EF';
+  ctx.lineWidth = river.w;
+  ctx.lineCap='round'; ctx.lineJoin='round';
+  ctx.beginPath();
+  let started = true;                    // 完成态默认画整条
+  if (head === null){
+    river.pts.forEach((p,i)=> i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));
+  } else {
+    // 画到切点：整点直接连线，跨过切点的那一段插值出端点（线帽 round 让河头是圆的）
+    started = false;
+    for (let i=0;i<river.pts.length;i++){
+      const p = river.pts[i];
+      if (p.x <= head){
+        if (!started){ ctx.moveTo(p.x,p.y); started=true; } else ctx.lineTo(p.x,p.y);
+        continue;
+      }
+      const a = river.pts[i-1];
+      if (started && a){
+        const dx = p.x - a.x;
+        const t = Math.abs(dx) < 1e-6 ? 0 : clamp((head - a.x)/dx, 0, 1);
+        ctx.lineTo(head, a.y + (p.y - a.y)*t);
+      }
+      break;
+    }
+  }
+  if (started) ctx.stroke();
+  ctx.restore();
+
+  // 河名：跟随折线在 62% 宽度处的高度（随入场淡入）
+  ctx.save();
+  if (riverIn < 1) ctx.globalAlpha = Math.max(0, riverIn*2 - 1);   // 后半段才显出来
+  ctx.fillStyle = '#AFCFE2';
+  ctx.font = '600 12px "Segoe UI",system-ui,sans-serif';
+  ctx.textAlign='center';
+  ctx.fillText('RIVER', W*0.62, riverYAt(W*0.62) + 4);
+  ctx.restore();
+}
+
+// 折线上给定 x 处的高度（用于放置河名，避免落在阶梯空隙）
+function riverYAt(x){
+  for (let i=1;i<river.pts.length;i++){
+    const a=river.pts[i-1], b=river.pts[i];
+    if (x>=a.x && x<=b.x){
+      if (Math.abs(b.x-a.x)<1e-6) return b.y;
+      const t=(x-a.x)/(b.x-a.x);
+      return a.y + t*(b.y-a.y);
+    }
+  }
+  return river.pts[river.pts.length-1].y;
+}
+
+// 线段相交检测（用于判断线路是否跨越河流）
+function segIntersect(p1,p2,p3,p4){
+  const rx=p2.x-p1.x, ry=p2.y-p1.y;
+  const sx=p4.x-p3.x, sy=p4.y-p3.y;
+  const den = rx*sy - ry*sx;
+  if (Math.abs(den) < 1e-9) return null;      // 平行或共线
+  const qpx=p3.x-p1.x, qpy=p3.y-p1.y;
+  const t = (qpx*sy - qpy*sx) / den;          // p1->p2 上的参数
+  const u = (qpx*ry - qpy*rx) / den;          // p3->p4 上的参数
+  if (t>=-1e-9 && t<=1+1e-9 && u>=-1e-9 && u<=1+1e-9)
+    return { x:p1.x+t*rx, y:p1.y+t*ry };
+  return null;
+}
+// 线段 p→q 与河流所有段求交，返回沿线段的参数 t 列表（含 0 与 1）
+function riverHitParams(p, q){
+  const ts = [0, 1];
+  for (let j=1;j<river.pts.length;j++){
+    const c = segIntersect(p, q, river.pts[j-1], river.pts[j]);
+    if (c){
+      const dx=q.x-p.x, dy=q.y-p.y;
+      const l2 = dx*dx+dy*dy;
+      if (l2 > 1e-6) ts.push(((c.x-p.x)*dx + (c.y-p.y)*dy)/l2);
+    }
+  }
+  return ts;
+}
+
+/* 把线路按「是否在河面上」切成若干片段。
+   做法：沿每段密集采样 -> 平滑（消除河边界抖动产生的碎片）-> 按连续同标记成段。
+   只靠交点切分是不够的：河道有宽度，斜穿线段的交点参数区间跨度远大于河宽，
+   区间中点会落到河外；而纯采样又会在边界反复抖动。两者结合才稳。
+   缓存到 L._rpPieces，线路或河流变化时重建。 */
+function lineRiverPieces(L){
+  if (!L.path || L.path.length<2) return [];
+  if (L._rpRiver === river && L._rpRef === L.path) return L._rpPieces;
+  // 略放宽到河宽的一半 + 2px，让虚线完整覆盖河面
+  const half = river.w * 0.5 + 2;
+  const pieces = [];
+  for (let i=1;i<L.path.length;i++){
+    const p = L.path[i-1], q = L.path[i];
+    const segLen = Math.hypot(q.x-p.x, q.y-p.y);
+    // 采样密度随段长提升：保证「穿河段」无论在一长段里占多小比例，都至少有足够格数被采样到
+    const N = Math.max(48, Math.ceil(segLen/4));
+    // 采样点：t=0 起点、t=1 终点、以及所有交点
+    const ts = riverHitParams(p, q);
+    for (let k=1;k<N;k++) ts.push(k/N);
+    ts.sort((a,b)=>a-b);
+    // 每个区间取中点判定，并记录
+    const flags = [];
+    for (let k=0;k+1<ts.length;k++){
+      const tm = (ts[k]+ts[k+1])/2;
+      const mx = lerp(p.x,q.x,tm), my = lerp(p.y,q.y,tm);
+      flags.push({ t0:ts[k], t1:ts[k+1], tunnel: distToRiver(mx,my) < half });
+    }
+    if (!flags.length) continue;
+    // 平滑（形态学开闭）：先填 1 格宽的「假裂隙」（河边界采样抖动），再剔 1 格宽的「真毛刺」。
+    // 关键：保留任何「连续≥2格」的真实穿河，不再因长 path 段里穿河占比小而被多数投票翻成 false。
+    const close = flags.map((f,k)=> f.tunnel || (flags[k-1] && flags[k-1].tunnel && flags[k+1] && flags[k+1].tunnel));
+    const sm = close.map((v,k)=>{
+      if (!v) return false;
+      const l = close[k-1], r = close[k+1];
+      if (l === undefined || r === undefined) return true;   // 边界真值保留，不误剔
+      return !!(l) && !!(r);                                 // 两侧皆假才剔孤立毛刺
+    });
+    // 按连续同标记成段（沿线路顺序输出，不要排序）
+    // 关键：合并只允许发生在「同一个 path 段内部」。跨段合并会把中间拐点吞掉
+    // （last.b = b 只改终点），渲染出的线就与 L.path 不符 —— 表现为
+    // 「路线自动走最短直线」且「列车轨迹与显示不一致」。
+    let k = 0;
+    while (k < flags.length){
+      const v = sm[k];
+      let e = k;
+      while (e+1 < flags.length && sm[e+1] === v) e++;
+      const a = { x:lerp(p.x,q.x,flags[k].t0), y:lerp(p.y,q.y,flags[k].t0) };
+      const b = { x:lerp(p.x,q.x,flags[e].t1), y:lerp(p.y,q.y,flags[e].t1) };
+      const last = pieces[pieces.length-1];
+      if (last && last.tunnel===v && last.seg===i && Math.abs(last.b.x-a.x)<0.01 && Math.abs(last.b.y-a.y)<0.01){
+        last.b = b;
+      } else {
+        pieces.push({ a, b, tunnel:v, seg:i });
+      }
+      k = e+1;
+    }
+  }
+  L._rpRiver = river; L._rpRef = L.path; L._rpPieces = pieces;
+  return pieces;
+}
+
+/* 按「实线组 / 虚线组」分别批量描边。
+   同类片段合并成一条 polyline 一次画完 —— 避免逐段 beginPath 在接缝处留下断点
+   或因 lineCap 圆头重叠而出现缺口。 */
+function strokeGroups(groups, width, color, dashed){
+  for (const g of groups){
+    if (!g.pts.length) continue;
+    ctx.save();
+    if (dashed){
+      // butt 端帽 + 较小周期：短隧道段也能看出虚线，而不是变成一串圆点
+      ctx.setLineDash([6,5]);
+      ctx.lineCap = 'butt';
+    } else {
+      ctx.setLineDash([]);
+      ctx.lineCap = 'round';
+    }
+    ctx.beginPath();
+    g.pts.forEach((p,i)=> i ? ctx.lineTo(p.x,p.y) : ctx.moveTo(p.x,p.y));
+    ctx.lineWidth = width;
+    ctx.strokeStyle = color;
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+/* 把片段按 tunnel 标记分成两组折线。
+   安全约束：只有首尾真正重合的同类型片段才允许并入同一条 polyline；
+   一旦断开就新开一组。绝不能把不连续的片段硬连 —— 那会画出横穿屏幕的直线。 */
+function groupPieces(pieces){
+  const solid=[], dashed=[];
+  const EPS = 0.5;
+  for (const p of pieces){
+    const list = (p.tunnel && p._eff) ? dashed : solid;
+    const cur = list[list.length-1];
+    if (cur){
+      const e = cur.pts[cur.pts.length-1];
+      if (Math.abs(e.x-p.a.x)<EPS && Math.abs(e.y-p.a.y)<EPS){
+        cur.pts.push(p.b);
+        continue;
+      }
+    }
+    list.push({ pts:[p.a, p.b], tunnel:p.tunnel });
+  }
+  return { solid, dashed };
+}
+
+// 按「隧道容量上限」决定哪些跨河线路显示为隧道（虚线），其余降级为地面实线。
+// 计数单位是「跨河线路」：一条线路无论与河相交几次都只占 1 个隧道槽位，
+// 这样 HUD 的隧道数 == 玩家实际建出的跨河线路数，避免一条线被切成多段后计数虚高。
+function markTunnels(){
+  if (!river) return;
+  const cap = G.tunnelCap || CFG.tunnelCapStart;
+  for (const L of G.lines){
+    const pieces = lineRiverPieces(L);
+    for (const p of pieces) p._eff = false;
+  }
+  let tunnels = 0;
+  for (const L of G.lines){
+    const pieces = lineRiverPieces(L);
+    const has = pieces.some(p=>p.tunnel);
+    if (has){
+      const on = (tunnels < cap);          // 该线整体是否享有隧道
+      for (const p of pieces) if (p.tunnel) p._eff = on;
+      tunnels++;
+    }
+  }
+}
+
+function drawLines(){
+  if (!river) return;
+  markTunnels();
+  for (const L of G.lines){
+    if (!L.path || L.path.length<2) continue;
+    const sel = (L===G.selected);
+    const pieces = lineRiverPieces(L);
+    if (!pieces.length) continue;
+    const grp = groupPieces(pieces);
+    const all = grp.solid.concat(grp.dashed);
+    // 选中态：先铺一层深色底 + 白底，把整条线托起来
+    if (sel){
+      strokeGroups(grp.solid, CFG.lineW + 8, 'rgba(42,42,42,.13)', false);
+      strokeGroups(grp.dashed, CFG.lineW + 8, 'rgba(42,42,42,.13)', true);
+    }
+    // 白色描边（两组合并画，接缝连续）
+    strokeGroups(grp.solid, CFG.lineW + (sel?5:3.5), 'rgba(255,255,255,.92)', false);
+    strokeGroups(grp.dashed, CFG.lineW + (sel?5:3.5), 'rgba(255,255,255,.92)', true);
+    // 主体色：隧道段深色虚线、地面段实线
+    strokeGroups(grp.solid, CFG.lineW, L.color, false);
+    strokeGroups(grp.dashed, CFG.lineW, shade(L.color,-0.12), true);
+  }
+}
+
+// 颜色明暗调整（hex），amount<0 变暗、>0 变亮
+function shade(hex, amount){
+  const n = parseInt(hex.slice(1),16);
+  let r=(n>>16)&255, g=(n>>8)&255, b=n&255;
+  if (amount<0){ r*=1+amount; g*=1+amount; b*=1+amount; }
+  else { r+=(255-r)*amount; g+=(255-g)*amount; b+=(255-b)*amount; }
+  return 'rgb('+(r|0)+','+(g|0)+','+(b|0)+')';
+}
+
+function drawTrains(){
+  for (const L of G.lines){
+    for (const t of L.trains){
+      const w = 26, h = 15;                    // 车厢放大以容纳 8 个图形乘客
+      ctx.save();
+      ctx.translate(t.x, t.y);
+      ctx.rotate(t.ang);
+      ctx.beginPath();
+      const r = 4.5;
+      ctx.moveTo(-w/2+r,-h/2);
+      ctx.arcTo(w/2,-h/2, w/2,h/2, r);
+      ctx.arcTo(w/2,h/2, -w/2,h/2, r);
+      ctx.arcTo(-w/2,h/2, -w/2,-h/2, r);
+      ctx.arcTo(-w/2,-h/2, w/2,-h/2, r);
+      ctx.closePath();
+      ctx.fillStyle = L.color;
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2.4;
+      ctx.stroke();
+      // 乘客：保留各自的目的地图形（4 列 × 2 排 = 最多 8 人）
+      const n = t.pass.length;
+      const COLS = 4, dx = 6.0, dy = 3.8, sr = 3.1;
+      for (let i=0;i<n;i++){
+        if (t.pass[i]._hid) continue;         // 正在滑入车厢的乘客由 drawAnims 负责绘制
+        const col = i % COLS;
+        const row = (i / COLS) | 0;
+        const px = -((COLS-1)*dx)/2 + col*dx;
+        const py = row===0 ? -dy : dy;
+        const sh = t.pass[i].dest;
+        shapePath(ctx, sh, px, py, sr, shapeRot(sh));
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fill();
+        // 深色细描边：保证白图形压在彩色车厢 / 站点白底上都能看清轮廓
+        ctx.lineWidth = 1.1;
+        ctx.strokeStyle = 'rgba(20,20,20,.62)';
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+  }
+}
+
+function drawPassengers(st){
+  const n = st.queue.length;
+  if (n===0) return;
+  const ring = CFG.stationR + 8.5;
+  const show = Math.min(n, 8);
+  for (let i=0;i<show;i++){
+    if (st.queue[i]._hid) continue;         // 正在滑出/滑入的乘客由 drawAnims 负责绘制
+    const a = -Math.PI/2 + i*(TAU/8);
+    const px = st.x + Math.cos(a)*ring;
+    const py = st.y + Math.sin(a)*ring;
+    ctx.save();
+    ctx.fillStyle = '#2A2A2A';
+    shapePath(ctx, st.queue[i].dest, px, py, 4.4, shapeRot(st.queue[i].dest));
+    ctx.fill();
+    ctx.restore();
+  }
+  if (n>8){
+    ctx.save();
+    ctx.fillStyle = '#2A2A2A';
+    ctx.font='800 10px "Segoe UI",system-ui,sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('+'+(n-8), st.x, st.y + ring + 13);
+    ctx.restore();
+  }
+}
+
+function drawStations(){
+  for (const st of G.stations){
+    // 出场「轻轻一跳」：缩放带一点过冲(back-out 弹出 ~10%)，同时上跳 7px 再落回原位。
+    // 纯视觉 —— 半径/位置只影响绘制，命中判定用的是常量 CFG.stationR 与 st.x/st.y。
+    const bt = st.born;
+    const grow = bt<1 ? backOut(bt) : 1;
+    const hop  = bt<1 ? Math.sin(Math.PI*bt) * 7 : 0;           // 出场时轻轻上跳 7px 再落回
+    const s = st.pulse>0 ? 1 + st.pulse*0.18 : 1;
+    const R = CFG.stationR * grow * s;
+    const jx = st.shake>0 ? rand(-1.6,1.6)*st.shake : 0;
+    const jy = st.shake>0 ? rand(-1.6,1.6)*st.shake : 0;
+    const x = st.x+jx, y = st.y+jy - hop;
+
+    // 拥挤计时环
+    if (st.over>0){
+      const frac = clamp(st.over/CFG.overcrowdSec,0,1);
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(x,y,R+6.5,-Math.PI/2, -Math.PI/2 + TAU*frac);
+      ctx.lineWidth = 3.4;
+      ctx.strokeStyle = frac>0.7 ? '#D7263D' : (frac>0.4 ? '#E8890C' : '#E8B91E');
+      ctx.lineCap='round';
+      ctx.stroke();
+      ctx.restore();
+    }
+    // 拥挤光晕
+    if (st.queue.length >= stationCapOf(st)){
+      ctx.save();
+      const g = ctx.createRadialGradient(x,y,R, x,y,R+18);
+      g.addColorStop(0,'rgba(215,38,61,.22)');
+      g.addColorStop(1,'rgba(215,38,61,0)');
+      ctx.fillStyle=g;
+      ctx.beginPath(); ctx.arc(x,y,R+18,0,TAU); ctx.fill();
+      ctx.restore();
+    }
+
+    const rare = RARE.indexOf(st.shape)>=0;
+    const ap = isAirport(st);
+    // 机场站：画一圈蓝色跑道环 + 蓝色描边的飞机标志，和普通站一眼区分
+    if (ap){
+      ctx.save();
+      ctx.beginPath(); ctx.arc(x, y, R+6.5, 0, TAU);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = 'rgba(23,84,143,.35)';
+      ctx.stroke();
+      ctx.restore();
+    }
+    // 站点本体：白色图形 + 深色描边
+    shapePath(ctx, st.shape, x, y, R, shapeRot(st.shape));
+    ctx.fillStyle = ap ? '#EAF3FC' : '#FFFFFF';
+    ctx.fill();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = ap ? '#17548F' : (rare ? '#B8860B' : '#2A2A2A');
+    ctx.lineJoin='round';
+    ctx.stroke();
+
+    if (rare){
+      shapePath(ctx, st.shape, x, y, R+4.5, shapeRot(st.shape));
+      ctx.lineWidth = 1.4;
+      ctx.strokeStyle = 'rgba(184,134,11,.55)';
+      ctx.stroke();
+    }
+
+    // 接入线路：一圈向外扩散并淡出的涟漪（ring 1→0，半径随之变大、透明度随之降低）
+    if (st.ring > 0){
+      ctx.save();
+      ctx.globalAlpha = st.ring * 0.85;
+      ctx.strokeStyle = '#2A2A2A';
+      ctx.lineWidth = 2.4;
+      ctx.beginPath(); ctx.arc(x, y, R + (1-st.ring)*20, 0, TAU); ctx.stroke();
+      ctx.restore();
+    }
+
+    drawPassengers(st);
+  }
+}
+
+function drawDragPreview(){
+  if (!drag) return;
+  const L = drag.line;
+  // 仅插入模式（路线用完、灰线）：锚点就是生长端，从锚点画到指针
+  if (drag.insertOnly){
+    const col = INSERT_GRAY;
+    const tsp = drag.hover ? {x:drag.hover.x, y:drag.hover.y} : {x:drag.px, y:drag.py};
+    const seg = octSegment({x:drag.anchor.x,y:drag.anchor.y}, tsp, false);
+    ctx.save();
+    ctx.setLineDash([7,7]);
+    ctx.lineWidth = CFG.lineW;
+    ctx.strokeStyle = col;
+    ctx.globalAlpha = .6;
+    ctx.lineCap='round'; ctx.lineJoin='round';
+    ctx.beginPath();
+    seg.forEach((p,i)=> i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));
+    ctx.stroke();
+    ctx.restore();
+    if (drag.hover){
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(drag.hover.x, drag.hover.y, CFG.stationR+9, 0, TAU);
+      ctx.strokeStyle = col;
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([4,4]);
+      ctx.stroke();
+      ctx.restore();
+    }
+    // 实时高亮「将被横穿插入」的已有线路 —— 相交即可见
+    if (drag.crossLine && drag.crossLine.stations.length>=2){
+      const cl = drag.crossLine;
+      ctx.save();
+      ctx.setLineDash([]);
+      ctx.lineWidth = CFG.lineW + 6;
+      ctx.strokeStyle = 'rgba(120,140,170,.5)';
+      ctx.lineCap='round'; ctx.lineJoin='round';
+      ctx.beginPath();
+      cl.stations.forEach((s,i)=> i?ctx.lineTo(s.x,s.y):ctx.moveTo(s.x,s.y));
+      ctx.stroke();
+      ctx.restore();
+    }
+    return;
+  }
+  if (L.stations.length===0) return;
+  // 一次拖拽连多站时，生长端会随接入前移 —— 预览线必须从「当前生长端」画，
+  // 否则会一直从最初那个 anchor 画，导致预览与实际线路不符。
+  const anchor = dragTip(L, drag.prepend) || drag.anchor;
+  const tx = drag.px, ty = drag.py;
+  let tsp = {x:tx,y:ty};
+  if (drag.hover){
+    tsp = {x:drag.hover.x, y:drag.hover.y};
+  }
+  const seg = octSegment({x:anchor.x,y:anchor.y}, tsp, drag.prepend);
+  ctx.save();
+  ctx.setLineDash([7,7]);
+  ctx.lineWidth = CFG.lineW;
+  ctx.strokeStyle = L.color;
+  ctx.globalAlpha = .55;
+  ctx.lineCap='round'; ctx.lineJoin='round';
+  ctx.beginPath();
+  seg.forEach((p,i)=> i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));
+  ctx.stroke();
+  ctx.restore();
+
+  if (drag.hover){
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(drag.hover.x, drag.hover.y, CFG.stationR+9, 0, TAU);
+    ctx.strokeStyle = L.color;
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([4,4]);
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+/* 视野边缘提示：未连接的站点落在屏幕外时，在视野边缘画箭头指向它 */
+function drawEdgeHints(){
+  if (G.mode !== 'play') return;
+  const m = 36;                          // 箭头中心离屏幕边的内边距
+  const cx = W/2, cy = H/2;
+  // 已连接（属于某条线路）的站点不提示，只提示未连接站点
+  const connected = new Set();
+  for (const L of G.lines) for (const st of L.stations) connected.add(st);
+  const drawnAng = [];
+  const pulse = 0.55 + 0.45*Math.sin(G.elapsed*12);
+  for (const st of G.stations){
+    if (connected.has(st)) continue;     // 未连接才提示
+    const sx = st.x*cam.scale + cam.x;
+    const sy = st.y*cam.scale + cam.y;
+    if (sx > m && sx < W-m && sy > m && sy < H-m) continue;   // 在视野内，无需提示
+    const dx = sx - cx, dy = sy - cy;
+    if (dx===0 && dy===0) continue;
+    // 求「屏幕中心 → 站点」射线与内缩矩形 [m,W-m]×[m,H-m] 的交点，作为箭头落点
+    const tx = dx>0 ? (W-m-cx)/dx : (dx<0 ? (m-cx)/dx : Infinity);
+    const ty = dy>0 ? (H-m-cy)/dy : (dy<0 ? (m-cy)/dy : Infinity);
+    const t = Math.min(tx, ty);
+    if (!isFinite(t) || t <= 0) continue;
+    const ax = cx + t*dx, ay = cy + t*dy;
+    const ang = Math.atan2(dy, dx);
+    // 同方向已画过则去重，避免边缘挤成一团
+    let dup = false;
+    for (const a of drawnAng){ let d = ang - a; d = Math.atan2(Math.sin(d), Math.cos(d)); if (Math.abs(d) < 0.2){ dup = true; break; } }
+    if (dup) continue;
+    drawnAng.push(ang);
+    // 箭头：默认指向 +x，旋转后朝向站点的屏幕方向
+    ctx.save();
+    ctx.translate(ax, ay);
+    ctx.rotate(ang);
+    ctx.globalAlpha = 0.3 + 0.7*pulse;
+    ctx.fillStyle = '#E53935';
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 3.2;
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(20, 0);
+    ctx.lineTo(-13, -13);
+    ctx.lineTo(-5, 0);
+    ctx.lineTo(-13, 13);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+function render(){
+  // 背景底色在「屏幕空间」铺满整块画布（缩放/平移后不留边）
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  ctx.fillStyle = G.crazy ? '#E2E2E2' : '#F5F1E8';   // 疯狂模式：淡灰色背景
+  ctx.fillRect(0,0,W,H);
+  // 其余内容套上相机变换（世界空间）
+  ctx.save();
+  ctx.translate(cam.x, cam.y);
+  ctx.scale(cam.scale, cam.scale);
+  drawRiver();       // 河流在最底层
+  drawLines();       // 路线在河流之上：跨河段用虚线表示隧道
+  drawStations();
+  if (G.mode==='overview' && heatmapAlpha>0) drawHeatmap();   // 热力图在世界空间、站点之下
+  drawTrains();
+  drawPlanes();      // 飞机在列车之上（从画面外飞入机场）
+  drawAnims();       // 上下客动效：在车厢/站点之上滑行
+  drawDragPreview();
+  ctx.restore();
+  drawEdgeHints();        // 屏幕空间：视野外未连接站点的边缘箭头提示
+  if (G.mode==='over' && confetti.length) drawConfetti();   // 彩带礼炮盖在结算卡之上
+  const zl = document.getElementById('zLabel');
+  if (zl) zl.textContent = Math.round(cam.scale*100)+'%';
+}
+
+/* =========================================================
+   9. 交互
+   ========================================================= */
+let drag = null;
+let pan = null;
+let pinch = null;
+const pointers = new Map();
+
+function evPos(e){
+  const r = cv.getBoundingClientRect();
+  return { x:e.clientX - r.left, y:e.clientY - r.top };
+}
+function stationAt(x,y){
+  let best=null, bd=CFG.hitStation*cam.scale;
+  for (const st of G.stations){
+    const d = dist(x,y,st.x,st.y);
+    if (d < bd){ bd=d; best=st; }
+  }
+  return best;
+}
+function lineAt(x,y){
+  let best=null, bd=CFG.hitLine*cam.scale;
+  for (const L of G.lines){
+    if (!L.path) continue;
+    for (let i=1;i<L.path.length;i++){
+      const d = segDist(x,y, L.path[i-1], L.path[i]);
+      if (d<bd){ bd=d; best=L; }
+    }
+  }
+  return best;
+}
+/* 当前拖拽正在「生长」的那一端：prepend 时是stations[0]，否则是末尾。
+   一次拖拽连多个站时，接上新站后生长端会前移，预览线要跟着换锚点。 */
+function dragTip(L, prepend){
+  if (!L || L.stations.length===0) return null;
+  return prepend ? L.stations[0] : L.stations[L.stations.length-1];
+}
+function segDist(px,py,a,b){
+  const dx=b.x-a.x, dy=b.y-a.y;
+  const l2 = dx*dx+dy*dy;
+  if (l2<1e-6) return dist(px,py,a.x,a.y);
+  let t = ((px-a.x)*dx + (py-a.y)*dy)/l2;
+  t = clamp(t,0,1);
+  return dist(px,py, a.x+t*dx, a.y+t*dy);
+}
+// 找出离 (x,y) 最近的一段相邻站点，返回插入位置（该段之后）
+function nearestInsertIndex(L,x,y,tol){
+  let best=-1, bd=tol;
+  for (let i=0;i<L.stations.length-1;i++){
+    const d = segDist(x,y, L.stations[i], L.stations[i+1]);
+    if (d<bd){ bd=d; best=i; }
+  }
+  return best<0 ? -1 : best+1;
+}
+// 返回站点所属的线路（未连接则返回 null）。站点可被多条线共享时取第一条。
+function lineOf(st){
+  for (const L of G.lines){ if (L.stations.indexOf(st) >= 0) return L; }
+  return null;
+}
+// 找到被「线段 (x1,y1)→(x2,y2)」横穿的某条已有线路。
+// 返回 { L, idx }：线 L 的 stations[idx]..stations[idx+1] 这段被横穿，应插到 idx+1。
+// exclude：要排除的线（如拖拽刚新建的、只含锚点的线）；excludeSt：锚点站，它原本所在的线
+// 也不应被判定为「相交插入」（否则把中段站拖到空白会误插回原线）。只认至少 2 站点的线。
+// 相交即判定，比「落点距线的距离阈值」灵敏得多——拖出的线只要穿过已有路网就能插入。
+function lineCrossedBySegment(x1,y1,x2,y2, exclude, excludeSt){
+  const A={x:x1,y:y1}, B={x:x2,y:y2};
+  for (const L of G.lines){
+    if (L===exclude) continue;
+    if (excludeSt && L.stations.indexOf(excludeSt) >= 0) continue;  // 锚点本就在该线上 → 跳过
+    if (L.stations.length<2) continue;
+    for (let i=0;i<L.stations.length-1;i++){
+      if (segIntersect(A,B, L.stations[i], L.stations[i+1])) return { L, idx:i };
+    }
+  }
+  return null;
+}
+
+cv.addEventListener('pointerdown', e=>{
+  Snd.init();
+  if (G.mode!=='play' && G.mode!=='overview') return;
+  try { cv.setPointerCapture(e.pointerId); } catch(err){ /* 部分环境不支持指针捕获 */ }
+  const p = evPos(e);
+  pointers.set(e.pointerId, { x:p.x, y:p.y });
+
+  // 双指：进入缩放/平移
+  if (pointers.size>=2){
+    drag = null; pan = null;
+    pinch = startPinch();
+    return;
+  }
+
+  const w = toWorld(p);
+
+  // —— 铁路系统总览模式：点击线路/站点查看详情；点空白则平移 ——
+  if (G.mode==='overview'){
+    const st = stationAt(w.x, w.y);
+    if (st){ selectEntityInOverview({ type:'station', ref:st }); return; }
+    const L = lineAt(w.x, w.y);
+    if (L){ selectEntityInOverview({ type:'line', ref:L }); return; }
+    pan = { sx:p.x, sy:p.y, camx:cam.x, camy:cam.y, moved:false, line:null };
+    return;
+  }
+
+  // 暂停时也允许编辑路网：下面的通用分支已能处理 ——
+  // 按到站点 → 进入 drag（连线/摘端点/插入），按到空白 → pan 平移。
+  // 双指缩放 / 滚轮缩放在此之前已处理，不受影响。
+
+  const st = stationAt(w.x, w.y);
+  if (!st){
+    // 空白处：准备平移；若手指未移动，抬起时视为「点击」来选择/取消选择
+    const L = lineAt(w.x, w.y);
+    pan = { sx:p.x, sy:p.y, camx:cam.x, camy:cam.y, moved:false, line:L };
+    return;
+  }
+
+  // 决定要编辑哪条线。手势约定（中段 = 已连线的非端点站）：
+  //   · 普通拖拽中段站点 → 从该站【拉出一条新路线】（本次需求）
+  //   · 按住 Shift 拖拽中段站点 → 保留旧行为：把落点站【插入】到该线路
+  // 端点站：普通拖拽=延长该线；Shift=强制新建路线。
+  let L = null, isNew = false, prepend = false, insertAt = -1;
+  const forceNew = e.shiftKey;
+
+  // st 所在的线路与下标（端点或中段都算，优先选中线）
+  let onLine = null, onIdx = -1;
+  if (G.selected && G.selected.stations.indexOf(st) >= 0){
+    onLine = G.selected; onIdx = G.selected.stations.indexOf(st);
+  } else {
+    for (const cand of G.lines){
+      const at = cand.stations.indexOf(st);
+      if (at >= 0){ onLine = cand; onIdx = at; break; }
+    }
+  }
+  const isEndpoint = onLine && (onIdx===0 || onIdx===onLine.stations.length-1);
+
+  if (forceNew){
+    // Shift：除非按在「中段站点」上（保留插入语义），否则一律新建路线
+    if (onLine && !isEndpoint){ L = onLine; insertAt = onIdx; }
+    // 否则 L 仍为 null → 下方走 createLine 新建
+  } else if (isEndpoint){
+    L = onLine;
+    prepend = (onIdx===0);
+  }
+  // 非 Shift 的非端点站（中段站 / 孤立站）→ L 仍为 null → 下方新建路线
+
+  if (!L){
+    L = createLine();
+    if (!L){
+      // 线路已用完：若是从「孤立站」直接拖出（非 Shift、不在任何线上），
+      // 进入「仅插入」模式（灰线）—— 允许把该站并入某条已有路线；
+      // 但若松手落在「不会并入已有路线」的位置（空白 / 另一个孤立站），
+      // 则视为「试图新建路线」，照常提示「线路已用完」。
+      if (onLine===null && !forceNew){
+        drag = { line:null, anchor:st, isNew:false, insertOnly:true,
+                 prepend:false, insertAt:-1, sx:p.x, sy:p.y, px:w.x, py:w.y,
+                 hover:null, moved:false, appended:[] };
+        return;
+      }
+      toast('线路已用完（送达乘客可解锁更多线路）'); return;
+    }
+    L.stations.push(st);
+    isNew = true;
+  } else if (insertAt < 0){
+    prepend = (L.stations[0]===st);
+  }
+
+  drag = { line:L, anchor:st, isNew, prepend, insertAt, sx:p.x, sy:p.y, px:w.x, py:w.y, hover:null, moved:false, appended:[] };
+  selectLine(L);
+});
+
+cv.addEventListener('pointermove', e=>{
+  const p = evPos(e);
+  if (pointers.has(e.pointerId)) pointers.set(e.pointerId, { x:p.x, y:p.y });
+
+  // 双指缩放
+  if (pinch && pointers.size>=2){ updatePinch(); return; }
+
+  if (drag){
+    const w = toWorld(p);
+    drag.px = w.x; drag.py = w.y;
+    if (dist(p.x,p.y, drag.sx, drag.sy) > 8) drag.moved = true;
+    // 仅插入模式（路线用完时从孤立站拖出，灰线）：不改动任何线路，只高亮「可并入的已有路线/站点」
+    if (drag.insertOnly){
+      const hc = stationAt(w.x, w.y);
+      drag.hover = (hc && hc!==drag.anchor && lineOf(hc)) ? hc : null;
+      // 实时标出「拖出的线段正横穿的已有线路」，让相交即插入更直观
+      const cr = lineCrossedBySegment(drag.anchor.x, drag.anchor.y, w.x, w.y, null, drag.anchor);
+      drag.crossLine = cr ? cr.L : null;
+      return;
+    }
+    // 插入模式（从线路中间站点拖出）：拖拽期间**不改动线路**，只高亮候选站点，等松手再插入
+    if (drag.insertAt >= 0){
+      const hc = stationAt(w.x, w.y);
+      drag.hover = (hc && hc!==drag.anchor && drag.line.stations.indexOf(hc)<0) ? hc : null;
+      return;
+    }
+    // —— 一次拖拽可连续连接多个站点 ——
+    // 指针靠近某个「还不在本线路上」的站点时立即吸附接入，然后从新站继续拖，
+    // 于是 A→B→C→D 一次拖完。离生长端太近不吸附，避免刚接上就反复吸同一个。
+    const tip = dragTip(drag.line, drag.prepend);
+    if (tip){
+      const cand = stationAt(w.x, w.y);
+      if (cand && cand!==tip
+          && drag.line.stations.indexOf(cand)<0
+          && dist(w.x, w.y, tip.x, tip.y) > CFG.stationR*1.5){
+        if (drag.prepend) drag.line.stations.unshift(cand);
+        else drag.line.stations.push(cand);
+        drag.appended.push(cand);
+        onStationConnected(cand, drag.appended.length-1);   // 音高随接入个数上行
+        rebuildLine(drag.line, true);   // 拖拽中不赠车，等 endDrag 统一赠
+        selectLine(drag.line);
+      }
+    }
+    const h = stationAt(w.x, w.y);
+    drag.hover = (h && drag.line.stations.indexOf(h)<0) ? h : null;
+    return;
+  }
+
+  if (pan){
+    const dx = p.x - pan.sx, dy = p.y - pan.sy;
+    if (Math.abs(dx)>3 || Math.abs(dy)>3) pan.moved = true;
+    // 不设平移上限：站点生成范围四周无限制，必须保证玩家永远追得到新站
+    cam.x = pan.camx + dx;
+    cam.y = pan.camy + dy;
+  }
+});
+
+/* 站点被接入线路时的反馈：一圈扩散涟漪 + 轻微弹一下 + 清脆上行音。
+   step = 本次拖拽已接入的第几个站（用于音高逐级上行，一次连多站就是一串上行音）。 */
+function onStationConnected(st, step){
+  if (!st) return;
+  st.ring  = 1;
+  st.pulse = 0.7;
+  Snd.connect(step || 0);
+}
+
+function endDrag(){
+  if (!drag) return;
+  const L = drag.line;
+  const anchor = drag.anchor;
+  const isNew = drag.isNew;
+  const prepend = drag.prepend;
+  const insertAt = drag.insertAt;
+  const moved = drag.moved;
+  const dropX = drag.px, dropY = drag.py;
+  const added = drag.appended.slice();
+
+  // 仅插入模式（路线用完时从孤立站拖出）：把锚点并入已有路线，否则视为「新建路线」被拒
+  if (drag.insertOnly){
+    drag = null;
+    const hEnd = stationAt(dropX, dropY);
+    // ① 落在某条已有路线的站点上 → 插入该站所在线的最近位置
+    if (hEnd && hEnd!==anchor){
+      const other = lineOf(hEnd);
+      if (other){
+        const at = nearestInsertIndex(other, dropX, dropY, 9999);
+        other.stations.splice(at<0 ? other.stations.length : at, 0, anchor);
+        onStationConnected(anchor, 0);
+        rebuildLine(other); selectLine(other); renderSlots();
+        toast('已把该站插入 ' + other.name);
+        return;
+      }
+    }
+    // ② 拖出的线段与某条已有路线相交 → 在相交处插入（核心：相交即插入，更灵敏）
+    const cross = lineCrossedBySegment(anchor.x, anchor.y, dropX, dropY, null, anchor);
+    if (cross){
+      const at = cross.idx + 1;                 // 插在相交段两站之间
+      cross.L.stations.splice(at, 0, anchor);
+      onStationConnected(anchor, 0);
+      rebuildLine(cross.L); selectLine(cross.L); renderSlots();
+      toast('已把该站插入 ' + cross.L.name);
+      return;
+    }
+    // ③ 落点在某条已有路线附近（线附近但没相交） → 仍按最近位置并入（兜底更宽容）
+    const ln = lineAt(dropX, dropY);
+    if (ln){
+      const at = nearestInsertIndex(ln, dropX, dropY, 70*cam.scale);
+      if (at>=0){
+        ln.stations.splice(at, 0, anchor);
+        onStationConnected(anchor, 0);
+        rebuildLine(ln); selectLine(ln); renderSlots();
+        toast('已把该站插入 ' + ln.name);
+        return;
+      }
+    }
+    // ③ 落在孤立站 / 空白 → 无法并入已有路线，等于「试图新建路线」→ 提示「线路已用完」
+    if ((hEnd && hEnd!==anchor) || moved){
+      toast('线路已用完（无法新建路线，可把新站拖到已有线路上并入）');
+    }
+    return;
+  }
+
+  drag = null;
+
+  // 松手时若正落在某个尚未接入的站点上（没来得及触发 pointermove），补接上
+  const hEnd = stationAt(dropX, dropY);
+
+  // 插入模式：把落点站点插到 anchor 之前（=线路中间两站之间）
+  if (insertAt >= 0){
+    if (hEnd && hEnd!==anchor && L.stations.indexOf(hEnd)<0){
+      L.stations.splice(insertAt, 0, hEnd);
+      onStationConnected(hEnd, 0);
+      rebuildLine(L);
+      selectLine(L);
+      renderSlots();
+      toast('已把该站插入 '+L.name);
+    }
+    // 落在空白/自己身上 → 视为取消，线路保持原样
+    return;
+  }
+
+  if (hEnd && L.stations.indexOf(hEnd)<0){
+    if (prepend) L.stations.unshift(hEnd);
+    else L.stations.push(hEnd);
+    added.push(hEnd);
+    onStationConnected(hEnd, added.length-1);   // 松手补接（没来得及触发 pointermove 的那次）
+  }
+
+  // 本次拖拽已经接入过站点 → 这次意图是「连线」，就地收尾，
+  // 不再走下面的「摘端点 / 插入别的线路 / 撤销新建」分支。
+  if (added.length){
+    rebuildLine(L);
+    selectLine(L);
+    renderSlots();
+    if (added.length>1) toast(L.name+' 一次连接了 '+added.length+' 个站点');
+    return;
+  }
+
+  // 把一个「孤立站点」拖到某条线路的中间 —— 直接插入该线路
+  if (moved && isNew && L.stations.length===1){
+    const cross = lineCrossedBySegment(anchor.x, anchor.y, dropX, dropY, L, anchor);
+    const other = cross ? cross.L : lineAt(dropX, dropY);
+    if (other && other!==L && other.stations.length>=2){
+      const at = cross ? cross.idx + 1 : nearestInsertIndex(other, dropX, dropY, 52*cam.scale);
+      if (at>=0){
+        other.stations.splice(at, 0, anchor);
+        onStationConnected(anchor, 0);
+        removeLine(L);
+        rebuildLine(other);
+        selectLine(other);
+        toast('已插入 ' + other.name);
+        return;
+      }
+    }
+  }
+
+  // 拖到空白处：若是端点则摘除该端点
+  if (moved){
+    const n = L.stations.length;
+    if (n>=3 && (L.stations[0]===anchor || L.stations[n-1]===anchor)){
+      if (L.stations[0]===anchor) L.stations.shift();
+      else L.stations.pop();
+      rebuildLine(L);
+      return;
+    }
+    // 拖到远离线路的空白：新建了一条只有锚点的线 -> 撤销
+    if (isNew && dist(dropX,dropY,anchor.x,anchor.y)>60){
+      removeLine(L);
+      toast('拖到另一个站点即可连线');
+      return;
+    }
+  }
+
+  if (isNew && L.stations.length<2) removeLine(L);
+}
+
+function endPointer(e){
+  pointers.delete(e.pointerId);
+  if (pinch){
+    if (pointers.size<2) pinch = null;
+    return;                 // 双指期间不触发线路编辑的结束
+  }
+  if (drag){ endDrag(); return; }
+  if (pan){
+    if (!pan.moved){
+      if (G.mode==='overview'){
+        // 总览模式点空白：数据栏滑出视野（不破坏选中态之外的任何东西）
+        const _ip = el('infoPanel');
+        _ip.classList.remove('swap');   // 清掉 ipSwap 的 fill 残留，否则动画末态会盖过 .gone
+        _ip.classList.add('gone');
+        G.selEntity = null; renderInfo(false);
+      } else if (pan.line){ selectLine(pan.line); }
+      else { G.selected = null; renderSlots(); }
+    }
+    pan = null;
+  }
+}
+cv.addEventListener('pointerup', endPointer);
+cv.addEventListener('pointercancel', endPointer);
+
+// 滚轮缩放（以光标为中心）
+cv.addEventListener('wheel', e=>{
+  if (G.mode!=='play' && G.mode!=='overview') return;
+  e.preventDefault();
+  const p = evPos(e);
+  zoomAt(p.x, p.y, e.deltaY<0 ? 1.12 : 1/1.12);
+}, { passive:false });
+
+function zoomAt(cx, cy, factor){
+  const ns = clamp(cam.scale*factor, CAM_MIN, CAM_MAX);
+  const k = ns/cam.scale;
+  cam.x = cx - (cx - cam.x)*k;
+  cam.y = cy - (cy - cam.y)*k;
+  cam.scale = ns;
+}
+
+function startPinch(){
+  const pts = [...pointers.values()];
+  const a = pts[0], b = pts[1];
+  return {
+    x0:(a.x+b.x)/2, y0:(a.y+b.y)/2,
+    d0:Math.max(1, dist(a.x,a.y,b.x,b.y)),
+    scale0:cam.scale, camx0:cam.x, camy0:cam.y
+  };
+}
+function updatePinch(){
+  const pts = [...pointers.values()];
+  const a = pts[0], b = pts[1];
+  const mx = (a.x+b.x)/2, my = (a.y+b.y)/2;
+  const d = Math.max(1, dist(a.x,a.y,b.x,b.y));
+  const ns = clamp(cam.scale0 * (d/pinch.d0), CAM_MIN, CAM_MAX);
+  const wx = (pinch.x0 - pinch.camx0)/pinch.scale0;
+  const wy = (pinch.y0 - pinch.camy0)/pinch.scale0;
+  cam.scale = ns;
+  cam.x = mx - wx*ns;
+  cam.y = my - wy*ns;
+}
+
+// 右键：选中线路（不做破坏性操作），删除请用按钮或 Delete 键
+cv.addEventListener('contextmenu', e=>{
+  e.preventDefault();
+  if (G.mode!=='play') return;
+  const p = evPos(e);
+  const w = toWorld(p);
+  const L = lineAt(w.x, w.y);
+  if (L){ selectLine(L); toast('已选择 '+L.name+' ，按 Delete 删除'); }
+  else { G.selected = null; renderSlots(); }
+});
+
+document.addEventListener('keydown', e=>{
+  if (e.code==='Space'){ e.preventDefault(); togglePause(); }
+  if (e.key==='1'||e.key==='2'||e.key==='3'||e.key==='4'||e.key==='5'||e.key==='6'||e.key==='7'||e.key==='8'){
+    const i = +e.key-1;
+    const L = G.lines.find(l=>l.colorIdx===i);
+    if (L) selectLine(L);
+  }
+  if (e.key==='Delete' || e.key==='Backspace'){
+    if (G.selected) { removeLine(G.selected); renderSlots(); }
+  }
+  if (e.key==='t' || e.key==='T'){ addTrainToSelected(); }
+});
+
+/* =========================================================
+   10. UI
+   ========================================================= */
+const el = id => document.getElementById(id);
+
+function selectLine(L){
+  G.selected = L;
+  renderSlots();
+}
+
+function renderSlots(){
+  const box = el('slots');
+  box.innerHTML = '';
+  for (let i=0;i<CFG.maxLines;i++){
+    const locked = i >= G.unlockedLines;
+    const L = G.lines.find(l=>l.colorIdx===i) || null;
+    const d = document.createElement('div');
+    d.className = 'slot' + (locked?' locked':'') + (L===G.selected && L?' sel':'') + (!L && !locked?' empty':'');
+    d._idx = i;                                  // 供「新增路线!」对话框定位对应槽位
+    const dot = document.createElement('span');
+    dot.className='dot';
+    if (!locked) dot.style.background = COLORS[i];
+    // 空槽位（路线未建立、已解锁）的虚线圆圈用对应线路颜色，而非中性灰
+    if (!L && !locked) dot.style.border = '2px dashed ' + COLORS[i];
+    d.appendChild(dot);
+    if (L && L.trains.length){
+      const nt = document.createElement('span');
+      nt.className='nt';
+      nt.textContent = '×'+L.trains.length;            // 显示该线列车数（每列独立运行）
+      d.appendChild(nt);
+    }
+    d.title = locked ? '未解锁' : (L ? COLOR_NAMES[i]+'（'+L.stations.length+' 站）' : COLOR_NAMES[i]+'（空）');
+    if (!locked && L){
+      d.onclick = ()=>{ selectLine(L); toast('已选择 '+COLOR_NAMES[i]); };
+    }
+    box.appendChild(d);
+  }
+  el('uLines').textContent = G.lines.length + '/' + G.unlockedLines;
+  el('uPool').textContent = G.trainPool;
+}
+
+function addTrainToSelected(){
+  if (G.mode!=='play') return;
+  const L = G.selected;
+  if (!L){ toast('先选择一条线路'); return; }
+  if (L.stations.length<2){ toast('线路至少需要 2 个站点'); return; }
+  if (G.trainPool<=0){ toast('没有备用列车了'); return; }
+  if (addTrain(L,false)){ toast('已为 '+L.name+' 增加列车'); renderSlots(); Snd.newline(); }
+}
+
+/* 减少列车：从选中线路撤掉一列车，回收进备用池（可再分配到别的线路）。
+   车上乘客原路退回各自出发站，不丢失。线路至少保留 1 列。 */
+function removeTrainFromSelected(){
+  if (G.mode!=='play') return;
+  const L = G.selected;
+  if (!L){ toast('先选择一条线路'); return; }
+  if (L.trains.length<=1){ toast(L.name+' 至少保留 1 列车'); return; }
+  const t = L.trains.pop();
+  const n = dumpTrainPassengers(t);
+  clearAnims();                    // 车厢已撤除，清掉残留动效
+  G.trainPool++;                       // 回收进备用池：净增减为 0，仅作重新分配
+  renderSlots();
+  toast('已回收 '+L.name+' 1 列车' + (n ? '，'+n+' 名乘客返回出发站' : ''));
+}
+
+el('btnTrain').onclick = addTrainToSelected;
+el('btnTrainMinus').onclick = removeTrainFromSelected;
+// 铁路系统总览模式：顶栏按钮
+el('ovHeat').onclick = ()=>{
+  toggleHeat();
+  const b = el('ovHeat');
+  b.textContent = '热力图：'+(G.heatmap?'开':'关');
+  b.classList.toggle('on', G.heatmap);
+  // 按下回弹动效（先归一再加，确保每次点击都重新触发）
+  b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop');
+};
+el('ovBack').onclick = exitOverview;
+el('btnDel').onclick = ()=>{
+  if (G.mode!=='play') return;
+  if (!G.selected){ toast('先选择一条线路'); return; }
+  const n = G.selected.name;
+  const back = removeLine(G.selected);
+  renderSlots();
+  toast('已删除 '+n
+    + (back.trains     ? '，'+back.trains+' 列车已归还备用池' : '')
+    + (back.passengers ? '，'+back.passengers+' 名乘客已退回上一个站' : ''));
+};
+el('btnPause').onclick = togglePause;
+el('btnSpeed').onclick = ()=>{
+  G.speed = G.speed===1?2:(G.speed===2?3:1);
+  el('btnSpeed').textContent = '×'+G.speed;
+};
+el('muteBtn').onclick = ()=>{
+  Snd.muted = !Snd.muted;
+  el('muteBtn').textContent = Snd.muted ? '🔇 静音' : '🔊 音效';
+  if (!Snd.muted) Snd.init();
+};
+el('bgmBtn').onclick = ()=>{
+  bgmMuted = !bgmMuted;
+  if (bgmEl) bgmEl.muted = bgmMuted;
+  el('bgmBtn').textContent = bgmMuted ? '🔇 BGM' : '🎵 BGM';
+};
+el('zIn').onclick   = ()=> zoomAt(W/2, H/2, 1.2);
+el('zOut').onclick  = ()=> zoomAt(W/2, H/2, 1/1.2);
+el('zReset').onclick= ()=>{ cam.x=0; cam.y=0; cam.scale=1; };
+
+function togglePause(){
+  if (G.mode!=='play') return;
+  G.paused = !G.paused;
+  el('btnPause').textContent = G.paused ? '继续' : '暂停';
+  if (G.paused){
+    // 进入编辑模式：先把在途乘客全部送回各自出发站。
+    // 这样玩家改线（拖拽/删线/加线）时，不会有乘客被留在旧路径或已删除的线路上。
+    const n = dumpAllPassengers();
+    if (n) toast('已暂停 · '+n+' 名在途乘客返回出发站');
+  }
+}
+
+let toastTimer = null;
+function toast(msg){
+  const t = el('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> t.classList.remove('show'), 1600);
+}
+
+/* 新增一条路线时，在底部路线栏「对应路线槽位」正上方弹出一个对话框，
+   文案「新增路线!」，背景色 = 该路线颜色。约 1.4s 后淡出自动移除。 */
+function popTextColor(hex){
+  const n = parseInt(hex.slice(1),16);
+  const r=(n>>16)&255, g=(n>>8)&255, b=n&255;
+  const lum = (0.299*r + 0.587*g + 0.114*b)/255;   // 感知亮度，决定文字用深/浅
+  return lum>0.62 ? '#222' : '#fff';
+}
+function showNewLinePopup(colorIdx){
+  if (colorIdx == null) return;
+  const box = el('slots');
+  if (typeof box.querySelector !== 'function' && !box.children) return;  // 无头环境跳过
+  const col = COLORS[colorIdx];
+  const pop = document.createElement('div');
+  pop.className = 'newline-pop';
+  pop.textContent = '新增路线!';
+  pop.style.background = col;
+  pop.style.borderTopColor = col;       // 让下方小三角与气泡同色
+  pop.style.color = popTextColor(col);
+  // 定位到对应槽位（用自定义 _idx 匹配，headless/真实 DOM 通用）
+  let slot = null;
+  const kids = box.children || [];
+  for (const c of kids){ if (c._idx === colorIdx){ slot = c; break; } }
+  if (slot && typeof box.getBoundingClientRect==='function' && typeof slot.getBoundingClientRect==='function'){
+    const br = box.getBoundingClientRect();
+    const sr = slot.getBoundingClientRect();
+    pop.style.left = (sr.left + sr.width/2 - br.left) + 'px';
+    pop.style.top  = (sr.top - br.top - 8) + 'px';
+  } else {
+    pop.style.left = '50%';
+    pop.style.top  = '-8px';
+  }
+  box.appendChild(pop);
+  // 夹取到视口内，避免槽位贴边时对话框被裁掉（内容仍指向对应槽位）
+  if (typeof pop.getBoundingClientRect==='function' && typeof box.getBoundingClientRect==='function'
+      && typeof window!=='undefined' && window.innerWidth){
+    const bw = box.getBoundingClientRect();
+    const half = (pop.offsetWidth||0)/2;
+    const min = 8 + half, max = window.innerWidth - 8 - half;
+    let center = bw.left + (parseFloat(pop.style.left)||0);   // 期望中心（页面坐标）
+    center = Math.max(min, Math.min(max, center));
+    pop.style.left = (center - bw.left) + 'px';
+  }
+  setTimeout(()=>{
+    pop.classList.add('out');
+    setTimeout(()=>{
+      if (pop.parentNode && pop.parentNode.removeChild) pop.parentNode.removeChild(pop);
+      else if (pop.remove) pop.remove();
+    }, 260);
+  }, 1400);
+}
+
+/* =========================================================
+   11. 开始 / 结束
+   ========================================================= */
+// 兜底：保证河流两侧都至少有一个站点（开局站点可能因极端随机漏掉某一侧）
+function ensureRiverSides(){
+  if (!river) return;
+  for (let attempt=0; attempt<6; attempt++){
+    let hasPos=false, hasNeg=false;
+    for (const s of G.stations){
+      const sd = riverSide(s.x, s.y);
+      if (sd > 0) hasPos = true; else if (sd < 0) hasNeg = true;
+    }
+    if (hasPos && hasNeg) return;
+    if (!hasPos) spawnStation(pick(COMMON), 1);
+    if (!hasNeg)  spawnStation(pick(COMMON), -1);
+  }
+}
+
+function startGame(crazy){
+  clearTimeout(focusTimer);          // 防止上一次结束的延迟弹卡打断新局
+  G.mode='play'; G.paused=false; G.speed=1; G.crazy=!!crazy;
+  G.stations=[]; G.lines=[]; G.unlockedLines = G.crazy ? CFG.maxLines : CFG.startLines;  // 疯狂模式：开局所有路线全解锁
+  G.trainPool=0; G.delivered=0; G.elapsed=0; G.tunnelCap=CFG.tunnelCapStart;
+  G.passengerTimer = G.crazy ? 0.6 : 1.5;          // 疯狂模式：开局乘客就来得快
+  G.stationTimer   = G.crazy ? rand(3,5) : rand(9,15);   // 与 updateSpawn 里的后续间隔保持一致
+  G.planeTimer = CFG.planeFirst;                     // 第一架飞机的延迟
+  G.airportTimer = rand(CFG.airportGapMin, CFG.airportGapMax);   // 下一座机场
+  G.planes = [];
+  G.selected=null; G.nextStationId=0;
+  spawnCursor = 0;                 // 新一局重置乘客轮转游标
+  clearAnims();
+  drag=null; pan=null; pinch=null; pointers.clear();
+  cam.x=0; cam.y=0; cam.scale=1; camTween=null;
+  el('btnPause').textContent='暂停';
+  el('btnSpeed').textContent='×1';
+  // 注意：这里**不要**先 remove('reveal')——那会让遮罩瞬间从结算态的 .28 半透明
+  // 跳回 .82 不透明、卡片也从底部弹回中央，观感是一次硬跳。
+  // 让遮罩保持当前外观原地淡出，'reveal' 由 fadeOutOverlay() 的 finish() 在淡出结束后再摘。
+  // 防御性重置：清掉上一局「结束/总览」的残留（总览 UI、热力图、选中、礼炮粒子）
+  G.selEntity=null; G.heatmap=false; heatmapAlpha=0; confetti=[];
+  if (fctx) fctx.clearRect(0,0,W,H);
+  if (document.body) document.body.classList.remove('ov');
+  const _ob=el('ovbar');     if (_ob && _ob.classList) _ob.classList.add('hidden');
+  const _ip=el('infoPanel'); if (_ip && _ip.classList) _ip.classList.add('hidden');
+  const _oh=el('ovHeat');    if (_oh){ _oh.textContent='热力图：关'; _oh.classList.remove('on'); }
+  const _ot=el('ovtrans');   if (_ot && _ot.classList) _ot.classList.remove('go');
+  fadeOutOverlay();            // 遮罩淡出 → 游戏画面淡入
+
+  buildRiver();   // 每次开局重新随机生成河流形状（两侧远超屏幕，看不到尽头）
+
+  // 初始站点：保证三种常用图形都有，共 4 个，且不与河流重叠。
+  // 同时强制前两个站点分置河流两侧（保证开局河流两侧至少各有一个站）。
+  const shapes = COMMON.slice();
+  for (let i=shapes.length-1;i>0;i--){ const j=(Math.random()*(i+1))|0; const t=shapes[i]; shapes[i]=shapes[j]; shapes[j]=t; }
+  const order = shapes.slice();
+  spawnQuiet = true;                         // 初始这批随河流入场一起出现，不逐个播音
+  if (G.crazy){
+    // 疯狂大都市模式：开局 8 站 —— 6 普通（三种常用图形都覆盖）+ 2 机场，两岸铺开
+    spawnStation(order[0], 1);                       // 河的一侧
+    spawnStation(order[1], -1);                      // 河的另一侧
+    spawnStation(order[2] || pick(COMMON), 1);
+    spawnStation(pick(COMMON), -1);
+    spawnStation(pick(COMMON), 0);
+    spawnStation(pick(COMMON), 0);
+    spawnStation('airport', 1);                      // 开局自带两座机场
+    spawnStation('airport', -1);
+    ensureRiverSides();
+    if (airports().length < 2){                      // 兜底：极端情况下再补，保证「开局必有两座机场」
+      while (airports().length < 2){ const st = spawnStation('airport', 0); if (!st) break; }
+    }
+  } else {
+    // 开局默认带一座机场（飞机标志，容量 16）。机场放在最后生成 ——
+    // 前 CFG.startStations-1 个仍是三种常用图形，保证「开局三种常用站都有」。
+    spawnStation(order[0], 1);                 // 河的一侧
+    spawnStation(order[1], -1);                // 河的另一侧
+    for (let i=2;i<CFG.startStations-1;i++){
+      spawnStation(i<3 ? order[i] : pick(COMMON));
+    }
+    spawnStation('airport', 0);                // 开局自带一座机场
+    ensureRiverSides();                        // 兜底：若某侧因极端情况仍无站，补一个
+    // 极端情况下机场没生成成功（找不到不压河的点）→ 再补一次，保证「开局必有一座机场」
+    if (!airports().length) spawnStation('airport', 0);
+  }
+  spawnQuiet = false;
+  renderSlots();
+  Snd.init();
+  // BGM：仅疯狂大都市模式开局播放（正常模式不播）
+  if (G.crazy) startBGM(); else stopBGM();
+  // BGM 静音按钮也只有疯狂模式才有（正常模式根本不播 BGM，按钮无意义）
+  // 注意：用 add/remove 而非 classList.toggle(cls,force) —— 无头桩的 classList 是 Set，不支持第二参数
+  const _bb = el('bgmBtn');
+  if (_bb && _bb.classList){ if (G.crazy) _bb.classList.remove('hidden'); else _bb.classList.add('hidden'); }
+}
+
+function gameOver(failed){
+  if (G.mode==='over') return;
+  G.mode='over';
+  stopBGM();                 // 失败结算不再播 BGM
+  Snd.over();
+  focusOnStation(failed);          // 先把镜头推到爆满站点
+  const days = Math.floor(G.elapsed/45)+1;     // 1 天 = 45 秒（与 HUD 一致）
+  const m = Math.floor(G.elapsed/60), s = Math.floor(G.elapsed%60);
+  const mm = String(m).padStart(2,'0'), ss = String(s).padStart(2,'0');
+  const rank = getRank(G.delivered);
+  // 疯狂大都市模式：结算栏侧边用回旋针夹着「疯狂大都市模式」卡片
+  const crazyTag = G.crazy ?
+    '<div class="crazytag" aria-hidden="true">'+
+      '<svg class="clip" viewBox="0 0 32 84" width="34" height="84">'+
+        '<path d="M11 16 V58 a9 9 0 0 0 18 0 V22 a5 5 0 0 0 -10 0 V52" '+
+              'fill="none" stroke="#6f7883" stroke-width="3.6" stroke-linecap="round"/>'+
+        '<path d="M11 16 V58 a9 9 0 0 0 18 0 V22 a5 5 0 0 0 -10 0 V52" '+
+              'fill="none" stroke="#c3cad2" stroke-width="1" stroke-linecap="round" opacity=".75"/>'+
+      '</svg>'+
+      '<div class="tag">疯狂大都市模式</div>'+
+    '</div>' : '';
+  const html =
+    '<div class="stage st-head">'+
+      '<h1>有站点爆满了<span>!</span></h1>'+
+      '<p class="sub">本次运行结束,快来看看你的成果吧!</p>'+
+    '</div>'+
+    '<div class="stage st-rank">'+
+      '<div class="rankbadge rank-'+rank.tier+'">'+rank.name+'</div>'+
+    '</div>'+
+    '<div class="stage st-stats">'+
+      '<div class="finalrow">'+
+        '<div><b>'+G.delivered+'</b><small>总送达人数</small></div>'+
+        '<div><b>'+days+'</b><small>总运营天数</small></div>'+
+        '<div><b>'+mm+':'+ss+'</b><small>运营时长</small></div>'+
+        '<div><b>'+G.lines.length+'</b><small>线路数</small></div>'+
+      '</div>'+
+      '<div class="ctarow">'+
+        '<button class="cta" id="ovEnter">铁路系统总览</button>'+
+        '<button class="cta alt" id="again">再来一次</button>'+
+      '</div>'+
+    '</div>'+
+    crazyTag;
+  // 镜头推近后再让结算卡分批从底部滑出（标题 → 荣誉 → 数据）
+  setTimeout(()=>{
+    if (G.mode!=='over') return;
+    el('card').innerHTML = html;
+    el('overlay').classList.remove('fadeout');
+    el('overlay').classList.add('show','reveal');
+    document.getElementById('again').onclick = ()=> startGame(G.crazy);   // 按当前模式重开（疯狂模式再来仍是疯狂模式）
+    document.getElementById('ovEnter').onclick = enterOverview;
+    // 荣誉阶段（第二组滑出）才放彩带礼炮
+    setTimeout(()=>{ if (G.mode==='over') spawnConfetti(rank.tier); }, 480);
+  }, 900);
+}
+
+/* =========================================================
+   11b. 结算：荣誉称号 + 铁路系统总览模式 + 热力图 + 彩带礼炮
+   ========================================================= */
+// 按总送达人数映射荣誉称号与配色档位（铜 / 银 / 金 / 金闪）
+function getRank(d){
+  if (d>2600) return { name:'城市动脉传奇设计师', tier:'goldflash' };
+  if (d>1200) return { name:'地铁运营总指挥',     tier:'gold' };
+  if (d>800)  return { name:'线路设计主管',       tier:'gold' };
+  if (d>500)  return { name:'地铁架构师',         tier:'gold' };
+  if (d>300)  return { name:'枢纽主管',           tier:'gold' };
+  if (d>100)  return { name:'调度专员',           tier:'gold' };
+  if (d>50)   return { name:'线路助理',           tier:'bronze' };
+  return { name:'实习站务员', tier:'bronze' };
+}
+
+// —— 过场幕布：擦屏盖住场景切换的瞬间（z 高于结算卡）——
+function playTrans(){
+  const t = el('ovtrans'); if (!t) return;
+  t.classList.remove('go');
+  void t.offsetWidth;        // 强制回流，确保动画每次都能重启
+  t.classList.add('go');
+}
+// —— 铁路系统总览模式：游戏结束后进入，看全局网络、点线路/站点看详情、开热力图 ——
+function enterOverview(){
+  if (G.mode!=='over' && G.mode!=='overview') return;
+  playTrans();                 // 过场：幕布擦入再擦出，露出总览
+  G.mode='overview';
+  if (document.body) document.body.classList.add('ov');
+  el('overlay').classList.remove('show','reveal','fadeout');
+  el('ovbar').classList.remove('hidden');
+  el('infoPanel').classList.remove('hidden','gone');
+  G.selEntity = null;
+  confetti = [];                       // 清掉结算残留的礼炮粒子
+  if (fctx) fctx.clearRect(0,0,W,H);
+  fitNetworkView();
+  renderInfo();
+}
+function exitOverview(){
+  playTrans();                 // 过场：幕布擦入再擦出，露出结算卡
+  G.mode='over';
+  G.heatmap=false; heatmapAlpha=0;   // 离开总览时收掉热力图，下次进入是干净状态
+  const _oh=el('ovHeat'); if (_oh){ _oh.textContent='热力图：关'; _oh.classList.remove('on'); }
+  if (document.body) document.body.classList.remove('ov');
+  el('ovbar').classList.add('hidden');
+  el('infoPanel').classList.add('hidden');
+  el('infoPanel').classList.remove('gone');
+  el('overlay').classList.add('show','reveal');
+}
+function toggleHeat(){ G.heatmap = !G.heatmap; renderInfo(false); }
+// 相机适配全部站点：居中并缩放到能容纳整张网
+function fitNetworkView(){
+  if (!G.stations.length){ cam.x=W/2; cam.y=H/2; cam.scale=1; camTween=null; return; }
+  let minx=1e9,miny=1e9,maxx=-1e9,maxy=-1e9;
+  for (const st of G.stations){
+    minx=Math.min(minx,st.x); miny=Math.min(miny,st.y);
+    maxx=Math.max(maxx,st.x); maxy=Math.max(maxy,st.y);
+  }
+  const pad=130;
+  const bw=(maxx-minx)+pad*2, bh=(maxy-miny)+pad*2;
+  const s=Math.min(W/bw, H/bh, CAM_MAX);
+  const cx=(minx+maxx)/2, cy=(miny+maxy)/2;
+  cam.scale = clamp(s, CAM_MIN, CAM_MAX);
+  cam.x = W/2 - cx*cam.scale;
+  cam.y = H/2 - cy*cam.scale;
+  camTween = null;
+}
+// 线路聚合指标（换乘量 / 平均等待 / 平均拥堵）
+function lineMetrics(L){
+  let waitSum=0, waitCount=0, peakSum=0, n=0;
+  for (const st of L.stations){
+    waitSum+=st.stats.waitSum; waitCount+=st.stats.waitCount; peakSum+=st.stats.peak; n++;
+  }
+  return {
+    rides:L.stats.rides, transfer:L.stats.transfer,
+    avgWait: waitCount? waitSum/waitCount : 0,
+    avgPeak: n? peakSum/n : 0
+  };
+}
+function fmtWait(sec){ return (sec>0? sec.toFixed(1):'0.0')+'s'; }
+function metricRow(k,v){
+  return '<div class="ip-metric"><span>'+k+'</span><b>'+v+'</b></div>';
+}
+function shapeName(s){
+  return ({circle:'圆形',triangle:'三角',square:'方形',diamond:'菱形',star:'星形',airport:'机场'})[s]||s;
+}
+// 总览模式选中站点/线路：若数据栏已滑走则滑回（不重播内容动效）；已显示则重播切换动效
+function selectEntityInOverview(ent){
+  G.selEntity = ent;
+  const ip = el('infoPanel');
+  if (ip.classList.contains('gone')){ ip.classList.remove('gone'); renderInfo(false); }
+  else renderInfo(true);
+}
+// 详情面板：网络总览 + 选中线路/站点的四项指标
+function renderInfo(animate){
+  const ip = el('infoPanel');
+  let h = '<div class="ip-head">铁路系统总览</div>';
+  h += '<div class="ip-sum">总送达 <b>'+G.delivered+'</b> · 线路 <b>'+G.lines.length+'</b> · 站点 <b>'+G.stations.length+'</b></div>';
+  if (!G.selEntity){
+    h += '<div class="ip-hint">点击线路或站点查看详情：<br>客流量 · 换乘量 · 拥堵度 · 平均等待时间<br><br>右上角可开启「客流压力热力图」。</div>';
+    ip.innerHTML = h; return;
+  }
+  if (G.selEntity.type==='station'){
+    const st = G.selEntity.ref;
+    const flow = st.stats.spawn + st.stats.transfer + st.stats.delivered;
+    const cap = stationCapOf(st);                       // 机场 16 / 普通 8
+    const peakPct = Math.round(st.stats.peak / cap * 100);
+    h += '<div class="ip-title"><span class="ip-dot"></span>'+shapeName(st.shape)+'站</div>';
+    h += metricRow('客流量', flow+' 人');
+    h += metricRow('换乘量', st.stats.transfer+' 人');
+    h += metricRow('拥堵度', '峰值 '+st.stats.peak+'/'+cap+'（'+peakPct+'%）');
+    h += metricRow('平均等待时间', fmtWait(st.stats.waitCount? st.stats.waitSum/st.stats.waitCount : 0));
+  } else {
+    const L = G.selEntity.ref;
+    const mt = lineMetrics(L);
+    const peakPct = Math.round(mt.avgPeak / CFG.stationCap * 100);
+    h += '<div class="ip-title"><span class="ip-dot" style="background:'+L.color+'"></span>'+L.name+'</div>';
+    h += '<div class="ip-sub">'+L.stations.length+' 个站点</div>';
+    h += metricRow('客流量', mt.rides+' 人');
+    h += metricRow('换乘量', mt.transfer+' 人');
+    h += metricRow('拥堵度', '平均峰值 '+mt.avgPeak.toFixed(1)+'/'+CFG.stationCap+'（'+peakPct+'%）');
+    h += metricRow('平均等待时间', fmtWait(mt.avgWait));
+  }
+  ip.innerHTML = h;
+  // 切换选中对象时让数据栏做一次淡入+轻微横移，强调「换了一张数据」
+  if (animate){
+    ip.classList.remove('swap'); void ip.offsetWidth; ip.classList.add('swap');
+  }
+}
+// 热力图：以站点峰值排队为压力，径向渐变叠加（蓝→青→绿→黄→红，additive）
+function drawHeatmap(){
+  if (heatmapAlpha<=0) return;
+  let maxPeak=0;
+  for (const st of G.stations) maxPeak=Math.max(maxPeak, st.stats.peak);
+  if (maxPeak<=0) return;
+  ctx.save();
+  // 用普通 alpha 叠加（而非 additive）：在浅色底图上 additive 会迅速饱和成白色，
+  // 蓝端几乎看不出颜色；普通叠加能让蓝→红的色相清晰可辨。
+  ctx.globalAlpha = heatmapAlpha;
+  for (const st of G.stations){
+    const t = clamp(st.stats.peak/maxPeak, 0, 1);
+    if (t<=0) continue;
+    const R = 30 + 90*t;
+    const g = ctx.createRadialGradient(st.x,st.y,0, st.x,st.y,R);
+    const hue = 240*(1-t);            // 蓝(240)→青→绿→黄→红(0)，压力越高越红
+    g.addColorStop(0, 'hsla('+hue+',92%,52%,'+(0.60*t+0.22)+')');
+    g.addColorStop(0.6, 'hsla('+hue+',92%,52%,'+(0.26*t+0.10)+')');
+    g.addColorStop(1, 'hsla('+hue+',92%,52%,0)');
+    ctx.fillStyle=g;
+    ctx.beginPath(); ctx.arc(st.x,st.y,R,0,TAU); ctx.fill();
+  }
+  ctx.restore();
+}
+
+// —— 彩带礼炮（结算庆祝）——
+let confetti = [];
+function spawnConfetti(tier){
+  confetti = [];
+  const golden = (tier==='gold' || tier==='goldflash');
+  const colors = golden
+    ? ['#FFD700','#FFC107','#FFE082','#FFF8E1','#E0A531']
+    : ['#FF5A5F','#5AC8FA','#FFD166','#06D6A0','#B388FF','#FF8C42'];
+  if (tier==='goldflash') colors.push('#FFFBE0');
+  const corners = [[46,H-16],[W-46,H-16]];
+  const N = golden? 170 : 140;
+  for (let c=0;c<2;c++){
+    const ox=corners[c][0], oy=corners[c][1];
+    const dir = c===0 ? 1 : -1;        // 左炮向右上、右炮向左上
+    for (let i=0;i<N/2;i++){
+      const base = -Math.PI/2 + dir*rand(0.15,0.85);
+      const sp = rand(380,760);
+      confetti.push({ x:ox, y:oy, vx:Math.cos(base)*sp, vy:Math.sin(base)*sp,
+        rot:rand(0,TAU), vr:rand(-9,9), w:rand(5,12), h:rand(9,20),
+        color:pick(colors), life:0, max:rand(2.2,3.8) });
+    }
+  }
+}
+function updateConfetti(dt){
+  for (let i=confetti.length-1;i>=0;i--){
+    const p=confetti[i];
+    p.life+=dt; p.vy += 540*dt;
+    p.x += p.vx*dt; p.y += p.vy*dt; p.rot += p.vr*dt;
+    if (p.life>=p.max || p.y>H+50) confetti.splice(i,1);
+  }
+}
+function drawConfetti(){
+  if (!confetti.length || !fctx) return;
+  fctx.clearRect(0,0,W,H);
+  fctx.save();
+  for (const p of confetti){
+    const a = clamp(1 - p.life/p.max, 0, 1);
+    fctx.globalAlpha = a;
+    fctx.save();
+    fctx.translate(p.x,p.y); fctx.rotate(p.rot);
+    fctx.fillStyle = p.color;
+    fctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+    fctx.restore();
+  }
+  fctx.restore();
+}
+
+// 镜头平滑推近到指定站点（爆满时聚焦该站；否则回到默认视角）
+function focusOnStation(st){
+  clearTimeout(focusTimer);
+  if (!st){ camTween = null; return; }
+  const targetScale = 2.1;
+  const focusY = H * 0.30;          // 爆满站停在屏幕中上方，给底部结算卡让出空间
+  camTween = {
+    t:0, dur:0.85,
+    x0:cam.x, y0:cam.y, s0:cam.scale,
+    x1:W/2 - st.x*targetScale, y1:focusY - st.y*targetScale,
+    s1:targetScale,
+  };
+}
+let focusTimer = null;
+
+/* ---- 开始界面的点阵标题：METRO ENGINEER ----
+   5×7 点阵字库（1=亮格）。不引外部字体，用 box-shadow 把每个亮格「印」成一个像素方块，
+   这样在任何浏览器/离线环境下都是真正的像素风，而不是靠字体碰运气。 */
+const PIXFONT = {
+  M:['10001','11011','10101','10101','10001','10001','10001'],
+  E:['11111','10000','10000','11110','10000','10000','11111'],
+  T:['11111','00100','00100','00100','00100','00100','00100'],
+  R:['11110','10001','10001','11110','10100','10010','10001'],
+  O:['01110','10001','10001','10001','10001','10001','01110'],
+  N:['10001','11001','10101','10011','10001','10001','10001'],
+  G:['01110','10001','10000','10111','10001','10001','01111'],
+  I:['11111','00100','00100','00100','00100','00100','11111'],
+};
+// METRO 五个字母各用一种颜色（像地铁线路图），ENGINEER 统一白色
+const METRO_COLORS = { M:'#E8453C', E:'#F5A623', T:'#2ECC71', R:'#3DA5F4', O:'#B06BE8' };
+/* S = 一个像素的边长。
+   血泪：S（阴影步进）与元素实际尺寸必须**严格相等**，否则相邻像素之间会出现 1px 缝隙，
+   整行字看起来像「串珠/虚线」而不是实心像素块。
+   （曾把 HUD 的 --px 改成 3px 却忘了同步 S=4 → HUD 标题变成点状，截图才看出来。）
+   所以这里让 JS 同时决定「元素尺寸」和「步进」：把 --px 内联写进 style，
+   从结构上杜绝 CSS 与 JS 不同步。 */
+function pixelLetter(ch, color, S){
+  const g = PIXFONT[ch];
+  if (!g) return '';
+  const out = [];
+  for (let r=0;r<g.length;r++)
+    for (let c=0;c<g[r].length;c++)
+      if (g[r][c]==='1') out.push((c*S)+'px '+(r*S)+'px 0 0 '+color);
+  // .pxbox 占位 5×7 字模盒，.px 自身只有 1 个像素大（box-shadow 复制的是元素盒）
+  return '<span class="pxbox"><i class="px" style="box-shadow:'+out.join(',')+'"></i></span>';
+}
+// px = 像素边长（同时写进 --px 和阴影步进）；extraClass 可传 'mini' 等修饰类
+function pixelTitle(px, extraClass){
+  const S = px || 4;
+  let h = '<div class="pixelTitle'+(extraClass?' '+extraClass:'')+'" style="--px:'+S+'px">';
+  for (const ch of 'METRO') h += pixelLetter(ch, METRO_COLORS[ch]||'#fff', S);
+  h += '<span class="pxgap"></span>';
+  for (const ch of 'ENGINEER') h += pixelLetter(ch, '#FFFFFF', S);
+  return h + '</div>';
+}
+
+/* 开始界面标题面板的宽度公式（px = 像素边长）。
+   一行排版：14 个 flex 子项（13 字母 + 1 词间空隙）→ **13 个 gap**，
+     13 字母 × 5 格 = 65·px，gap 13·px，词间空隙 4·px  => 内容 82·px，加左右 padding。
+   两行排版（窄屏）：把词间空隙改成 100% 宽，把 ENGINEER 挤到第二行，
+     最长的一行是 ENGINEER = 8 字母 × 5 格 + 7 个 gap = 47·px，加左右 padding。
+   **padX 必须与 CSS 里那条 @media(max-width:420px) 的 padding 一致**，
+   否则公式会在临界宽度上算错、标题差几个像素塞不下。
+   为什么不用 transform:scale 把标题缩小：缩放会把 box-shadow 画出的像素插值糊掉，
+   pixel 风就毁了；而且 px 降到 2 以下字母只有 10×14px，1px 细笔画会糊成一团（实测不可读）。
+   所以宁可**换行**也不缩放 —— 两行时仍能用 px=4 的大字母。 */
+function titlePadX(){ return W<=420 ? 10 : 16; }
+function titleWidth(px){ return 82*px + 2*titlePadX(); }        // 一行
+function titleWidthTwo(px){ return 47*px + 2*titlePadX(); }     // 两行
+
+/* 按当前卡片可用宽度挑一个不溢出的排版：从 px=4 往下试，
+   每个 px 优先「一行」，一行放不下再试「两行」，都不行才降 px。
+   渲染后再量一次真实宽度兜底：万一仍超出（极端窄屏），用 scale 压回去，
+   保证标题**永远不会溢出卡片/屏幕**（那会出现一块难看的黑色边框）。 */
+function fitPixelTitle(){
+  const host = el('titleHost');
+  if (!host) return;
+  const cardW = el('card').clientWidth || (W - 40);      // 减去 #overlay 的左右 padding
+  const avail = Math.max(60, cardW - 56);                // 减去 .card 左右 padding 28×2
+  let px = 0, two = false;
+  for (let p=4; p>=1; p--){
+    if (titleWidth(p) <= avail){ px = p; two = false; break; }
+    if (titleWidthTwo(p) <= avail){ px = p; two = true;  break; }
+  }
+  if (!px){ px = 1; two = true; }
+  host.innerHTML = pixelTitle(px, two ? 'two' : '');
+  const t = host.firstElementChild;
+  if (t && t.getBoundingClientRect){
+    const w = t.getBoundingClientRect().width;
+    if (w > avail) t.style.transform = 'scale(' + (avail/w).toFixed(4) + ')';
+  }
+}
+
+function menu(){
+  stopBGM();                                  // 回到开始界面不再播 BGM
+  el('card').innerHTML =
+    '<div id="titleHost"></div>'+
+    '<button class="cta pixel" id="go">开始游戏</button>'+
+    '<button class="cta crazy" id="crazyBtn">疯狂大都市模式!<span class="newbadge">新!</span></button>';
+  fitPixelTitle();
+  el('overlay').classList.remove('reveal','fadeout');
+  el('overlay').classList.add('show');
+  document.getElementById('go').onclick = ()=> startGame(false);
+  document.getElementById('crazyBtn').onclick = ()=> startGame(true);
+}
+
+/* 遮罩淡出：保留 display:flex 让 opacity 过渡能播放，过渡结束（或兜底超时）后
+   才真正隐藏，避免「硬切」。期间若又被 menu/gameOver 重新显示（show 重新加上），
+   则不隐藏，让新的菜单/结算正常出现。 */
+function fadeOutOverlay(){
+  const ov = el('overlay');
+  if (!ov.classList.contains('show')){ ov.classList.remove('show','reveal','fadeout'); return; }
+  ov.classList.add('fadeout');
+  let done = false;
+  const finish = () => {
+    if (done) return; done = true;
+    ov.removeEventListener('transitionend', onEnd);
+    if (ov.classList.contains('fadeout')) ov.classList.remove('show','reveal','fadeout');
+  };
+  const onEnd = (e) => { if (e.propertyName==='opacity') finish(); };
+  ov.addEventListener('transitionend', onEnd);
+  setTimeout(finish, 760);   // 兜底：reduced-motion 等不触发过渡时强制收尾
+}
+
+/* =========================================================
+   12. 主循环
+   ========================================================= */
+let last = performance.now();
+function loop(now){
+  const raw = Math.min((now-last)/1000, 0.05);
+  last = now;
+
+  // 结束镜头缓动（与游戏逻辑无关，over 状态也要跑）
+  if (camTween){
+    camTween.t += raw;
+    const k = clamp(camTween.t / camTween.dur, 0, 1);
+    const e = k<0.5 ? 4*k*k*k : 1 - Math.pow(-2*k+2,3)/2;   // easeInOutCubic
+    cam.x = lerp(camTween.x0, camTween.x1, e);
+    cam.y = lerp(camTween.y0, camTween.y1, e);
+    cam.scale = lerp(camTween.s0, camTween.s1, e);
+    if (k>=1) camTween = null;
+  }
+
+  // 河流入场延伸（纯视觉，与游戏逻辑无关；用真实时间推进，暂停/结束也要跑完）
+  if (riverIn < 1) riverIn = Math.min(1, riverIn + raw/RIVER_IN_SEC);
+
+  // 热力图开关淡入淡出（纯视觉）
+  const hTarget = (G.mode==='overview' && G.heatmap) ? 1 : 0;
+  heatmapAlpha += (hTarget - heatmapAlpha) * Math.min(1, raw*6);
+  if (heatmapAlpha < 0.01) heatmapAlpha = 0;
+
+  // 站点「接入线路」涟漪：纯视觉。必须放在 play 分支之外 —— 暂停时仍可拖拽改线，
+  // 若只在 updateStations 里衰减，暂停中接入的站会把涟漪永久卡住。
+  for (const st of G.stations){ if (st.ring>0) st.ring = Math.max(0, st.ring - raw*2.4); }
+
+  // 结算彩带礼炮在 over 态持续更新（与游戏逻辑无关）
+  if (G.mode==='over' && confetti.length) updateConfetti(raw);
+
+  if (G.mode==='play' && !G.paused){
+    const dt = raw * G.speed;
+    G.elapsed += dt;
+    G.tunnelCap = Math.min(CFG.tunnelCapMax, CFG.tunnelCapStart + Math.floor(G.elapsed/CFG.tunnelCapStep));
+    updateSpawn(dt);
+    updateTrains(dt);
+    updateAnims(dt);
+    updateStations(dt);
+    updatePlanes(dt);      // 飞机飞行推进（落地后给机场加乘客）
+    updateHUD();
+  }
+  render();
+  requestAnimationFrame(loop);
+}
+
+function updateHUD(){
+  el('uDeliver').textContent = G.delivered;
+  // 隧道数 = 跨越河流的「线路」条数（受隧道容量上限约束，复用缓存避免每帧重算求交）。
+  // 按线路计，而非按被切出的 tunnel 片段计，避免一条线多次穿河导致计数虚高。
+  let tunnelLines = 0;
+  for (const L of G.lines){
+    if (!L.path || L.path.length<2) continue;
+    for (const p of lineRiverPieces(L)){ if (p.tunnel){ tunnelLines++; break; } }
+  }
+  const cap = G.tunnelCap || CFG.tunnelCapStart;
+  const eff = Math.min(tunnelLines, cap);
+  el('uTunnels').textContent = eff + '/' + cap;
+  const m = Math.floor(G.elapsed/60), s = Math.floor(G.elapsed%60);
+  el('uClock').textContent = String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  el('uDay').textContent = Math.floor(G.elapsed/45)+1;
+}
+
+/* ---- 调试句柄（方便在控制台观察内部状态） ---- */
+window.__game = G;
+window.__cam = cam;
+window.__river = () => river;
+window.__riverIn = () => riverIn;              // 河流入场延伸进度（0~1，卡住会导致河流只画一半）
+window.__spawnQuiet = () => spawnQuiet;        // 开局初始站点是否静音
+window.__spawnStation = spawnStation;          // 生成站点（浏览器校验出场动效+音效）
+window.__lineRiverPieces = lineRiverPieces;   // 纯几何：线路按河带切成片段（无头测试用）
+window.__pixelTitle = pixelTitle;              // 像素标题生成器（无头测试校验像素步进）
+window.__spawnPassenger = spawnPassenger;      // 乘客生成（无头测试校验各站均分）
+window.__offSpread = offSpread;                // 视野外生成半径（无头测试校验范围扩张）
+window.__netReachLimit = netReachLimit;        // 新站可达性上限（到最近路网的硬上限）
+window.__distToNetwork = distToNetwork;        // 点到最近路网距离（无头测试校验新站接得上）
+window.__CFG = CFG; window.__COLORS = COLORS; window.__COLOR_NAMES = COLOR_NAMES;
+window.__renderSlots = renderSlots;          // 底部线路槽位渲染（无头测试校验数量）
+window.__getRank = getRank;                   // 荣誉称号阈值（无头测试校验）
+window.__enterOverview = enterOverview;       // 铁路系统总览（无头测试校验）
+window.__heatmapAlpha = () => heatmapAlpha;    // 热力图淡入淡出进度（0~1，开关切换平滑过渡）
+window.__dragState = () => drag ? { insertOnly:!!drag.insertOnly, hasLine:!!drag.line, anchor:drag.anchor } : null;
+window.__exitOverview = exitOverview;
+window.__toggleHeat = toggleHeat;
+window.__renderInfo = renderInfo;
+window.__selectEntityInOverview = selectEntityInOverview;
+window.__stationCapOf = stationCapOf;      // 站点容量（机场 16 / 普通 8）
+window.__airports = airports;              // 当前所有机场站
+window.__crazy = () => G.crazy;            // 是否疯狂大都市模式
+window.__bgm = () => bgmEl ? { playing:!bgmEl.paused, muted:bgmEl.muted, src:bgmEl.src } : null;  // BGM 状态
+window.__spawnPlane = spawnPlane;          // 立刻放飞一架飞机（测试/调试）
+window.__planeArrive = planeArrive;
+window.__infoGone = () => document.getElementById('infoPanel').classList.contains('gone');
+window.__gameOver = gameOver;                 // 强制结算（浏览器/无头测试验证荣誉卡+彩带礼炮）
+window.__confettiCount = () => confetti.length; // 彩带礼炮粒子数（浏览器/无头测试校验）
+window.__spawnConfetti = spawnConfetti;        // 直放礼炮（无头测试校验粒子生成/衰减）
+window.__fitPixelTitle = fitPixelTitle;      // 开始界面标题自适应宽度（无头测试校验换 px）
+window.__titleWidth = titleWidth;            // 标题面板宽度公式（一行）
+window.__titleWidthTwo = titleWidthTwo;      // 标题面板宽度公式（两行）
+
+/* HUD 标题位图（内嵌 base64，保持单文件交付、零外部依赖） */
+const BRAND_PNG_DATAURI = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAdAAAABFCAYAAAD6gbdEAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAAEnQAABJ0Ad5mH3gAAAynSURBVHhe7Z1Pdh3FGcWrtQBZsaXESD5wYkbGduZkDySELcAOMKvA7AC2QEjYQ5gHGY/COXCONDFroDOo6u6q+93q/krd7+mP74/zvdd961ZV+w10qX6lVnd4/2EfQgihiy9dADqjJE+mW0vGbKMQQgixA2K0VSmae+vujRJdmdwd3n/Ye8OzCE5jDjVxhGSxEEIIsQkk84CKYZSXgzQP0e7wwcN+KTzng9MIjqBcNAghhBBOTOwV8GAlYpJMjJoQjdqBCc+ug/DsYuClt8xYCEO3qevQzkoIIYTYCsyYMm/yfOIZlUkhhI7lYn6aXrp7D96ZotW16sw8FX1vXMOUQgghNoQsBHcLrCaL0+zEsRqdApSFZyUgywR3MkT2hmw7mhBCiH2zXX6OidfAZJ5ycSFEswA9CMEfnnb5O4NZM483gzcrIYQQtxv8uX71SkeYPR3OmDP0xmxLJ+NbNkiWlzFAB314LSacGRzJLnpw5SWEEELsCsycKdOWwnTKuTLr8resczJ1945P+8mDE0yD5ucF3aST1gp+pxBCCLHM8r3bwsG35o4uc0uX3M7NArQxPF3BSVqIJIQQQqyC5iEVQ8hbaJDOhegUoQeBZtpSeHZD5GJLUlJlhxWzEEIIsR6aNUYYmSy4eAxjq8nALr4Mcnd0fNqHkA9Q6TiepvZSLRXb6OKK3YQQQrwFsLWiG1xNZqT1JmnKV6JZYx/Xod3R8Vl6lN9A1xie6Wwh/erN9RYhhBCijkk8ogCVIJ1kHKGv3sotduGWYWbDszNqPTwHb3yiw3RmSwghhLgKmCc2cQxjQ+kYj6YV5CDYRWXq3x2dnKVIjQ3GmInlsOy+Mb2cNq7YTQghxB0HF4cuxhu0FlxZ5u6iQ1LTynOQYAU6kIenURbCszPukaFproQQQggG5oUrO6KB2kZhaolH6MzP03EXhhVo6tKhMYqlYsMTpy4gUjt8kFfPzlAKT88vUKL8+lXl/x2uyLuf/44S5ez7j1FaxcVH36FE+eDljyi5+enFc5TcfPPJDyi5+fTbD1G6Ufx2+TNKqzg+fYzS5rBr9s7L+nrxzsFYMy9jzbV4YdfsnZf1XcNdnvf49M8oTdAlZ4jfaVqJrELHJWeh5qvQ+RRxh2dnQ45IlsG0VEIIIQQykw/V+MBcG3yTatpDADUejwFqvjd1ELtAx5mLtiWEEEKsYSFTaBMJ0RAKYxfCYjAelCNnxwurz3gIg9O56NULIYQQGzPkDckcI0HGmXZOnqnzt3BbMJNX/hFCCCHEziEZZCKJtU9aPM09pb87OnnUm19dSYMUw2T94qERMowQQmXTD+MZ2Qh0vqLvL2TD0HvOTT/74JRsLLp0bg5iPCEbhl6v2AjkHe9rsmHosxUbgbYebw1vyEaHE+cmiTWweRnea2Hjsb5en5fbOB7DOwcbj/X1+rbmts6Lm3/YBiS+eQl6wq+o2N9YgQ1FsJloOM2SpUxZHoEEYzSCEEIIsZouqzagR3HK2uZnGBaddmlmKAeKZ7XBa/oeyT/huU8aPddZDPS0FAM9LcVAT4vPWwz07KsY6NlFecF+tWKgp8XnLQZ6WoqBnpbygv1qxUBPi2/rYqBnF8VAT80HOG0Z9R71lkRhmE4cAYqdM2r6WvDD3NU8Qgghbh7483+zLMgGcI4Vbdx8sLBLl1DrUNPX/Luv8qnhp13ri57rLAZ6WoqBnpZioKfF5y0GevZVDPTsorxgv1ox0NPi8xYDPS3FQE9LecF+tWKgp8W3dTHQs4tioAdrxk6oyAuwry2tgtgV6EyfmaYr8+zVBdRlOH96lup0rGevLk0J8TZycva+qTcX/zN1k8DrPTl7Hy03Drze2/A5300WEpPgdtaMNR1IAZq7WRJfHf9YbR+QEEKIt40tMmKLMSJ2BVpgH903UujcxFVEwSmEEMKLLzOWHchCD9K8EKAIGcHLiq5CCCFEyXKo1B28hatc77rmAPXDJhRCCCFuD/NJ1v3hj4/GP2cWlbknEBUnGXYSo3QhnD+1TxNim4HOn56itMr3y0tzNat47wU+D2Mdp//+O0rh8m//QsnNky//i9IqXn/xF5QoX//jPyiFz/75V5TcbD3eGrbeLOLdRMPmXdOXwcZjfb0+L2w8L2ze6xqP9WWw8bx9vbA5GHdv3uxn8txDhwpSS+2pRHDQh/yPbMeDna1AhRBCiL2z7Xpplg0CdI9XK4QQQhiuJ4c2CFBOfdkshBBC3Abmk2yDAJ2fQAghhNgt/DvQXafTzjYRBaKyP0nGNv14WbOJaOuNQGvYxyYithHI6/Oy9aafrcdbA9v84N04sYat5/WO5/V50Xh8PK9va276vF5fpL5rqP5TvmbCTUTxbHwtG1tXoPXLuTq7GFMIIcTdprf5sTJOWrs3Bmgb/oshH4QQQghhqOTFtllqwfF7T4DWrqLQa6ZWhg9mq/GEEELcDSrZQGTictDeKwVo3jG7BwwDtg/v6FM15GFaKwZ6WnzXVQz0tBQDPS0+bzHQ01IM9OyrGOjZRTHQ01IM9LT4vMVAT0sx0NNSDPS0FAM9Lb6ti4GeXRQDPTUfULESCcgcy+ZZlleghvYZF3s0fm5iG15/8dzUky9/NCWEEPvk5OyxqTcXP5d1+TN223uEHPQ4I567me8435qRh6m7kxBCiDuHMwsclkTmgg7FqW8w5wq0NqeZxAjryT9ALAZ6WnzXVQz0tBQDPbVioKdWDPS0FAM9+yoGenZRDPS0FAM9LT5vMdDTUgz0tBQDPS3FQE+Lb+tioGcXxUDPkj/DaUvMOVlbrrF2V4Cyjplmmo0wC35ebb2FEELcddbnAowwf1rQjy+FEkIZoLkj30jkwJiN0AQGaq0Y6GnxXVcx0NNSDPTUioGeWjHQ01IM9OyrGOjZRTHQ01IM9LT4vMVAT0sx0NNSDPS0FAM9Lb6ti4GeXRQDPazWsTQCtPdEA4avPrujk0d9Nz6op/ZEokCeSjS94uFEKb4iTyJ6en6BkhvveL9+5Vhor+Tdz39Hyc3Z9x+jFC4++g4lNx+8tBt/fnrxHCU3a8b75pMfUHLz6bcfonRt/EY2LGzN8eljlOi8zOdlzXis7xrYvFvPwfDOy3xevOMx39bc9HmZz8vyeCQITV4aoTDF09zTj6cHps2J6dK7RSGEEGKHVLLHSK3hmdOHAzPAQI+5nD8HMNNQNJ7AfUIIIcTmkKyhEQQZZ9oZpQnubTpGyCzTNZEQdQwVGcxNnYQQQrx1NOZF1YYLxIFJpdkWygXpGKB0lcpWoYTaRPWLn2Po5CkGemq+rcE5W4qBnpZioKelGOip1RpwrOusfYBz1uZFT0sx0FOrrcHxdzEHA+eszYuelmKgp+bbGpzzps2LnrlyUrXHBtPUjy/TaSnBSTzujk7OktoFvpkotU3K1A4bh6ZTuqOI02AVQgghRkwS1ohGaidpGfMU3dPmIRqgIYQUopiMZs9tNUQHrhSmQgghxGbMBGeYCc+Ae36SGpN1lA5wgMIwNrHpp0EY/VjTUdUshBBCrCZPnil9DGND6YhHGJ4RFoMzvyAJ7vR9aKkmxTYUDM2xpv+wxZYQQoi3G8yFWqKUqUIpGktXRQYhHffxpTs6Pu1DyB+SkN/Knc5H6O3cgUzlBiGEEGK/FKFoEjIpbOWZWjBd+xD60IcD27HSYTztQ+xqWpKSKjusmIUQQohtwdzpUbTW0LeF53Acn0Q0tI9UOuanqdFe0sDQkjlQWiohhBBvN5gLS0U7lUxqz7/cHFqL8cxb6O4dn/ZhunELt14XbucOdONLzXEFthtJCCHEbYaFXBvFCDQ0ByrhmQ7j/ddId+/BO335veZSiE4aJQvTQhJCCCH2hI1Idps2B4Nz0qa3PEz7chdu6o5RHV+Lle7MVfSZGb4vbSkhhBBiADNivtJRnkXVYJlSp8y4dDK+ZQMkY1yBhnKJyVeiU0toWZG2sDjMokEIIcSdApKvGoStTAPRVWd2yMIzFAEaKiGavZETCNJg2oUQQoibQZm+1eDMTmvhGUIYfo0lkTX2Y8fsV1KylkEo7taa9qKjEEIIsQcwg2IVd3RNZuHp8GiGQS+zrA8hdIcPHvbBPCzeLi0LhzGHmojDCCGEEHsBMi+DNGSBalpNeMaFZXd4/2Efs88TotMrHlpmG4UQQog9YSJxYi44Qz08w/gs3D6aTPdynZtWtoMvu7XLZ3WUEEIIsQbMFVYz9izVSh/Pv9zYHd7/U3wW7qjEF7p+rNyPnVTSTiQhhBBi55hUDKNIm0IKTpSG16KpHwI00FuzlRitBmnObKgKIYQQO6VcPc5CQjPMBOfA/wHaN+fXp+JpzQAAAABJRU5ErkJggg==';
+
+/* ---- 启动 ---- */
+resize();
+renderSlots();
+// HUD 左上角用与开始界面完全相同的像素标题（mini 尺寸，px=3）
+el('brandPixel').innerHTML = '<img class="brandImg" alt="Metro Engineer" src="'+BRAND_PNG_DATAURI+'">';
+menu();
+requestAnimationFrame(loop);
+
+})();
+</script>
+</body>
+</html>
