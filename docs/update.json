@@ -1,14 +1,14 @@
 {
-  "version": "1.26.26.31",
-  "releaseDate": "2026-11-21",
+  "version": "1.26.26.32",
+  "releaseDate": "2026-11-25",
   "notes": [
-    "正式版加入 szy 全景首页",
-    "首页顶部启动、下滑概览",
+    "修复发布版实际读取 api.emcl.life 公告",
+    "同步新主页和全景启动页",
     "同步正版皮肤修复"
   ],
   "url": "https://www.emcl.life/download.html",
-  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.31.exe?v=31",
-  "sha256": "35585733703F5FDD47CF0D6574CC3E3BFFC97DD314F6613E530664790C793EF9",
-  "asarUrl": "https://www.emcl.life/downloads/updates/app-1.26.26.31.asar",
-  "asarSha256": "2830B0A7135972A26C057F5EA3F41C9F08F5B7B30F27D0D07B66BE588D0B6DB8"
+  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.32.exe?v=32",
+  "sha256": "B844480E3A5880CF104B67C671B586FC0981B3FBAE5BC8ACD029DD9A2C417021",
+  "asarUrl": "https://www.emcl.life/downloads/updates/app-1.26.26.32.asar",
+  "asarSha256": "5FD29ED5D42E55DE227C31258CB9170711973275D5E5C257DF59075E9101C436"
 }

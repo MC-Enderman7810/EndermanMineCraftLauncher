@@ -10,7 +10,7 @@ const { isDev } = require('./channel');
 
 const REPO = 'https://github.com/MC-Enderman7810/EndermanMineCraftLauncher';
 const UPDATE_URL = 'https://api.emcl.life/api/update';
-const ANNOUNCEMENT_URL = 'https://www.emcl.life/announcements.json';
+const ANNOUNCEMENT_URL = 'https://api.emcl.life/api/announcements';
 const CONTENT_API = 'https://api.github.com/repos/MC-Enderman7810/EndermanMineCraftLauncher/contents/';
 const CACHE_MS = 15 * 60 * 1000;
 
@@ -234,7 +234,12 @@ async function getAnnouncements(force = false) {
     return announcementCache.value;
   }
   try {
-    const data = await readRepoJson('announcements.json', ANNOUNCEMENT_URL);
+    let data;
+    try {
+      data = await fetchJson(ANNOUNCEMENT_URL + '?t=' + Date.now(), { timeout: 15000, headers: { 'Cache-Control': 'no-cache' } });
+    } catch {
+      data = await readRepoJson('announcements.json', 'https://www.emcl.life/announcements.json');
+    }
     const result = { ok: true, items: normalizeAnnouncements(data), checkedAt: now, error: '' };
     announcementCache = { at: now, value: result };
     return result;
