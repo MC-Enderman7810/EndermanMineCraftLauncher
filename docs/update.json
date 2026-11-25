@@ -1,14 +1,14 @@
 {
-  "version": "1.26.26.33",
+  "version": "1.26.26.34",
   "releaseDate": "2026-11-25",
   "notes": [
-    "修复公告标签白块",
-    "修复深色启动栏和公告弹窗",
-    "发布版实际读取 api.emcl.life 公告"
+    "新增软件渲染兼容模式",
+    "OpenGL/显卡异常时自动回退",
+    "修复深色公告标签和启动栏"
   ],
   "url": "https://www.emcl.life/download.html",
-  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.33.exe?v=33",
-  "sha256": "73E46C90C6474EF032DB5C0991500E6AB075EA63690823A16E98430541455CD9",
-  "asarUrl": "https://www.emcl.life/downloads/updates/app-1.26.26.33.asar",
-  "asarSha256": "90EA04547E2D9B87AD4DBC4A6A54F80939805881A5E0856A02BC17F6798F8847"
+  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.34.exe?v=34",
+  "sha256": "2EF66E6BD83BB859F19F7BFE46D508F16F8EDC7B30B78D5FE91001E9FD90F11F",
+  "asarUrl": "https://www.emcl.life/downloads/updates/app-1.26.26.34.asar",
+  "asarSha256": "7393A3F3045EB8787C5A82CDBF128E08AF093031B2379E12D9FD5E4B78791BAA"
 }

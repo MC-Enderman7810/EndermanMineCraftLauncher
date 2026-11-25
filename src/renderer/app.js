@@ -2184,6 +2184,11 @@ function pageSettings() {
           '<option value="system"' + (c.colorMode === 'system' ? ' selected' : '') + '>跟随系统</option>' +
         '</select><div class="card-subtitle">深色模式会同步切换窗口、卡片、输入框和弹窗配色。</div></div></div>' +
 
+      '<div class="card"><div class="card-head"><h3 class="card-title">兼容模式</h3></div>' +
+        '<div class="setting-row"><div class="setting-info"><div class="setting-title">软件渲染</div>' +
+          '<div class="setting-desc">显卡或 OpenGL 异常、界面黑屏时开启。会降低动画性能，重启后生效。</div></div>' +
+          '<div class="setting-control"><label class="switch"><input type="checkbox" data-change="softwareRenderer"' + (c.softwareRenderer ? ' checked' : '') + '><span></span></label></div></div></div>' +
+
       '<div class="card"><div class="card-head"><h3 class="card-title">主题</h3><span class="small muted">蓝色为主</span></div>' +
         '<div class="setting-row"><div class="setting-info"><div class="setting-title">强调色</div>' +
           '<div class="setting-desc">默认 PCL 蓝，修改后全局立即生效。</div></div>' +
@@ -4283,6 +4288,10 @@ function bind() {
         await api.patchConfig({ colorMode: el.value });
         state.config.colorMode = el.value;
         applyColorMode(el.value);
+      } else if (key === 'softwareRenderer') {
+        await api.patchConfig({ softwareRenderer: el.checked });
+        state.config.softwareRenderer = el.checked;
+        toast(el.checked ? '兼容模式已开启，重启后生效' : '兼容模式已关闭，重启后生效');
       } else if (key === 'language') {
         const lang = ['zh-CN', 'zh-TW', 'en-US', 'ja-JP', 'ko-KR', 'fr-FR', 'ru-RU'].includes(el.value)
           ? el.value : 'zh-CN';

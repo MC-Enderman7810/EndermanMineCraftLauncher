@@ -18,6 +18,24 @@ if (typeof globalThis.fetch === 'undefined') {
   }
 }
 
+function earlyConfig() {
+  try {
+    const file = path.join(app.getPath('userData'), 'config.json');
+    return JSON.parse(fs.readFileSync(file, 'utf8').replace(/^\uFEFF/, ''));
+  } catch { return {}; }
+}
+
+const earlySettings = earlyConfig();
+const SAFE_MODE = process.argv.includes('--safe-mode') || process.env.EMCL_SAFE_MODE === '1' || earlySettings.softwareRenderer === true;
+if (SAFE_MODE) {
+  app.disableHardwareAcceleration();
+  app.commandLine.appendSwitch('disable-gpu');
+  app.commandLine.appendSwitch('disable-gpu-compositing');
+  app.commandLine.appendSwitch('use-angle', 'swiftshader');
+  app.commandLine.appendSwitch('use-gl', 'angle');
+  console.log('[EMCL] software renderer enabled');
+}
+
 const { channel, isDev } = require('./channel');
 const { Store } = require('./store');
 const {
@@ -1137,6 +1155,24 @@ async function autoCheck() {
     console.warn('[EMCL] auto update check failed:', error && error.message ? error.message : error);
   }
 }
+
+app.on('render-process-gone', () => {
+  if (!SAFE_MODE) {
+    try {
+      app.relaunch({ args: process.argv.slice(1).concat('--safe-mode') });
+      app.exit(0);
+    } catch { /* ignore */ }
+  }
+});
+
+app.on('gpu-process-crashed', () => {
+  if (!SAFE_MODE) {
+    try {
+      app.relaunch({ args: process.argv.slice(1).concat('--safe-mode') });
+      app.exit(0);
+    } catch { /* ignore */ }
+  }
+});
 
 app.whenReady().then(async () => {
   app.setAppUserModelId(isDev ? 'com.emcl.launcher.dev' : 'com.emcl.launcher');
