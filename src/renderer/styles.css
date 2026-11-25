@@ -910,3 +910,27 @@ html[data-theme="dark"] .titlebar-brand, html[data-theme="dark"] .page-title { c
 .hero::after { display: none; }
 .hero h2 { font-size: 32px; }
 .hero .hero-sub { max-width: 620px; }
+
+/* dark tags */
+html[data-theme="dark"] .tag,
+html[data-theme="dark"] .tag-gray { background: #24384c !important; color: #cfe3f7 !important; border-color: #344c62 !important; }
+html[data-theme="dark"] .tag-blue { background: #12314c !important; color: #7fc4ff !important; }
+html[data-theme="dark"] .tag-green { background: #123a2a !important; color: #77e0a1 !important; }
+html[data-theme="dark"] .tag-orange { background: #3a2b14 !important; color: #ffc46b !important; }
+html[data-theme="dark"] .announce-date, html[data-theme="dark"] .announce-body { color: var(--text-2) !important; }
+
+/* dark notice */
+html[data-theme="dark"] .notice-modal,
+html[data-theme="dark"] .modal.notice-modal { background: var(--card) !important; color: var(--text) !important; border-color: var(--line) !important; }
+html[data-theme="dark"] .notice-modal h3,
+html[data-theme="dark"] .notice-title { color: var(--text) !important; }
+html[data-theme="dark"] .notice-body,
+html[data-theme="dark"] .modal-desc { color: var(--text-2) !important; }
+
+/* dark launch */
+html[data-theme="dark"] .launch-bar { background: #101b27 !important; border-color: #26384a !important; }
+html[data-theme="dark"] .launch-version label, html[data-theme="dark"] .launch-version > label { color: #aab9c9 !important; }
+html[data-theme="dark"] .launch-select { background: #0c1621 !important; color: #e8f1fb !important; border-color: #344c62 !important; }
+html[data-theme="dark"] .launch-tool { background: #172331 !important; color: #e8f1fb !important; border-color: #344c62 !important; }
+html[data-theme="dark"] .launch-status { color: #aab9c9 !important; border-color: #26384a !important; }
+html[data-theme="dark"] .window-buttons, html[data-theme="dark"] .win-btn { background: transparent !important; color: #aab9c9 !important; }
