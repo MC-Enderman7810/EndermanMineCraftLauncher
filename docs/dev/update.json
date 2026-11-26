@@ -1,13 +1,13 @@
 {
-  "version": "1.26.25.30kfz",
+  "version": "1.26.25.31kfz",
   "releaseDate": "2026-11-26",
   "notes": [
-    "新增 OpenGL 自动检测和软件渲染提示",
-    "公告、启动栏深色修复",
-    "版本选择中文名称修复"
+    "OpenGL 自动检测与软件渲染提示",
+    "发布版 UI 同步",
+    "版本选择中文修复"
   ],
-  "url": "https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/tag/dev-v1.26.25.30",
-  "downloadUrl": "https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/download/dev-v1.26.25.30/EMCL-Dev-Portable-1.26.25.30.exe",
+  "url": "https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/tag/dev-v1.26.25.31",
+  "downloadUrl": "https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/download/dev-v1.26.25.31/EMCL-Dev-Portable-1.26.25.31.exe",
   "mandatory": true,
-  "sha256": "E537E13FB06B5490D36A2BD420182E645A97F4950886AFF0E4AC7ACE9FCE8FA5"
+  "sha256": "2258D10C12828318AC7B60683E51AC92E79E3A274E1C5139D2DBB1F4B890902E"
 }

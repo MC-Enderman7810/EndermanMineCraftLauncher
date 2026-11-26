@@ -2126,6 +2126,19 @@ async function handleAction(action, el) {
     case 'skin-cape-off': await disableCape(); break;
     case 'skin-upload': $('skinFileInput') && $('skinFileInput').click(); break;
     case 'save-version-name': await confirmVersionName(); break;
+    case 'enable-software-render': {
+      await api.patchConfig({ softwareRenderer: true });
+      state.config.softwareRenderer = true;
+      try { await api.relaunch(); } catch { toast('已开启软件渲染，请手动重启启动器'); }
+      break;
+    }
+    case 'open-gl-continue': {
+      const pending = state.pendingOpenGLLaunch;
+      state.pendingOpenGLLaunch = null;
+      closeModal();
+      if (pending) await doLaunch(pending.versionId, pending.accountId, { ...(pending.options || {}), skipOpenGL: true });
+      break;
+    }
     case 'launch': await doLaunch(); break;
     case 'launch-with-account':
       closeModal();
@@ -3040,7 +3053,32 @@ function openLaunchAccountPicker(versionId) {
   });
 }
 
-async function doLaunch(versionId, accountId) {
+let openGLSupport = null;
+function detectOpenGL() {
+  if (openGLSupport !== null) return openGLSupport;
+  try {
+    const canvas = document.createElement('canvas');
+    const gl = canvas.getContext('webgl2') || canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    openGLSupport = !!gl;
+  } catch { openGLSupport = false; }
+  return openGLSupport;
+}
+
+function showOpenGLWarning() {
+  openModal({
+    title: 'OpenGL 检测',
+    desc: '您的设备没有opengl,将无法正常启动游戏，是否打开软件渲染。',
+    body: '<div class="card-subtitle">软件渲染可以修复启动器界面黑屏，但 Minecraft Java 版仍需要显卡驱动提供 OpenGL。建议同时更新显卡驱动。</div>',
+    className: 'notice-modal',
+    actions: [
+      { label: '取消', kind: 'ghost', action: 'close-modal' },
+      { label: '仍然启动', kind: 'ghost', action: 'open-gl-continue' },
+      { label: '打开软件渲染', kind: 'primary', action: 'enable-software-render' }
+    ]
+  });
+}
+
+async function doLaunch(versionId, accountId, options) {
   if (state.launching || state.gameRunning) return;
   const id = versionId || currentVersionId();
   if (!id) {
@@ -4060,6 +4098,8 @@ async function patchSetting(key, value) {
     state.resourceVersionId = currentVersionId();
     state.firstRun = s.config.firstRun;
     state.page = 'home';
+    openGLSupport = detectOpenGL();
+    if (!openGLSupport && !state.config.softwareRenderer) setTimeout(showOpenGLWarning, 900);
     if (window.EMCL_I18N) window.EMCL_I18N.setLanguage(state.config.language || 'zh-CN');
     render();
     loadLatestLog();
