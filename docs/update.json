@@ -1,14 +1,14 @@
 {
-  "version": "1.26.26.34",
+  "version": "1.26.26.35",
   "releaseDate": "2026-11-25",
   "notes": [
-    "新增软件渲染兼容模式",
-    "OpenGL/显卡异常时自动回退",
-    "修复深色公告标签和启动栏"
+    "打开版本时自动检测 OpenGL",
+    "无 OpenGL 时提示并支持软件渲染",
+    "修复网站公告深色样式"
   ],
   "url": "https://www.emcl.life/download.html",
-  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.34.exe?v=34",
-  "sha256": "2EF66E6BD83BB859F19F7BFE46D508F16F8EDC7B30B78D5FE91001E9FD90F11F",
-  "asarUrl": "https://www.emcl.life/downloads/updates/app-1.26.26.34.asar",
-  "asarSha256": "7393A3F3045EB8787C5A82CDBF128E08AF093031B2379E12D9FD5E4B78791BAA"
+  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.35.exe?v=35",
+  "sha256": "F1F86FC6254DDA491E885E4A8021F258C85CF33224114B93B974D4B3D73AFB00",
+  "asarUrl": "https://www.emcl.life/downloads/updates/app-1.26.26.35.asar",
+  "asarSha256": "90749E8A214EA127C44F647CC444912E0BDE935319E4C023C823ED778CF24D33"
 }

@@ -26,6 +26,11 @@
     .item a.more { display:inline-block; margin-top:10px; font-size:12px; font-weight:700; }
     .empty { color:var(--muted); padding:30px; text-align:center; border:1px dashed var(--line); border-radius:14px; background:#fff; }
     footer { padding:26px 0 36px; color:var(--muted); font-size:11px; }
+    /* announcements dark */
+    html[data-theme="dark"] .item { background:#0F2234 !important; border-color:#29445F !important; box-shadow:0 18px 50px rgba(0,0,0,.28); }
+    html[data-theme="dark"] .item .tag { background:#132C45 !important; color:#9FD2FF !important; border:1px solid #29445F !important; }
+    html[data-theme="dark"] .item h2, html[data-theme="dark"] .item .body, html[data-theme="dark"] .item .meta { color:#E8F2FF !important; }
+    html[data-theme="dark"] .empty { background:#0F2234 !important; border-color:#29445F !important; color:#9DB2C8 !important; }
   </style>
   <link rel="stylesheet" href="./site-common.css">
   <script>try{var t=localStorage.getItem('emcl-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t;var l=localStorage.getItem('emcl-lang')||'zh-CN';document.documentElement.lang=l;document.documentElement.dataset.lang=l;}catch(e){}</script>

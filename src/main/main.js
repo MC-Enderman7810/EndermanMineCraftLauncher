@@ -199,6 +199,11 @@ async function installShaderLoader(store, finalVersionId, mcVersion, loader, tas
 }
 
 function registerIpc() {
+  ipcMain.handle('app:relaunch', async () => {
+    setImmediate(() => { app.relaunch({ args: process.argv.slice(1) }); app.exit(0); });
+    return { ok: true };
+  });
+
   ipcMain.handle('app:state', async () => {
     const installed = await refreshInstalled();
     const config = store.getConfig();
