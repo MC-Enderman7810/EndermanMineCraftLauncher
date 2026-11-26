@@ -1,14 +1,14 @@
 {
-  "version": "1.26.26.37",
+  "version": "1.26.26.38",
   "releaseDate": "2026-11-26",
   "notes": [
-    "OpenGL 自动检测提示",
-    "软件渲染兼容模式",
+    "渲染辅助：OpenGL 兼容包、Mesa3D、日志分析",
+    "OpenGL 自动检测与软件渲染",
     "发布版 UI 同步开发者版"
   ],
   "url": "https://www.emcl.life/download.html",
-  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.37.exe?v=37",
-  "sha256": "07D8967B607AE7BDA59E526008A0DB8B5280BAEFCAD5E2E7C5A67E2F4B851BC2",
-  "asarUrl": "https://www.emcl.life/downloads/updates/app-1.26.26.37.asar",
-  "asarSha256": "BF0E87AFCB2839033E1092A626BFF842F2D42AB9FEE25DC9F4756EE401814033"
+  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.38.exe?v=38",
+  "sha256": "2C7FFB706839E7F52ACAE373916F263390DD3CD6E031ACC1CD93335532E82B68",
+  "asarUrl": "https://www.emcl.life/downloads/updates/app-1.26.26.38.asar",
+  "asarSha256": "5D49B502E1478BEDEAE35FEC1F4D3A67A55567FB2AA4BCB59B82781015F507FE"
 }

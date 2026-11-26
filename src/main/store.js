@@ -67,6 +67,7 @@ class Store {
       accent: '#2F7FD1',
       colorMode: 'light',
       softwareRenderer: false,
+      mesaRenderer: false,
       language: 'zh-CN',
       msClientId: APPROVED_MS_CLIENT_ID,
       msAuthority: 'entra',

@@ -253,3 +253,7 @@ html[data-theme="dark"] .launch-select { background: #0c1621 !important; color: 
 html[data-theme="dark"] .launch-tool { background: #172331 !important; color: #e8f1fb !important; border-color: #344c62 !important; }
 html[data-theme="dark"] .launch-status { color: #aab9c9 !important; border-color: #26384a !important; }
 html[data-theme="dark"] .window-buttons, html[data-theme="dark"] .win-btn { background: transparent !important; color: #aab9c9 !important; }
+
+/* dark notice final */
+html[data-theme="dark"] .notice-modal, html[data-theme="dark"] .modal.notice-modal { background: var(--card, #101b27) !important; color: var(--text, #e8f1fb) !important; border-color: var(--line, #26384a) !important; }
+html[data-theme="dark"] .notice-modal .modal-desc, html[data-theme="dark"] .notice-modal .card-subtitle { color: var(--text-2, #aab9c9) !important; }

@@ -801,3 +801,7 @@ html[data-theme="dark"] .tag-gray { background: #24384c !important; color: #cfe3
 html[data-theme="dark"] .tag-blue { background: #12314c !important; color: #7fc4ff !important; }
 html[data-theme="dark"] .announce-date, html[data-theme="dark"] .announce-body { color: var(--text-2) !important; }
 html[data-theme="dark"] .notice-modal, html[data-theme="dark"] .modal.notice-modal { background: var(--card) !important; color: var(--text) !important; border-color: var(--line) !important; }
+
+/* dark notice final */
+html[data-theme="dark"] .notice-modal, html[data-theme="dark"] .modal.notice-modal { background: var(--card, #101b27) !important; color: var(--text, #e8f1fb) !important; border-color: var(--line, #26384a) !important; }
+html[data-theme="dark"] .notice-modal .modal-desc, html[data-theme="dark"] .notice-modal .card-subtitle { color: var(--text-2, #aab9c9) !important; }

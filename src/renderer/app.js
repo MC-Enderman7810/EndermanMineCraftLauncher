@@ -1977,7 +1977,7 @@ function settingOption(title, hint, controls) {
 
 function pageSettings() {
   const c = state.config, java = state.java;
-  const groups = [['game','游戏'],['runtime','Java 与内存'],['downloads','下载'],['appearance','外观'],
+  const groups = [['game','游戏'],['runtime','Java 与内存'],['downloads','下载'],['appearance','外观'],['render','渲染'],
     ...(c.localAdmin === true ? [['developer','开发者']] : []), ['about','关于']];
   const section = groups.some(([id]) => id === state.settingsSection) ? state.settingsSection : 'game';
   const toggle = (key, label) => '<label class="switch"><input type="checkbox" data-change="' + key + '" aria-label="' + label + '"' +
@@ -2021,6 +2021,14 @@ function pageSettings() {
     settingOption('强调色', '', '<div class="swatches">' + ['#2F7FD1','#1F9D62','#8A5CD1','#D9891B','#D4517E'].map((color) =>
       '<button class="swatch ' + (c.accent.toLowerCase() === color.toLowerCase() ? 'active' : '') + '" style="background:' + color + '" data-action="set-theme" data-color="' + color +
       '" title="' + color + '" aria-label="' + color + '"></button>').join('') + '</div>');
+  if (section === 'render') content = '<h2 class="detail-title">渲染辅助</h2>' +
+    settingOption('当前图形', (state.glInfo && state.glInfo.renderer) || '未检测到 OpenGL', '<span class="small">' + esc((state.glInfo && state.glInfo.version) || '') + '</span>') +
+    settingOption('OpenGL 兼容包', '适用于缺少 OpenGL 驱动的 Windows 设备，通过 DirectX 提供 OpenGL。', '<button class="btn btn-soft" data-action="render-helper-store">安装</button>') +
+    settingOption('显卡驱动', '打开显卡驱动下载页面。', '<button class="btn btn-ghost" data-action="render-helper-driver">打开</button>') +
+    settingOption('游戏 OpenGL 日志', '读取最近一次启动日志，查找 GL 上下文和驱动错误。', '<button class="btn btn-ghost" data-action="render-helper-log">分析</button>') +
+    settingOption('Mesa3D 软件渲染', '实验性；需要系统已安装 Mesa3D。显卡不支持 OpenGL 时可尝试。', '<label class="switch"><input type="checkbox" data-change="mesaRenderer"' + (c.mesaRenderer ? ' checked' : '') + '><span></span></label>') +
+    settingOption('Mesa3D 下载', '打开 Mesa3D Windows 构建发布页。', '<button class="btn btn-ghost" data-action="render-helper-mesa">打开</button>');
+
   if (section === 'developer') content = '<h2 class="detail-title">开发者</h2>' + announcerCard();
   if (section === 'about') content = '<h2 class="detail-title">EMCL</h2><p class="about-name">Enderman MineCraft Launcher</p>' +
     '<p class="section-meta">' + (isDeveloper() ? '开发者版本 · ' : '') + esc(displayVersion()) + '</p>' + updateSettingsCard() +
@@ -2139,6 +2147,10 @@ async function handleAction(action, el) {
       if (pending) await doLaunch(pending.versionId, pending.accountId, { ...(pending.options || {}), skipOpenGL: true });
       break;
     }
+    case 'render-helper-store': await api.openExternal('ms-windows-store://search/?query=OpenGL%20Compatibility%20Pack'); break;
+    case 'render-helper-driver': await api.openExternal('https://www.google.com/search?q=' + encodeURIComponent('update graphics driver OpenGL')); break;
+    case 'render-helper-mesa': await api.openExternal('https://github.com/pal1000/mesa-dist-win/releases'); break;
+    case 'render-helper-log': await analyzeRenderLog(); break;
     case 'launch': await doLaunch(); break;
     case 'launch-with-account':
       closeModal();
@@ -3064,6 +3076,28 @@ function detectOpenGL() {
   return openGLSupport;
 }
 
+function getRenderInfo() {
+  try {
+    const canvas = document.createElement('canvas');
+    const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+    if (!gl) return { ok: false, renderer: '未检测到 OpenGL', version: '' };
+    const ext = gl.getExtension('WEBGL_debug_renderer_info');
+    return { ok: true, renderer: ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER), version: gl.getParameter(gl.VERSION) };
+  } catch { return { ok: false, renderer: '检测失败', version: '' }; }
+}
+
+async function analyzeRenderLog() {
+  let text = '';
+  try { const log = await api.latestLog(); text = typeof log === 'string' ? log : (log && log.text) || ''; } catch {}
+  const lines = String(text || '').split(/\r?\n/).filter((line) => /opengl|GL context|GLX|Failed to create|Unsupported|driver|pixel format|Could not/i.test(line)).slice(-30);
+  openModal({
+    title: '游戏 OpenGL 日志分析',
+    desc: lines.length ? '发现以下可能相关的日志：' : '最近日志中没有发现明显的 OpenGL 错误。',
+    body: '<pre style="max-height:320px;overflow:auto;white-space:pre-wrap;font-size:11px">' + esc(lines.join('\n') || '未找到日志') + '</pre><div class="card-subtitle">如果日志里出现 Failed to create GL context，建议先安装 OpenGL 兼容包或更新显卡驱动。</div>',
+    actions: [{ label: '知道了', kind: 'primary', action: 'close-modal' }]
+  });
+}
+
 function showOpenGLWarning() {
   openModal({
     title: 'OpenGL 检测',
@@ -3956,6 +3990,10 @@ function bind() {
         await api.patchConfig({ softwareRenderer: el.checked });
         state.config.softwareRenderer = el.checked;
         toast(el.checked ? '兼容模式已开启，重启后生效' : '兼容模式已关闭，重启后生效');
+      } else if (key === 'mesaRenderer') {
+        await api.patchConfig({ mesaRenderer: el.checked });
+        state.config.mesaRenderer = el.checked;
+        toast(el.checked ? 'Mesa3D 软件渲染已开启，启动游戏时生效' : 'Mesa3D 软件渲染已关闭');
       } else if (key === 'language') {
         const lang = ['zh-CN', 'zh-TW', 'en-US', 'ja-JP', 'ko-KR', 'fr-FR', 'ru-RU'].includes(el.value)
           ? el.value : 'zh-CN';
@@ -4098,6 +4136,7 @@ async function patchSetting(key, value) {
     state.resourceVersionId = currentVersionId();
     state.firstRun = s.config.firstRun;
     state.page = 'home';
+    state.glInfo = getRenderInfo();
     openGLSupport = detectOpenGL();
     if (!openGLSupport && !state.config.softwareRenderer) setTimeout(showOpenGLWarning, 900);
     if (window.EMCL_I18N) window.EMCL_I18N.setLanguage(state.config.language || 'zh-CN');

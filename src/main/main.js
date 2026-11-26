@@ -288,7 +288,7 @@ function registerIpc() {
 
   ipcMain.handle('shell:openExternal', async (event, url) => {
     if (!url || typeof url !== 'string') return false;
-    if (!/^(https?:|mailto:)/i.test(url)) return false;
+    if (!/^(https?:|mailto:|ms-windows-store:)/i.test(url)) return false;
     await shell.openExternal(url);
     return true;
   });

@@ -1,12 +1,12 @@
 {
-  "version": "1.26.26.24",
+  "version": "1.26.26.25",
   "releaseDate": "2026-11-26",
   "notes": [
-    "同步正式版 1.26.26.36 的 UI 和修复",
-    "OpenGL 检测与软件渲染提示",
-    "深色模式和公告样式修复"
+    "新增渲染辅助页",
+    "OpenGL 检测和软件渲染提示",
+    "深色模式修复"
   ],
   "url": "https://www.emcl.life/sianhgheln/",
-  "downloadUrl": "https://www.emcl.life/downloads/EMCL-SianhGheln-1.26.26.24.exe",
-  "sha256": "5B4560E5A0E2784E15DAD1D793E653DD30DB4D9171708B8B8FC415E24D42C592"
+  "downloadUrl": "https://www.emcl.life/downloads/EMCL-SianhGheln-1.26.26.25.exe",
+  "sha256": "A32C7A87D34D13C9A3B2FBA6E90928DE89D62E7E998CD9596866B51B19A60158"
 }
