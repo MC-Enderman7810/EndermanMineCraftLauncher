@@ -90,23 +90,23 @@
     <section class="grid">
       <div class="card">
         <h2>当前开发者版本</h2>
-        <div class="kv"><span>版本号</span><b>1.26.25.29kfz</b></div>
+        <div class="kv"><span>版本号</span><b>1.26.25.30kfz</b></div>
         <div class="kv"><span>通道</span><b>Developer / 内部测试</b></div>
         <div class="kv"><span>更新方式</span><b>开发者版启动器检查更新</b></div>
         <div class="kv"><span>更新清单</span><b><a href="update.json">update.json</a></b></div>
         <div class="actions">
-          <a class="btn" href="https://gh-proxy.com/https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/download/dev-v1.26.25.29/EMCL-Dev-Portable-1.26.25.29.exe">下载开发者版</a>
+          <a class="btn" href="https://gh-proxy.com/https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/download/dev-v1.26.25.30/EMCL-Dev-Portable-1.26.25.30.exe">下载开发者版</a>
           <a class="btn ghost" href="update.json">查看更新清单</a>
           <a class="btn ghost" href="../download.html">稳定版下载</a>
         </div>
         <p class="note">开发者版下载仅在本页通过密码后显示。启动器会读取此目录的 <code>update.json</code> 检查新版本。</p>
-        <p class="note">SHA256：<code style="word-break:break-all">A5D77A3D1CCE35288C2610662E21CF0F3C5259EA68E6BEC14E8957B88BB25991</code></p>
+        <p class="note">SHA256：<code style="word-break:break-all">E537E13FB06B5490D36A2BD420182E645A97F4950886AFF0E4AC7ACE9FCE8FA5</code></p>
       </div>
 
       <div class="card">
         <h2>最新更新</h2>
         <ul class="log">
-          <li><b>2026-11-25 · 1.26.25.29kfz</b>合并 szy 新首页、深色模式、公告目标和软件渲染兼容模式。</li><li><b>2026-11-15 · 1.26.25.28kfz</b>开发者版强制更新；首次打开或更新后需要输入开发者密码，开发者账户功能暂时隐藏。</li><li><b>2026-10-31 · 1.26.25.23kfz</b>所有版本加入 Steve / Alex 模型选择，开发者版提供直链下载。</li>
+          <li><b>2026-11-26 · 1.26.25.30kfz</b>新增 OpenGL 检测提示和软件渲染；修复版本选择中文乱码。</li><li><b>2026-11-25 · 1.26.25.29kfz</b>合并 szy 新首页、深色模式、公告目标和软件渲染兼容模式。</li><li><b>2026-11-15 · 1.26.25.28kfz</b>开发者版强制更新；首次打开或更新后需要输入开发者密码，开发者账户功能暂时隐藏。</li><li><b>2026-10-31 · 1.26.25.23kfz</b>所有版本加入 Steve / Alex 模型选择，开发者版提供直链下载。</li>
           <li><b>2026-10-31 · 1.26.25.20kfz</b>重启皮肤库：仅正面预览、8 款原创推荐皮肤、本地皮肤上传和披风切换。</li>
           <li><b>2026-10-31 · 1.26.25.15kfz</b>开发者更新通道接入 emcl.life；新增“刷新公告和更新”，移除皮肤页面、3D 皮肤和披风入口。</li>
           <li><b>2026-10-25 · 1.26.25.15kfz</b>Mojang appID 通过 allowlist，开发者版切换到自有 Azure appID。</li>
@@ -430,6 +430,7 @@
             '<td style="padding:7px 8px;border-bottom:1px solid #E6EEF7">' + esc(d.version || '') + '</td>' +
             '<td style="padding:7px 8px;border-bottom:1px solid #E6EEF7">' + esc(first) + '</td>' +
             '<td style="padding:7px 8px;border-bottom:1px solid #E6EEF7">' + esc(last) + '</td>' +
+            '<td style="padding:7px 8px;border-bottom:1px solid #E6EEF7;text-align:right"><button type="button" data-device-delete="' + esc(d.id) + '" title="删除这条 IP 记录" style="border:0;background:transparent;cursor:pointer;font-size:15px;line-height:1;padding:2px 4px">🗑</button></td>' +
             '<td style="padding:7px 8px;border-bottom:1px solid #E6EEF7">' + esc(String(d.hits || 0)) + '</td>' +
             '</tr>';
         }).join('');
@@ -441,10 +442,28 @@
             '<th style="text-align:left;padding:7px 8px;border-bottom:2px solid #C9D9EA">版本</th>' +
             '<th style="text-align:left;padding:7px 8px;border-bottom:2px solid #C9D9EA">首次</th>' +
             '<th style="text-align:left;padding:7px 8px;border-bottom:2px solid #C9D9EA">最近</th>' +
+            '<th style="text-align:left;padding:7px 8px;border-bottom:2px solid #C9D9EA"></th>' +
             '<th style="text-align:left;padding:7px 8px;border-bottom:2px solid #C9D9EA">次数</th>' +
             '</tr></thead><tbody>' + rows + '</tbody></table>'
           : '<p class="note">还没有开发者设备上报。</p>';
       } catch (e) { deviceList.innerHTML = '<p class="note" style="color:#B33A3A">读取设备失败：' + esc(e.message) + '</p>'; }
+    }
+
+    if (deviceList) {
+      deviceList.addEventListener('click', async function (e) {
+        var button = e.target.closest ? e.target.closest('[data-device-delete]') : null;
+        if (!button) return;
+        var id = button.getAttribute('data-device-delete');
+        if (!id || !confirm('删除这条 IP 记录？')) return;
+        button.disabled = true;
+        try {
+          await apiFetch('/api/dev/devices/' + encodeURIComponent(id), { method: 'DELETE' });
+          await loadDevices();
+        } catch (err) {
+          button.disabled = false;
+          alert(err.message || '删除失败');
+        }
+      });
     }
 
     if (feedbackList) {

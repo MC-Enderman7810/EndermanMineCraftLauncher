@@ -126,6 +126,13 @@ export default {
         return json({ ok: true }, cors);
       }
 
+      const devDeviceMatch = url.pathname.match(/^\/api\/dev\/devices\/([^/]+)$/);
+      if (devDeviceMatch && request.method === 'DELETE') {
+        if (!(await isAdmin(request, env))) return json({ ok: false, error: '未登录' }, cors, 401);
+        await env.DB.prepare('DELETE FROM dev_devices WHERE id = ?').bind(decodeURIComponent(devDeviceMatch[1])).run();
+        return json({ ok: true }, cors);
+      }
+
       if (url.pathname === '/api/dev/devices' && request.method === 'GET') {
         if (!(await isAdmin(request, env))) return json({ ok: false, error: '未登录' }, cors, 401);
         const rows = await env.DB.prepare(
