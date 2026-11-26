@@ -5,13 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>EMCL · Enderman MineCraft Launcher</title>
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="minimal.css" />
+  <link rel="stylesheet" href="workspaces.css" />
 </head>
 <body>
   <div class="titlebar">
     <div class="titlebar-brand">
-      <span class="brand-gem"></span>
+      <img class="brand-icon" src="../../assets/icon.png" alt="" />
       <span>EMCL</span>
-      <span class="titlebar-sub">Enderman MineCraft Launcher</span>
+      <span class="edition-label" id="editionLabel" hidden>DEV</span>
     </div>
     <div class="titlebar-drag"></div>
     <div class="window-buttons">
@@ -23,14 +25,10 @@
 
   <div class="app-shell">
     <aside class="sidebar">
-      <div class="sidebar-brand">
-        <div class="brand-block">E</div>
-        <div class="brand-name">EMCL</div>
-      </div>
-      <nav id="nav" class="nav"></nav>
+      <nav id="nav" class="nav" aria-label="主导航"></nav>
       <div class="sidebar-bottom">
-        <button class="account-mini" id="accountMini" title="账户"></button>
-        <div class="version-mini" id="versionMini">v1.26.25.14</div>
+        <nav id="utilityNav" class="nav" aria-label="工具"></nav>
+        <button class="account-mini nav-item" id="accountMini" title="账户" aria-label="账户"></button>
       </div>
     </aside>
 
@@ -38,21 +36,16 @@
       <header class="topbar">
         <div class="topbar-left">
           <h1 id="pageTitle">主页</h1>
-          <span id="pageSubtitle" class="page-subtitle"></span>
         </div>
         <div class="topbar-right">
-          <button class="chip" id="websiteChip" title="打开官网">官网</button>
-          <button class="chip" id="refreshAllChip" data-action="refresh-all" title="刷新公告和更新">刷新</button>
-          <button class="chip feedback-chip" id="feedbackChip" title="提交错误或建议">反馈</button>
-          <button class="chip update-chip" id="updateChip" style="display:none"></button>
-          <button class="chip notice-chip" id="noticeChip" style="display:none"></button>
-          <div class="chip" id="javaChip"></div>
-          <div class="chip chip-account" id="accountChip"></div>
+          <button class="workspace-help" id="workspaceHelp" title="通知与帮助" aria-label="通知与帮助"></button>
         </div>
       </header>
-      <div class="launch-progress-global" id="launchProgress" style="display:none">
-        <div class="launch-progress-head"><span id="launchProgressText">正在启动…</span><span id="launchProgressPct">0%</span></div>
-        <div class="launch-progress-track"><div class="launch-progress-fill" id="launchProgressFill"></div></div>
+      <div class="launch-progress-global" id="launchProgress" role="status" aria-live="polite" style="display:none">
+        <div class="launch-progress-kicker"><span class="launch-progress-pulse" aria-hidden="true"></span><span id="launchProgressPhase">正在启动</span></div>
+        <div class="launch-progress-head"><strong id="launchProgressText">准备启动</strong><span id="launchProgressPct">0%</span></div>
+        <div class="launch-progress-track" id="launchProgressTrack" role="progressbar" aria-label="游戏启动进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="launch-progress-fill" id="launchProgressFill"></div></div>
+        <div class="launch-progress-instance" id="launchProgressInstance"></div>
       </div>
       <section class="content" id="content"></section>
     </main>

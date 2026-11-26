@@ -3,45 +3,28 @@
 const api = window.emcl;
 const OFFICIAL_URL = 'https://www.emcl.life';
 const SUPPORT_EMAIL = 'EMCLsupport2026@163.com';
-
-// Modrinth 的搜索以英文项目名为主。这里把常见中文名/别名补成英文检索词，
-// 让「钠」「苹果皮」这类中文输入也能找到正确项目。
-const RESOURCE_ALIASES = {
-  '钠': 'sodium', '钠离子': 'sodium', '锂': 'lithium', '磷': 'phosphor',
-  '星光': 'starlight', '铟': 'indium', '碘': 'iodine',
-  '苹果皮': 'appleskin', '高清修复': 'optifine', '光影': 'shaders',
-  '旅行地图': 'journeymap', '小地图': 'xaero', '世界地图': 'xaero',
-  '匠魂': 'tinkers construct', '植物魔法': 'botania', '热力膨胀': 'thermal expansion',
-  '通用机械': 'mekanism', '工业时代': 'industrialcraft', '工业': 'industrialcraft',
-  '应用能源': 'applied energistics', '精致存储': 'refined storage',
-  '储存抽屉': 'storage drawers', '暮色森林': 'twilight forest',
-  '虚无世界': 'advent of ascension', '星系': 'galacticraft',
-  '龙之研究': 'draconic evolution', '建筑': 'buildcraft', '林业': 'forestry',
-  '铁路': 'railcraft', '农夫乐事': 'farmers delight', '更好的战斗': 'better combat',
-  '交错次元': 'the betweenlands', '神秘时代': 'thaumcraft',
-  '沉浸工程': 'immersive engineering'
-};
-
-function expandResourceQuery(query) {
-  const raw = String(query || '').trim();
-  if (!raw) return raw;
-  const hit = Object.keys(RESOURCE_ALIASES).find((key) => raw.includes(key));
-  if (!hit) return raw;
-  return raw + ' ' + RESOURCE_ALIASES[hit];
-}
+// 开发者账户功能已具备，但暂时不对外开放。
+const SHOW_DEVELOPER_ACCOUNT = false;
+const BUILTIN_DEVELOPERS = ['末影哥', 'szy'];
 
 const state = {
   config: null,
   accounts: [],
   activeAccountId: '',
+  devUpdate: null,
+  devUpdateBusy: false,
   installed: [],
   java: null,
   tasks: [],
   page: 'home',
+  settingsSection: 'game',
+  accountInspectId: '',
+  accountAdding: false,
   renderedPage: '',
   manifest: null,
   manifestLoading: false,
   versionTab: 'installed',
+  pickerQuery: '',
   versionFilter: 'release',
   versionQuery: '',
   resourceKind: 'mod',
@@ -55,7 +38,6 @@ const state = {
   resourceVersionId: '',
   resourceWorld: '',
   servers: [],
-  multiplayerPings: {},
   serverId: '',
   serverLogs: [],
   pendingLocal: null,
@@ -72,14 +54,11 @@ const state = {
   gameRunning: false,
   launching: false,
   launchWaiting: false,
+  launchWaitTimer: null,
   launchProgress: 0,
   launchProgressText: '',
-  launchWaitTimer: null,
-  launchVersionId: '',
-  launchExited: false,
+  launchingVersionId: '',
   logLines: [],
-  logFilter: 'all',
-  logVersionId: '',
   latestLog: '',
   launchLogFile: '',
   msBusy: false,
@@ -88,16 +67,14 @@ const state = {
   modpackResult: null,
   skinData: null,
   skinLoading: false,
+  skinRequestId: 0,
+  skinRequestAccountId: '',
   skinError: '',
   skinVariant: 'steve',
   skinLayers: { hat: true, jacket: true, sleeves: true, pants: true },
   appVersion: '',
   update: null,
   updateChecking: false,
-  updateProgress: 0,
-  updateProgressText: '',
-  updateReady: false,
-  updateInstalling: false,
   refreshingAll: false,
   announcements: [],
   remoteAnnouncements: [],
@@ -114,11 +91,11 @@ const state = {
 };
 
 const PAGE_META = {
-  home: { title: '首页', subtitle: '启动、概览与快捷操作' },
+  home: { title: '首页', subtitle: '概览、快捷操作与公告' },
   versions: { title: '版本管理', subtitle: '下载、安装加载器、导入游戏' },
+  versionPicker: { title: '选择版本', subtitle: '选择本次启动的游戏实例' },
   resources: { title: '下载', subtitle: '游戏版本 · 模组 · 光影 · 资源包 · 数据包' },
   modpacks: { title: '整合包', subtitle: '导入 PCL2 / Modrinth / CurseForge 整合包' },
-  multiplayer: { title: '联机', subtitle: '收藏服务器 · 状态与延迟 · 一键加入' },
   accounts: { title: '账户', subtitle: '离线 · 微软 · 第三方验证' },
   skins: { title: '皮肤库', subtitle: '正面预览 · 推荐皮肤 · 披风' },
   servers: { title: '服务器', subtitle: '本地 Java 服务端与远程 RCON 管理' },
@@ -130,10 +107,9 @@ const NAVS = [
   { id: 'home', label: '主页', icon: 'home' },
   { id: 'resources', label: '下载', icon: 'download' },
   { id: 'modpacks', label: '整合包', icon: 'box' },
-  { id: 'multiplayer', label: '联机', icon: 'server' },
-  { id: 'servers', label: '服务端', icon: 'server' },
+  { id: 'servers', label: '服务器', icon: 'server' },
   { id: 'accounts', label: '账户', icon: 'user' },
-  { id: 'skins', label: '皮肤', icon: 'user' },
+  { id: 'skins', label: '皮肤', icon: 'skin' },
   { id: 'settings', label: '设置', icon: 'settings' },
   { id: 'logs', label: '日志', icon: 'terminal' }
 ];
@@ -173,6 +149,15 @@ function icon(name, size = 18) {
     (ICONS[name] || ICONS.info) + '</svg>';
 }
 
+// Vendored Tabler SVG assets keep the new shell usable without a network connection.
+function uiIcon(name) {
+  const files = { home: 'home', download: 'download', box: 'cube', server: 'server',
+    skin: 'shirt', settings: 'settings', terminal: 'terminal-2', user: 'user',
+    bell: 'bell', layers: 'stack-2', folder: 'folder' };
+  return '<span class="ui-icon" aria-hidden="true" style="--icon-url:url(assets/icons/' +
+    (files[name] || files.bell) + '.svg)"></span>';
+}
+
 function esc(value) {
   return String(value === undefined || value === null ? '' : value)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -184,73 +169,18 @@ function $(id) {
 }
 
 function toast(message, type = '') {
+  if (type === 'error') {
+    showErrorModal('操作失败', String(message || '未知错误'));
+    return;
+  }
   const root = $('toastRoot');
-  if (!root) return;
   const node = document.createElement('div');
   node.className = 'toast ' + type;
-  const text = document.createElement('span');
-  text.className = 'toast-text';
-  text.textContent = message;
-  const close = document.createElement('button');
-  close.className = 'toast-close';
-  close.type = 'button';
-  close.setAttribute('aria-label', '关闭通知');
-  close.textContent = '×';
-  node.appendChild(text);
-  node.appendChild(close);
+  node.setAttribute('role', 'status');
+  node.textContent = message;
   root.appendChild(node);
-
-  let timer = null;
-  let remaining = 3600;
-  let started = Date.now();
-  const hide = () => { if (timer) clearTimeout(timer); node.remove(); };
-  const arm = () => {
-    started = Date.now();
-    timer = setTimeout(hide, remaining);
-  };
-  const pause = () => {
-    if (timer) clearTimeout(timer);
-    timer = null;
-    remaining = Math.max(500, remaining - (Date.now() - started));
-  };
-  arm();
-
-  close.addEventListener('pointerdown', (e) => e.stopPropagation());
-  close.addEventListener('click', (e) => { e.stopPropagation(); hide(); });
-  node.addEventListener('pointerenter', pause);
-  node.addEventListener('pointerleave', () => { if (!timer) arm(); });
-
-  // Drag notifications away from buttons.
-  let dragging = false;
-  let startX = 0;
-  let startY = 0;
-  let dx = 0;
-  let dy = 0;
-  node.addEventListener('pointerdown', (e) => {
-    if (e.button !== 0 || e.target === close) return;
-    dragging = true;
-    startX = e.clientX - dx;
-    startY = e.clientY - dy;
-    node.setPointerCapture(e.pointerId);
-    node.classList.add('dragging');
-    pause();
-  });
-  node.addEventListener('pointermove', (e) => {
-    if (!dragging) return;
-    dx = e.clientX - startX;
-    dy = e.clientY - startY;
-    node.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
-  });
-  const endDrag = (e) => {
-    if (!dragging) return;
-    dragging = false;
-    node.classList.remove('dragging');
-    try { node.releasePointerCapture(e.pointerId); } catch { /* ignore */ }
-    node.addEventListener('pointerleave', () => { if (!timer) arm(); }, { once: true });
-  };
-  node.addEventListener('pointerup', endDrag);
-  node.addEventListener('pointercancel', endDrag);
-  node.addEventListener('dblclick', hide);
+  while (root.children.length > 3) root.firstElementChild.remove();
+  setTimeout(() => node.remove(), 3600);
 }
 
 function bytes(n) {
@@ -417,29 +347,24 @@ function displayVersion() {
 function render() {
   if (!state.config) return;
   applyAccent(state.config.accent);
-  applyColorMode(state.config.colorMode || 'light');
+  document.body.dataset.page = state.page;
   const oldScroll = $('content').scrollTop;
   renderNav();
   renderTopbar();
   const dev = isDeveloper();
-  const brand = document.querySelector('.titlebar-brand > span:not(.brand-gem):not(.titlebar-sub)');
-  if (brand) brand.textContent = dev ? 'EMCL 开发者版本' : 'EMCL';
-  const brandName = document.querySelector('.brand-name');
-  if (brandName) brandName.textContent = dev ? 'DEV' : 'EMCL';
+  $('editionLabel').hidden = !dev;
+  document.querySelector('.titlebar-brand').title = 'EMCL · v' + displayVersion();
   document.title = dev
     ? 'EMCL 开发者版本 · Enderman MineCraft Launcher'
     : 'EMCL · Enderman MineCraft Launcher';
-  const versionMini = $('versionMini');
-  if (versionMini) versionMini.textContent = 'v' + displayVersion();
   const meta = PAGE_META[state.page] || PAGE_META.home;
   $('pageTitle').textContent = meta.title;
-  $('pageSubtitle').textContent = meta.subtitle + (dev ? ' · 开发者版本' : '');
   const html = ({
     home: pageHome,
     versions: pageVersions,
+    versionPicker: pageVersionPicker,
     resources: pageResources,
     modpacks: pageModpacks,
-    multiplayer: pageMultiplayer,
     accounts: pageAccounts,
     skins: pageSkins,
     servers: pageServers,
@@ -452,65 +377,48 @@ function render() {
   state.renderedPage = state.page;
   renderTasks();
   renderLaunchProgress();
-  $('accountMini').innerHTML = avatar(currentAccount() ? currentAccount().name : '?', '') +
-    '<span class="mini-name">' + esc(currentAccount() ? currentAccount().name : '未登录') + '</span>';
+  $('accountMini').innerHTML = uiIcon('user') + '<span class="nav-label">账户</span>';
+  $('accountMini').classList.toggle('active', state.page === 'accounts');
+  if (state.page === 'accounts') $('accountMini').setAttribute('aria-current', 'page');
+  else $('accountMini').removeAttribute('aria-current');
+  if (state.page === 'skins') requestAnimationFrame(drawSkinCanvas);
   if (window.EMCL_I18N) window.EMCL_I18N.apply();
 }
 
 function renderNav() {
-  $('nav').innerHTML = NAVS.map((n) =>
-    '<button class="nav-item ' + (state.page === n.id ? 'active' : '') + '" data-nav="' + n.id + '">' +
-    icon(n.icon) + '<span>' + n.label + '</span></button>').join('');
+  const activePage = state.page === 'versionPicker' ? 'home' : state.page;
+  const item = (n) => '<button class="nav-item ' + (activePage === n.id ? 'active' : '') +
+    '" data-nav="' + n.id + '" title="' + n.label + '" aria-label="' + n.label + '"' +
+    (activePage === n.id ? ' aria-current="page"' : '') + '>' +
+    uiIcon(n.icon) + '<span class="nav-label">' + n.label + '</span></button>';
+  $('nav').innerHTML = NAVS.filter((n) => !['accounts', 'settings', 'logs'].includes(n.id)).map(item).join('');
+  $('utilityNav').innerHTML = NAVS.filter((n) => ['settings', 'logs'].includes(n.id)).map(item).join('');
 }
 
 function renderTopbar() {
-  const account = currentAccount();
-  const java = state.java;
-  const javaOk = !!(java && java.ok && !java.tooOld);
-  const updateChip = $('updateChip');
-  if (updateChip) {
-    const u = state.update;
-    if (u && u.hasUpdate) {
-      updateChip.style.display = '';
-      updateChip.innerHTML = '<span class="dot"></span>新版本 ' + esc(u.latest);
-    } else {
-      updateChip.style.display = 'none';
-    }
-  }
-  const noticeChip = $('noticeChip');
-  if (noticeChip) {
-    const unread = unseenAnnouncements();
-    if (unread.length) {
-      noticeChip.style.display = '';
-      noticeChip.innerHTML = icon('info', 13) + '<span>' + unread.length + ' 条新公告</span>';
-    } else {
-      noticeChip.style.display = 'none';
-    }
-  }
-  $('javaChip').className = 'chip ' + (javaOk ? 'ok' : 'warn');
-  $('javaChip').innerHTML = '<span class="dot"></span>' +
-    (java && java.ok
-      ? 'Java ' + java.major + (java.tooOld ? '（需 ' + java.required + '）' : '')
-      : '未检测到 Java');
-  $('accountChip').innerHTML = avatar(account ? account.name : '?', '') +
-    '<span>' + esc(account ? account.name : '未登录') + '</span>' +
-    (account ? ' · ' + esc(accountKind(account.kind)) : '');
+  const unread = unseenAnnouncements().length;
+  const hasUpdate = !!(state.update && state.update.hasUpdate);
+  $('workspaceHelp').innerHTML = uiIcon('bell') + (unread || hasUpdate ? '<span class="notice-indicator"></span>' : '');
 }
 
 function renderLaunchProgress() {
   const box = $('launchProgress');
   if (!box) return;
-  const inline = document.querySelector('.log-inline-progress');
-  if (inline) inline.textContent = '启动进度 ' + Math.round(state.launchProgress || 0) + '% · ' + (state.launchProgressText || '正在启动…');
-  if ((!state.launching && !state.launchWaiting) || state.page === 'logs') { box.style.display = 'none'; return; }
+  if (!state.launching && !state.launchWaiting) { box.style.display = 'none'; return; }
   box.style.display = 'block';
-  const pct = Math.max(2, Math.min(100, Number(state.launchProgress) || 0));
+  const pct = Math.max(0, Math.min(100, Number(state.launchProgress) || 0));
   const text = $('launchProgressText');
   const pctNode = $('launchProgressPct');
   const fill = $('launchProgressFill');
+  const phase = $('launchProgressPhase');
+  const instance = $('launchProgressInstance');
+  const track = $('launchProgressTrack');
+  if (phase) phase.textContent = pct >= 90 ? '正在进入游戏' : pct >= 55 ? '正在启动游戏' : pct >= 15 ? '正在检查文件' : '准备启动';
   if (text) text.textContent = state.launchProgressText || '正在启动…';
   if (pctNode) pctNode.textContent = Math.round(pct) + '%';
   if (fill) fill.style.width = pct + '%';
+  if (instance) instance.textContent = state.launchingVersionId || '';
+  if (track) track.setAttribute('aria-valuenow', String(Math.round(pct)));
 }
 
 function renderTasks() {
@@ -536,8 +444,7 @@ function renderTasks() {
 
 function applyColorMode(mode) {
   const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const resolved = mode === 'dark' || (mode === 'system' && prefersDark) ? 'dark' : 'light';
-  document.documentElement.dataset.theme = resolved;
+  document.documentElement.dataset.theme = (mode === 'dark' || (mode === 'system' && prefersDark)) ? 'dark' : 'light';
 }
 
 function applyAccent(color) {
@@ -576,7 +483,7 @@ function emptyState(text, iconName = 'box') {
 function allAnnouncements() {
   const out = [];
   const seen = new Set();
-  const combined = filterAnnouncements((state.localAnnouncements || []).concat(state.announcements || []));
+  const combined = (state.localAnnouncements || []).concat(state.announcements || []);
   for (const item of combined) {
     const id = String(item.id);
     if (seen.has(id)) continue;
@@ -642,7 +549,7 @@ function homeUpdateCard() {
     '<div class="update-actions">' +
       '<button class="btn btn-ghost btn-sm" data-action="show-update">更新内容</button>' +
       '<button class="btn btn-primary btn-sm" data-action="open-update">前往下载</button>' +
-    '</div></div>';
+    '</div>' + '</div>';
 }
 
 function homeAnnouncements() {
@@ -669,66 +576,6 @@ function homeAnnouncements() {
 
 /* ---------------- Home ---------------- */
 
-function pageHome() {
-  const version = currentVersion();
-  const account = currentAccount();
-  const accountName = account ? account.name : '未登录';
-  const activeId = currentVersionId();
-  return '' +
-    '<div class="hero">' +
-      '<div class="hero-top">' +
-        '<div><h2>Minecraft <em>Java Edition</em></h2>' +
-        '<p class="hero-sub">EMCL' + (isDeveloper() ? ' 开发者版本' : '') +
-          ' · Enderman MineCraft Launcher · 与 PCL2 相同的目录规范与操作习惯</p></div>' +
-        '<div class="hero-account" data-action="goto-accounts">' + avatar(accountName, '') +
-          '<div><div class="ha-name">' + esc(accountName) + '</div>' +
-          '<div class="ha-kind">' + esc(account ? accountKind(account.kind) : '点击登录') + '</div></div></div>' +
-      '</div>' +
-      '<div class="hero-controls">' +
-        '<div class="hero-version"><div class="hero-label">游戏版本</div>' +
-          '<select class="hero-select" id="homeVersion"' + (state.installed.length ? '' : ' disabled') + '>' +
-          activeVersionOptions(activeId) + '</select>' +
-          '<div class="hero-meta">' + (version ? loaderTag(version.loader) + '<span>' +
-            esc(version.mcVersion || version.id) + '</span>' : '<span>还没有安装版本</span>') + '</div></div>' +
-        (state.gameRunning
-          ? '<button class="hero-play" data-action="stop">' + icon('stop') + '停止游戏</button>'
-          : '<button class="hero-play" data-action="launch"' + (state.launching ? ' disabled' : '') + '>' +
-            icon('play') + (state.launching ? '正在启动…' : '启动游戏') + '</button>') +
-      '</div>' +
-      '<div class="hero-foot"><span>● ' + (state.java && state.java.ok && !state.java.tooOld
-        ? 'Java 就绪' : (state.java && state.java.ok ? 'Java 版本偏低，需要 ' + state.java.required : '请先配置 Java')) + '</span>' +
-        '<span>' + (state.config.isolation ? '版本隔离已开启' : '共享游戏目录') + '</span>' +
-        '<span>离线 / 微软 / 第三方登录</span></div>' +
-    '</div>' +
-    '<div class="stat-grid">' +
-      statCard(String(state.installed.length), '已安装版本', state.installed.length ? '可切换' : '去下载') +
-      statCard(state.java && state.java.ok ? 'Java ' + state.java.major : '缺失', 'Java 运行时',
-        state.java && state.java.ok && !state.java.tooOld ? '已就绪' : '需要更新') +
-      statCard(state.config.maxMemory + 'M', '内存上限', '可在设置调整') +
-      statCard(String(state.accounts.length), '账户', account ? accountKind(account.kind) : '未登录') +
-    '</div>' +
-    homeUpdateCard() +
-    '<div class="quick-grid">' +
-      quick('游戏版本', '下载游戏、安装加载器、导入文件夹', 'layers', 'resources', 'versions') +
-      quick('资源下载', '模组 · 光影 · 资源包 · 数据包', 'download', 'resources', 'resources') +
-      quick('整合包', '导入 PCL2 / Modrinth 整合包', 'box', 'modpacks') +
-      quick('联機服务器', '收藏 · 状态 · 一键加入', 'server', 'multiplayer') +
-      quick('账户与设置', '登录方式、Java 与主题', 'user', 'accounts') +
-    '</div>' +
-    homeAnnouncements() +
-    '<div class="card" style="margin-top:12px">' +
-      '<div class="card-head"><h3 class="card-title">' + icon('server', 18) + '服务器推荐</h3>' +
-        '<div class="spacer"></div><button class="btn btn-ghost btn-sm" data-action="server-recommend" data-type="survival">查看全部前 30</button></div>' +
-      '<div class="server-hint-group" style="margin-top:8px">' +
-      [['survival', '生存'], ['skyblock', '空岛'], ['factions', '阵营'], ['pvp', 'PvP'],
-        ['creative', '创造'], ['towny', '城市模拟'], ['modded', '模组'], ['pixelmon', '宝可梦'], ['roleplay', '角色扮演']]
-        .map(([id, name]) => '<button class="server-hint" data-action="server-recommend" data-type="' +
-          esc(id) + '">' + esc(name) + '</button>').join('') +
-      '</div>' +
-      '<div class="card-subtitle" style="margin-top:8px">来自 minecraftservers.org，按类型展示前 30 名，可复制 IP。</div>' +
-    '</div>';
-}
-
 function statCard(value, label, extra) {
   return '<div class="stat"><div class="stat-value">' + esc(value) + '</div>' +
     '<div class="stat-label">' + esc(label) + '</div>' +
@@ -743,87 +590,203 @@ function quick(title, desc, iconName, page, tab) {
     '<div class="quick-arrow">' + icon('chevron', 17) + '</div></div>';
 }
 
+function homeOverview() {
+  const account = currentAccount();
+  const java = state.java || {};
+  const javaText = java.ok ? 'Java ' + java.major : '缺失';
+  const javaExtra = java.ok && !java.tooOld ? '已就绪' : '需要更新';
+  return '<div class="stat-grid">' +
+    statCard(String(state.installed.length), '已安装版本', state.installed.length ? '可切换' : '去下载') +
+    statCard(javaText, 'Java 运行时', javaExtra) +
+    statCard(String(state.config.maxMemory || 4096) + 'M', '内存上限', '可在设置调整') +
+    statCard(String(state.accounts.length), '账户', account ? accountKind(account.kind) : '未登录') +
+    '</div>' +
+    '<div class="quick-grid">' +
+      quick('游戏版本', '下载游戏、安装加载器、导入文件夹', 'layers', 'resources', 'versions') +
+      quick('资源下载', '模组 · 光影 · 资源包 · 数据包', 'download', 'resources', 'resources') +
+      quick('整合包', '导入 PCL2 / Modrinth 整合包', 'box', 'modpacks') +
+    '</div>' +
+    '<div class="card" style="margin-top:12px"><div class="card-head"><h3 class="card-title">' + icon('server', 18) + '服务器推荐</h3>' +
+      '<div class="spacer"></div><button class="btn btn-ghost btn-sm" data-action="server-recommend" data-type="survival">查看全部前 30</button></div>' +
+      '<div class="server-hint-group" style="margin-top:8px">' +
+      [['survival', '生存'], ['skyblock', '空岛'], ['factions', '阵营'], ['pvp', 'PvP'], ['creative', '创造'], ['towny', '城市模拟'], ['modded', '模组'], ['pixelmon', '宝可梦'], ['roleplay', '角色扮演']]
+        .map(([id, name]) => '<button class="server-hint" data-action="server-recommend" data-type="' + esc(id) + '">' + esc(name) + '</button>').join('') +
+      '</div><div class="card-subtitle" style="margin-top:8px">来自 minecraftservers.org，按类型展示前 30 名，可复制 IP。</div></div>';
+}
+
+function pageSzyHome() {
+  const version = currentVersion();
+  const account = currentAccount();
+  const javaReady = !!(state.java && state.java.ok && !state.java.tooOld);
+  const status = javaReady ? 'Java ' + state.java.major + ' 就绪'
+    : (state.java && state.java.ok ? '需要 Java ' + state.java.required : '请配置 Java');
+  const memory = Math.round((Number(state.config.maxMemory) || 4096) / 1024 * 10) / 10;
+  const unread = unseenAnnouncements().length;
+  const hasUpdate = !!(state.update && state.update.hasUpdate);
+  const busy = state.launching || state.launchWaiting;
+  const launchAction = state.gameRunning ? 'stop' : (!version ? 'goto-versions' : (!account ? 'goto-accounts' : 'launch'));
+  const launchLabel = state.gameRunning ? '停止游戏' : (busy ? '正在启动…'
+    : (!version ? '安装游戏' : (!account ? '登录账户' : '启动游戏')));
+  return '<div class="home-screen">' +
+    '<div class="home-scene">' +
+      '<div class="home-utilities">' +
+        '<button class="scene-notices" data-action="launcher-center" title="通知与帮助" aria-label="通知与帮助">' +
+          uiIcon('bell') + (unread || hasUpdate ? '<span class="notice-indicator"></span>' : '') + '</button>' +
+        '<button class="scene-account" data-action="goto-accounts" title="账户">' + uiIcon('user') +
+          '<span' + (account ? ' data-i18n-skip' : '') + '>' + esc(account ? account.name : '未登录') + '</span></button>' +
+      '</div>' +
+      '<div class="home-caption"><div class="home-eyebrow">MINECRAFT / JAVA EDITION</div>' +
+        '<h2>世界，等你出发。</h2></div>' +
+    '</div>' +
+    '<div class="launch-bar">' +
+      '<div class="launch-version"><span class="launch-version-label">当前版本</span>' +
+        '<button class="launch-select" data-action="open-version-picker"' + (busy || state.gameRunning ? ' disabled' : '') +
+          ' aria-label="选择游戏版本"><span class="launch-select-name" data-i18n-skip>' +
+          esc(version ? versionLabel(version.id) : '选择游戏版本') + '</span>' +
+          '<span class="launch-select-arrow" aria-hidden="true">›</span></button></div>' +
+      '<div class="launch-tools">' +
+        '<button class="launch-tool" data-action="goto-versions" title="管理版本" aria-label="管理版本">' + uiIcon('layers') + '</button>' +
+        '<button class="launch-tool" data-action="open-version-dir" data-path="' + esc(version ? version.dir : state.config.gameDir) +
+          '" title="打开游戏目录" aria-label="打开游戏目录">' + uiIcon('folder') + '</button></div>' +
+      '<button class="launch-status ' + (javaReady ? 'ready' : 'needs-attention') + '" data-action="goto" data-page="settings"' +
+        ' title="Java、内存与版本隔离设置" aria-label="Java、内存与版本隔离设置">' +
+        '<span class="status-dot" aria-hidden="true"></span><span>' + esc(status) +
+        '<span class="launch-memory"> · ' + memory + ' GB</span></span></button>' +
+      '<button class="launch-button" data-action="' + launchAction + '"' + (busy && !state.gameRunning ? ' disabled' : '') + '>' +
+        (state.gameRunning ? icon('stop') : '') + '<span>' + launchLabel + '</span></button>' +
+    '</div></div>';
+}
+
+function pageVersionPicker() {
+  const query = state.pickerQuery.trim().toLocaleLowerCase();
+  const versions = state.installed;
+  const matches = (v) => !query || (versionLabel(v.id) + ' ' + v.id + ' ' + (v.loader || '原版')).toLocaleLowerCase().includes(query);
+  const currentId = currentVersionId();
+  return '<div class="version-picker-page">' +
+    '<div class="version-picker-header"><button class="btn btn-ghost" data-action="picker-back">返回启动页</button>' +
+      '<div><h2>选择游戏版本</h2><p>选中一个已安装的实例，回到启动页即可启动。</p></div></div>' +
+    '<input class="input version-picker-search" id="pickerSearch" type="search" placeholder="搜索版本或加载器" value="' + esc(state.pickerQuery) + '" aria-label="搜索已安装版本" />' +
+    (versions.length ? '<div class="version-picker-list">' + versions.map((v) => {
+      const active = v.id === currentId;
+      return '<button class="version-picker-row' + (active ? ' active' : '') + '" data-action="pick-version" data-id="' + esc(v.id) +
+        '" aria-pressed="' + active + '"' + (matches(v) ? '' : ' hidden') + '>' +
+        '<span class="version-picker-mark">' + uiIcon('layers') + '</span><span class="version-picker-detail">' +
+        '<strong data-i18n-skip>' + esc(versionLabel(v.id)) + '</strong><small data-i18n-skip>' +
+        esc(v.id) + ' · ' + esc(v.loader || '原版') + '</small></span>' +
+        (active ? '<span class="version-picker-current">当前使用</span>' : '') +
+        '<span class="version-picker-chevron" aria-hidden="true">›</span></button>';
+    }).join('') + '</div><p class="version-picker-no-match"' + (versions.some(matches) ? ' hidden' : '') + '>没有匹配的版本。</p>' : '<div class="version-picker-empty">' +
+      '还没有安装游戏版本。' +
+      '<button class="btn btn-primary" data-action="goto-versions">前往下载版本</button></div>') + '</div>';
+}
+
+function pageHome() {
+  return pageSzyHome() +
+    '<div class="home-overview">' +
+      '<div class="dashboard-head"><div><h1>概览</h1><p>启动、版本、账户与最近公告</p></div>' +
+      '<button class="btn btn-ghost" data-action="goto" data-page="versions">管理版本</button></div>' +
+      homeOverview() + homeUpdateCard() + homeAnnouncements(3) +
+    '</div>';
+}
+
+function showLauncherCenter() {
+  openModal({
+    title: '通知与帮助',
+    body: '<div class="launcher-center-tools">' +
+      '<button class="btn btn-ghost" data-action="open-url" data-url="' + OFFICIAL_URL + '">官网</button>' +
+      '<button class="btn btn-ghost" data-action="open-feedback">反馈</button>' +
+      '<button class="btn btn-ghost" data-action="refresh-all"' + (state.refreshingAll ? ' disabled' : '') + '>刷新公告和更新</button>' +
+      '</div>' + homeUpdateCard() + homeAnnouncements() +
+      (!visibleAnnouncements().length && !(state.update && state.update.hasUpdate)
+        ? '<div class="empty">暂无新通知</div>' : '') +
+      (state.announcementError ? '<p class="center-error">' + esc(state.announcementError) + '</p>' : ''),
+    actions: [],
+    className: 'launcher-center'
+  });
+}
+
 function notice(title, body) {
   return '<div class="notice"><div class="notice-dot"></div><div><div class="notice-title">' + esc(title) + '</div>' +
     '<div class="notice-body">' + esc(body) + '</div></div></div>';
 }
 
+function rowMenu(label, body) {
+  return '<details class="action-menu"><summary>' + esc(label) + '</summary><div class="action-menu-items">' + body + '</div></details>';
+}
+
+function sectionHeading(title, meta, actions = '') {
+  return '<div class="section-heading"><div><h2>' + esc(title) + '</h2>' +
+    (meta ? '<span class="section-meta">' + esc(meta) + '</span>' : '') + '</div><div class="section-actions">' + actions + '</div></div>';
+}
+
+function quietEmpty(title, detail = '') {
+  return '<div class="workspace-empty"><p>' + esc(title) + '</p>' + (detail ? '<span>' + esc(detail) + '</span>' : '') + '</div>';
+}
+
+function downloadNavigation() {
+  const selected = state.downloadTab === 'resources' ? state.resourceKind : 'versions';
+  return '<nav class="page-tabs" aria-label="下载分类">' + [['versions', '游戏版本'], ['mod', '模组'], ['shader', '光影'],
+    ['resourcepack', '资源包'], ['datapack', '数据包'], ['modpack', '整合包'], ['recommend', '推荐']].map(([id, label]) =>
+      '<button class="page-tab ' + (selected === id ? 'active' : '') + '" data-action="download-section" data-value="' + id +
+      '" aria-pressed="' + (selected === id) + '">' + label + '</button>').join('') + '</nav>';
+}
+
 /* ---------------- Versions ---------------- */
 
 function pageVersions() {
-  return '<div class="toolbar">' +
-    '<div class="tabs">' +
-      '<button class="tab ' + (state.versionTab === 'installed' ? 'active' : '') + '" data-action="vtab" data-value="installed">已安装</button>' +
-      '<button class="tab ' + (state.versionTab === 'online' ? 'active' : '') + '" data-action="vtab" data-value="online">下载版本</button>' +
-    '</div>' +
-    '<div class="spacer"></div>' +
-    '<button class="btn btn-ghost" data-action="auto-repair-all">自动补全文件</button>' +
-    '<button class="btn btn-ghost" data-action="import-folder">' + icon('folder') + '导入游戏文件夹</button>' +
-    '<button class="btn btn-ghost" data-action="import-modpack">' + icon('box') + '导入整合包</button>' +
-    '<button class="btn btn-primary" data-action="refresh-manifest">' + icon('refresh') + '刷新版本清单</button>' +
-    '</div>' +
+  return '<div class="section-toolbar"><div class="tabs">' +
+    '<button class="tab ' + (state.versionTab === 'installed' ? 'active' : '') + '" data-action="vtab" data-value="installed">已安装</button>' +
+    '<button class="tab ' + (state.versionTab === 'online' ? 'active' : '') + '" data-action="vtab" data-value="online">下载版本</button></div>' +
+    '<div class="spacer"></div><button class="btn btn-ghost" data-action="refresh-manifest" title="刷新版本清单">刷新</button>' +
+    rowMenu('导入与修复', '<button data-action="import-folder">导入游戏文件夹</button>' +
+      '<button data-action="import-modpack">导入整合包</button><button data-action="auto-repair-all">补全版本文件</button>') + '</div>' +
     (state.versionTab === 'installed' ? versionsInstalled() : versionsOnline());
 }
 
+
 function versionsInstalled() {
-  if (!state.installed.length) {
-    return '<div class="card">' + emptyState('还没有安装任何版本。\n可以在「下载版本」下载，或导入已有的 .minecraft 文件夹。', 'layers') +
-      '<div class="row" style="justify-content:center"><button class="btn btn-primary" data-action="vtab" data-value="online">' +
-      icon('download') + '去下载版本</button></div></div>';
-  }
-  return '<div class="version-list">' + state.installed.map((v) => {
-    const active = v.id === currentVersionId();
-    return '<div class="version-item ' + (active ? 'version-current' : '') + '">' +
-      '<div class="version-icon">' + esc(v.loader === '原版' ? 'MC' : v.loader.slice(0, 2).toUpperCase()) + '</div>' +
-      '<div class="version-main"><div class="version-name">' + esc(versionLabel(v.id)) + loaderTag(v.loader) +
-        (active ? tag('当前', 'blue') : '') + (!v.hasClientJar ? tag('缺 jar', 'red') : '') +
-        '<span class="version-date">' + (v.releaseTime ? '发布 ' + esc(timeText(v.releaseTime)) : '发布时间未知') + '</span></div>' +
-        '<div class="version-path">' + esc(v.dir) + '</div></div>' +
-      '<div class="version-actions">' +
-        '<button class="btn btn-primary btn-sm" data-action="launch-version" data-id="' + esc(v.id) + '">' + icon('play', 14) + '启动</button>' +
-        (active ? '' : '<button class="btn btn-soft btn-sm" data-action="select-version" data-id="' + esc(v.id) + '">设为当前</button>') +
-        '<button class="btn btn-ghost btn-sm" data-action="version-java" data-id="' + esc(v.id) + '">设置</button>' +
-        '<button class="btn btn-ghost btn-sm" data-action="rename-version" data-id="' + esc(v.id) + '">重命名</button>' +
-        (!v.hasClientJar ? '<button class="btn btn-ghost btn-sm" data-action="repair-version" data-id="' + esc(v.id) + '">补全文件</button>' : '') +
-        (v.loader === '原版' ? '<button class="btn btn-ghost btn-sm" data-action="loader-modal" data-id="' + esc(v.id) + '">装加载器</button>' : '') +
-        '<button class="icon-btn" title="打开目录" data-action="open-version-dir" data-path="' + esc(v.dir) + '">' + icon('folder', 15) + '</button>' +
-      '</div></div>';
-  }).join('') + '</div>';
+  if (!state.installed.length) return quietEmpty('还没有安装版本', '下载一个版本，或导入已有的游戏目录。') +
+    '<div class="empty-actions"><button class="btn btn-primary" data-action="vtab" data-value="online">下载版本</button>' +
+    '<button class="btn btn-ghost" data-action="import-folder">导入目录</button></div>';
+  return '<table class="data-table version-table"><thead><tr><th>版本</th><th>加载器</th><th>状态</th><th class="align-right">操作</th></tr></thead><tbody>' +
+    state.installed.map((v) => {
+      const active = v.id === currentVersionId();
+      const detail = [v.id !== versionLabel(v.id) ? v.id : '', v.releaseTime ? timeText(v.releaseTime) : ''].filter(Boolean).join(' · ');
+      const extra = '<button data-action="rename-version" data-id="' + esc(v.id) + '">重命名</button>' +
+        (!v.hasClientJar ? '<button data-action="repair-version" data-id="' + esc(v.id) + '">补全文件</button>' : '') +
+        (v.loader === '原版' ? '<button data-action="loader-modal" data-id="' + esc(v.id) + '">安装加载器</button>' : '') +
+        '<button data-action="open-version-dir" data-path="' + esc(v.dir) + '">打开目录</button>';
+      return '<tr class="' + (active ? 'is-current' : '') + '"><td><strong data-i18n-skip>' + esc(versionLabel(v.id)) +
+        '</strong>' + (detail ? '<span class="cell-detail" title="' + esc(v.dir) + '">' + esc(detail) + '</span>' : '') + '</td><td>' + esc(v.loader || '原版') + '</td>' +
+        '<td><span class="status-text ' + (!v.hasClientJar ? 'warning' : '') + '">' + (!v.hasClientJar ? '文件不完整' : active ? '当前版本' : '可用') + '</span></td>' +
+        '<td><div class="table-actions">' + (active ? '' : '<button class="btn btn-ghost btn-sm" data-action="select-version" data-id="' + esc(v.id) + '">选用</button>') +
+        '<button class="btn btn-ghost btn-sm" data-action="launch-version" data-id="' + esc(v.id) + '">启动</button>' + rowMenu('更多', extra) + '</div></td></tr>';
+    }).join('') + '</tbody></table>';
 }
 
+
 function versionsOnline() {
-  let list = (state.manifest && state.manifest.versions) ? state.manifest.versions.slice() : [];
-  list = LEGACY_20.concat(list);
+  let list = LEGACY_20.concat(state.manifest && state.manifest.versions || []);
   if (state.versionFilter === 'ancient') list = list.filter(isAncientVersion);
   else if (state.versionFilter === 'aprilfools') list = list.filter((v) => isAprilFoolsVersion(v.id));
   else if (state.versionFilter === 'release') list = list.filter((v) => !v.legacy && v.type === 'release');
   else if (state.versionFilter !== 'all') list = list.filter((v) => v.type === state.versionFilter);
-  if (state.versionQuery) {
-    const q = state.versionQuery.toLowerCase();
-    list = list.filter((v) => v.id.toLowerCase().includes(q));
-  }
+  if (state.versionQuery) list = list.filter((v) => v.id.toLowerCase().includes(state.versionQuery.toLowerCase()));
   const shown = list.slice(0, 120);
-  return '<div class="toolbar">' +
-    '<div class="tabs">' +
-      ['release', 'snapshot', 'aprilfools', 'ancient', 'all'].map((f) => '<button class="tab ' + (state.versionFilter === f ? 'active' : '') +
-        '" data-action="version-filter" data-value="' + f + '">' +
-        ({ release: '正式版', snapshot: '快照', aprilfools: '愚人节', ancient: '远古版', all: '全部' }[f]) + '</button>').join('') +
-    '</div>' +
-    '<div class="search-box">' + icon('search') +
-      '<input id="versionSearch" placeholder="筛选版本号，如 1.21 或 1.20.1" value="' + esc(state.versionQuery) + '" />' +
-    '</div>' +
-    '<span class="small muted">共 ' + list.length + ' 个，展示前 ' + shown.length + ' 个</span>' +
-    '</div>' +
-    '<div>' + shown.map((v) => '<div class="online-row">' +
-      '<div class="online-id">' + esc(v.id) + ' ' + tag(versionTypeLabel(v), v.type === 'release' ? 'blue' : 'gray') + '</div>' +
-      '<div class="online-date">' + esc(timeText(v.releaseTime)) + '</div><div class="spacer"></div>' +
-      (v.legacy
-        ? '<button class="btn btn-soft btn-sm" data-action="install-version" data-id="' + esc(v.id) + '" data-url="' + esc(v.url) + '">' +
-          (state.installing === v.id ? '安装中…' : '下载安装') + '</button>'
-        : '<button class="btn btn-soft btn-sm" data-action="install-options" data-id="' + esc(v.id) + '" data-url="' + esc(v.url) + '">' +
-          (state.installing === v.id ? '安装中…' : '下载安装') + '</button>') +
-      '</div>').join('') + '</div>';
+  return '<div class="filter-bar"><div class="search-box">' + icon('search') +
+    '<input id="versionSearch" aria-label="筛选版本" placeholder="筛选版本" value="' + esc(state.versionQuery) + '"></div>' +
+    '<select class="select compact-select" data-change="version-filter" aria-label="版本类型">' +
+      [['release','正式版'],['snapshot','快照'],['aprilfools','愚人节'],['ancient','远古版'],['all','全部']].map(([id,label]) =>
+        '<option value="' + id + '"' + (state.versionFilter === id ? ' selected' : '') + '>' + label + '</option>').join('') + '</select></div>' +
+    (shown.length ? '<table class="data-table"><thead><tr><th>版本</th><th>类型</th><th>发布日期</th><th></th></tr></thead><tbody>' +
+      shown.map((v) => '<tr><td><strong>' + esc(v.id) + '</strong></td><td>' + esc(versionTypeLabel(v)) + '</td><td>' + esc(timeText(v.releaseTime)) + '</td>' +
+        '<td class="align-right"><button class="btn btn-ghost btn-sm" data-action="' + (v.legacy ? 'install-version' : 'install-options') +
+        '" data-id="' + esc(v.id) + '" data-url="' + esc(v.url) + '"' + (state.installing === v.id ? ' disabled' : '') + '>' +
+        (state.installing === v.id ? '安装中…' : '安装') + '</button></td></tr>').join('') + '</tbody></table>' +
+      '<div class="list-footer">' + list.length + ' 个版本' + (list.length > shown.length ? ' · 显示前 ' + shown.length + ' 个' : '') + '</div>'
+      : quietEmpty(state.manifestLoading ? '正在加载版本清单…' : '未找到版本', state.manifestLoading ? '' : '调整筛选条件，或刷新版本清单。'));
 }
+
 
 /* ---------------- Resources ---------------- */
 
@@ -837,84 +800,51 @@ const RESOURCE_TABS = [
 ];
 
 function pageResources() {
-  const downloadTabs = '<div class="toolbar"><div class="tabs">' +
-    '<button class="tab ' + (state.downloadTab !== 'resources' ? 'active' : '') +
-    '" data-action="download-tab" data-value="versions">游戏版本</button>' +
-    '<button class="tab ' + (state.downloadTab === 'resources' ? 'active' : '') +
-    '" data-action="download-tab" data-value="resources">资源下载</button></div></div>';
-  if (state.downloadTab !== 'resources') return downloadTabs + pageVersions();
-  if (!state.resourceVersionId && state.installed.length) state.resourceVersionId = currentVersionId();
+  const navigation = downloadNavigation();
+  if (state.downloadTab !== 'resources') return navigation + pageVersions();
   const vid = state.resourceVersionId || currentVersionId();
-  const gv = gameVersionOf(vid);
-  const ld = loaderOf(vid);
-  if (state.resourceKind === 'recommend') return downloadTabs + pageRecommend(vid, gv, ld);
-  const kindLabel = (RESOURCE_TABS.find((t) => t.id === state.resourceKind) || RESOURCE_TABS[0]).label;
-  let html = downloadTabs + '<div class="toolbar">' +
-    '<div class="tabs">' + RESOURCE_TABS.map((t) =>
-      '<button class="tab ' + (state.resourceKind === t.id ? 'active' : '') + '" data-action="rkind" data-kind="' + t.id + '">' + t.label + '</button>').join('') +
-    '</div>' +
-    (isDeveloper() ? '<div class="tabs" style="margin-left:8px">' +
-      '<button class="tab ' + (state.resourceSource === 'modrinth' ? 'active' : '') +
-      '" data-action="resource-source" data-source="modrinth">Modrinth</button>' +
-      '<button class="tab ' + (state.resourceSource === 'curseforge' ? 'active' : '') +
-      '" data-action="resource-source" data-source="curseforge">CurseForge</button></div>' +
-      '<button class="btn btn-ghost btn-sm" data-action="cf-key-manager">密钥迁移</button>' : '') +
-    '<div class="spacer"></div>' +
-    '<div class="field" style="margin:0;min-width:180px"><select class="select" data-change="resource-version">' +
-      activeVersionOptions(vid) + '</select></div>' +
-    (state.resourceKind === 'datapack' ? '<div class="field" style="margin:0;min-width:150px"><select class="select" data-change="resource-world">' +
-      (state.worlds.length ? state.worlds.map((w) => '<option value="' + esc(w.name) + '"' +
-        (w.name === state.resourceWorld ? ' selected' : '') + '>' + esc(w.name) + '</option>').join('')
-        : '<option value="">没有存档</option>') + '</select></div>' : '') +
-    '<div class="chip">' + (gv ? esc(gv) : '未选版本') + (ld ? ' · ' + esc(ld) : '') + '</div>' +
-    '</div>' +
-    '<div class="card" style="padding:14px">' +
-      '<div class="spread" style="margin-bottom:10px"><div><div class="card-title">从 ' +
-      (state.resourceSource === 'curseforge' ? 'CurseForge' : 'Modrinth') + ' 获取' + kindLabel + '</div>' +
-        '<div class="card-subtitle">' + (state.resourceKind === 'datapack'
-          ? '数据包会安装到所选存档的 datapacks 目录'
-          : (state.resourceKind === 'mod' ? '按当前游戏版本与加载器筛选' : '下载后会放入对应目录')) + '</div></div>' +
-        '<button class="btn btn-ghost btn-sm" data-action="refresh-content">' + icon('refresh', 14) + '刷新本地</button></div>' +
-      '<div class="toolbar" style="margin-bottom:0">' +
-        '<div class="search-box">' + icon('search') +
-          '<input id="resourceSearch" placeholder="搜索' + kindLabel + '，例如 sodium / complementary" value="' + esc(state.resourceQuery) + '" />' +
-        '</div>' +
-        '<button class="btn btn-primary" data-action="search-resources"' + (state.resourceSearching ? ' disabled' : '') + '>' +
-          (state.resourceSearching ? '搜索中…' : '搜索') + '</button>' +
-      '</div>' +
-      (state.resourceError ? '<div class="empty" style="padding:14px;color:var(--red)">' + esc(state.resourceError) + '</div>' : '') +
-      (state.resourceFallback ? '<div class="empty" style="padding:8px 14px 2px;color:var(--orange)">当前版本/加载器没有严格匹配，已放宽过滤显示全量结果；安装前请确认文件支持你的版本。</div>' : '') +
-    '</div>' +
-    (state.resourceHits.length ? '<div class="resource-grid" style="margin-top:10px">' +
-      state.resourceHits.map((hit) => resourceCard(hit)).join('') + '</div>' : '') +
-    resourceInstalled(kindLabel);
-  return html;
+  if (!state.resourceVersionId) state.resourceVersionId = vid;
+  const gv = gameVersionOf(vid), ld = loaderOf(vid);
+  if (state.resourceKind === 'recommend') return navigation + pageRecommend(vid, gv, ld);
+  const kind = (RESOURCE_TABS.find((t) => t.id === state.resourceKind) || RESOURCE_TABS[1]).label;
+  const source = '<select class="select compact-select" data-change="resource-source" aria-label="资源来源">' +
+    '<option value="modrinth"' + (state.resourceSource === 'modrinth' ? ' selected' : '') + '>Modrinth</option>' +
+    (isDeveloper() ? '<option value="curseforge"' + (state.resourceSource === 'curseforge' ? ' selected' : '') + '>CurseForge</option>' : '') + '</select>';
+  return navigation + '<div class="resource-controls"><div class="filter-bar"><div class="search-box">' + icon('search') +
+    '<input id="resourceSearch" aria-label="搜索' + kind + '" placeholder="搜索' + kind + '" value="' + esc(state.resourceQuery) + '"></div>' + source +
+    '<button class="btn btn-primary" data-action="search-resources"' + (state.resourceSearching ? ' disabled' : '') + '>' +
+    (state.resourceSearching ? '搜索中…' : '搜索') + '</button></div>' +
+    '<div class="resource-target"><label for="resourceVersion">安装到</label><select id="resourceVersion" class="select" data-change="resource-version">' +
+      activeVersionOptions(vid) + '</select>' +
+      (state.resourceKind === 'datapack' ? '<select class="select" data-change="resource-world" aria-label="目标存档">' +
+        (state.worlds.length ? state.worlds.map((w) => '<option value="' + esc(w.name) + '"' + (w.name === state.resourceWorld ? ' selected' : '') + '>' + esc(w.name) + '</option>').join('')
+          : '<option value="">没有存档</option>') + '</select>' : '') +
+      '<div class="spacer"></div><button class="btn btn-ghost btn-sm" data-action="refresh-content">刷新本地</button>' +
+      (isDeveloper() ? rowMenu('更多', '<button data-action="cf-key-manager">CurseForge 密钥管理</button>') : '') + '</div></div>' +
+    (state.resourceError ? '<p class="inline-error" role="alert">' + esc(state.resourceError) + '</p>' : '') +
+    (state.resourceFallback ? '<p class="inline-note">没有完全匹配的结果，安装前请确认版本兼容性。</p>' : '') +
+    (state.resourceHits.length ? '<section class="resource-results">' + sectionHeading('搜索结果', state.resourceHits.length + ' 项') +
+      '<div class="resource-grid">' + state.resourceHits.map(resourceCard).join('') + '</div></section>' : '') + resourceInstalled(kind);
 }
+
 
 function resourceCard(hit) {
   const busy = state.installing === hit.project_id;
-  return '<div class="resource-card">' +
-    '<div class="resource-head"><div class="resource-icon">' +
-      (hit.icon_url ? '<img src="' + esc(hit.icon_url) + '" alt="" onerror="this.style.display=\'none\'" />' : esc(String(hit.title || '?').charAt(0))) +
-    '</div><div style="min-width:0"><div class="resource-title">' + esc(hit.title) + '</div>' +
-      '<div class="resource-author">by ' + esc(hit.author) + '</div></div></div>' +
-    '<div class="resource-desc">' + esc(hit.description) + '</div>' +
-    '<div class="resource-foot"><span class="downloads">' + downloads(hit.downloads) + ' 次下载</span><div class="spacer"></div>' +
-      '<button class="btn ' + (state.resourceKind === 'modpack' ? 'btn-primary' : 'btn-soft') + ' btn-sm" data-action="install-resource" data-project="' + esc(hit.project_id) + '">' +
-        (busy ? '处理中…' : (state.resourceKind === 'modpack' ? '安装整合包' : '安装')) + '</button></div></div>';
+  return '<article class="resource-card"><div class="resource-icon">' +
+    (hit.icon_url ? '<img src="' + esc(hit.icon_url) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' : uiIcon('box')) +
+    '</div><div class="resource-content"><div class="resource-title">' + esc(hit.title) + '</div>' +
+    '<div class="resource-desc" data-i18n-skip>' + esc(hit.description) + '</div><div class="resource-author">' + esc(hit.author || '') +
+    ' · ' + downloads(hit.downloads) + ' 次下载</div></div>' +
+    '<button class="btn btn-ghost btn-sm" data-action="install-resource" data-project="' + esc(hit.project_id) + '"' + (busy ? ' disabled' : '') + '>' +
+    (busy ? '处理中…' : '安装') + '</button></article>';
 }
 
+
 function recommendToolbar(vid, gv, ld) {
-  return '<div class="toolbar">' +
-    '<div class="tabs">' + RESOURCE_TABS.map((t) =>
-      '<button class="tab ' + (state.resourceKind === t.id ? 'active' : '') +
-      '" data-action="rkind" data-kind="' + t.id + '">' + t.label + '</button>').join('') + '</div>' +
-    '<div class="spacer"></div>' +
-    '<div class="field" style="margin:0;min-width:180px"><select class="select" data-change="resource-version">' +
-      activeVersionOptions(vid) + '</select></div>' +
-    '<div class="chip">' + (gv ? esc(gv) : '未选版本') + (ld ? ' · ' + esc(ld) : '') + '</div>' +
-    '</div>';
+  return '<div class="resource-target"><label for="recommendVersion">适用版本</label><select id="recommendVersion" class="select" data-change="resource-version">' +
+    activeVersionOptions(vid) + '</select><span class="section-meta">' + esc(gv + (ld ? ' · ' + ld : '')) + '</span></div>';
 }
+
 
 function pageRecommend(vid, gv, ld) {
   let html = recommendToolbar(vid, gv, ld);
@@ -940,8 +870,8 @@ function pageRecommend(vid, gv, ld) {
     html += '<div class="card">' + emptyState('当前版本没有可用的推荐。', 'box') + '</div>';
   } else {
     const shown = state.recommendHits.slice(0, state.recommendLimit || 30);
-    html += '<div class="recommend-head"><div><div class="card-title">模组热门 Top 100</div>' +
-      '<div class="card-subtitle">Modrinth 下载榜前 100 名，按 ' + esc(gv) + ' · ' + esc(ld) + ' 筛选，点击即可安装。</div></div>' +
+    html += '<div class="recommend-head"><div><div class="card-title">推荐模组</div>' +
+      '<div class="card-subtitle">按 ' + esc(gv) + ' · ' + esc(ld) + ' 筛选。</div></div>' +
       '<button class="btn btn-ghost btn-sm" data-action="refresh-recommend">' + icon('refresh', 14) + '刷新推荐</button></div>' +
       '<div class="recommend-grid">' + shown.map((item) => {
         const busy = state.installing === item.projectId;
@@ -1003,186 +933,91 @@ async function installRecommendation(slug) {
 }
 
 function resourceInstalled(kindLabel) {
-  if (state.contentLoading) {
-    return '<div class="card" style="margin-top:10px"><div class="empty">正在读取本地' + kindLabel + '…</div></div>';
-  }
-  if (state.resourceKind === 'modpack') {
-    return '<div class="card" style="margin-top:10px"><div class="card-head"><h3 class="card-title">已安装整合包版本</h3>' +
-      '<button class="btn btn-ghost btn-sm" data-action="import-modpack">导入本地整合包</button></div>' +
-      (state.installed.length ? state.installed.filter((v) => v.loader !== '原版').map((v) =>
-        '<div class="content-row">' + icon('box', 18) + '<div><div class="content-name">' + esc(versionLabel(v.id)) + '</div>' +
-        '<div class="content-meta">' + esc(v.loader) + ' · ' + esc(v.mcVersion || '') + '</div></div><div class="spacer"></div>' +
-        '<button class="btn btn-primary btn-sm" data-action="launch-version" data-id="' + esc(v.id) + '">启动</button></div>').join('')
-        : emptyState('还没有加载器版本，下载整合包或安装加载器后会显示在这里', 'box')) + '</div>';
-  }
-  const data = state.contentData;
-  if (!data || !Array.isArray(data.files) || !data.files.length) {
-    return '<div class="card" style="margin-top:10px">' + emptyState('本地还没有' + kindLabel + '。\n可以在上面搜索并一键安装。', 'box') + '</div>';
-  }
-  let files = data.files;
-  if (state.resourceKind === 'datapack') files = files.filter((f) => !state.resourceWorld || f.world === state.resourceWorld);
-  if (!files.length) return '<div class="card" style="margin-top:10px">' + emptyState('当前存档还没有数据包', 'box') + '</div>';
-  return '<div class="card" style="margin-top:10px"><div class="card-head"><h3 class="card-title">本地' + kindLabel + '</h3>' +
-    '<span class="small muted">' + files.length + ' 个</span></div>' +
-    files.map((f) => '<div class="content-row">' + icon('box', 18) +
-      '<div style="min-width:0"><div class="content-name">' + esc(f.name) + '</div>' +
-      '<div class="content-meta">' + esc(f.filename) + ' · ' + bytes(f.size) + (f.world ? ' · ' + esc(f.world) : '') + '</div></div>' +
-      '<div class="spacer"></div>' + (f.isDir ? tag('目录', 'gray') : tag(f.enabled ? '启用' : '禁用', f.enabled ? 'green' : 'gray')) +
-      (!f.isDir ? '<button class="btn btn-ghost btn-sm" data-action="toggle-content" data-kind="' + state.resourceKind +
-        '" data-path="' + esc(f.path) + '" data-enabled="' + (f.enabled ? '1' : '0') + '">' + (f.enabled ? '禁用' : '启用') + '</button>' : '') +
-      '<button class="btn btn-danger btn-sm" data-action="remove-content" data-kind="' + state.resourceKind +
-        '" data-path="' + esc(f.path) + '" data-name="' + esc(f.name) + '">' + icon('trash', 13) + '</button>' +
-      '</div>').join('') + '</div>';
+  if (state.contentLoading) return '<p class="inline-note">正在读取本地文件…</p>';
+  if (state.contentError) return '<p class="inline-error" role="alert">' + esc(state.contentError) + '</p>';
+  if (state.resourceKind === 'modpack') return '<section class="local-content">' + sectionHeading('已安装', '') + modpackVersionList() + '</section>';
+  const files = ((state.contentData && state.contentData.files) || []).filter((f) =>
+    state.resourceKind !== 'datapack' || !state.resourceWorld || f.world === state.resourceWorld);
+  return '<section class="local-content">' + sectionHeading('本地' + kindLabel, files.length + ' 项') +
+    (files.length ? '<table class="data-table"><thead><tr><th>名称</th><th>大小</th><th>状态</th><th class="align-right">操作</th></tr></thead><tbody>' +
+      files.map((f) => '<tr><td><strong>' + esc(f.name) + '</strong><span class="cell-detail">' + esc(f.filename) +
+        (f.world ? ' · ' + esc(f.world) : '') + '</span></td><td>' + bytes(f.size) + '</td><td>' + (f.isDir ? '目录' : f.enabled ? '已启用' : '已禁用') + '</td>' +
+        '<td><div class="table-actions">' + (!f.isDir ? '<button class="btn btn-ghost btn-sm" data-action="toggle-content" data-kind="' + state.resourceKind +
+        '" data-path="' + esc(f.path) + '" data-enabled="' + (f.enabled ? '0' : '1') + '">' + (f.enabled ? '禁用' : '启用') + '</button>' : '') +
+        '<button class="btn btn-ghost btn-sm danger-text" data-action="remove-content" data-kind="' + state.resourceKind + '" data-path="' + esc(f.path) +
+        '" data-name="' + esc(f.name) + '">删除</button></div></td></tr>').join('') + '</tbody></table>'
+      : quietEmpty('暂无本地' + kindLabel, '搜索并安装后会显示在这里。')) + '</section>';
 }
+
+function modpackVersionList() {
+  const versions = state.installed.filter((v) => v.loader && v.loader !== '原版');
+  if (!versions.length) return quietEmpty('还没有整合包', '导入 zip / mrpack 文件，或在线下载。');
+  return '<table class="data-table"><thead><tr><th>名称</th><th>Minecraft</th><th>加载器</th><th></th></tr></thead><tbody>' +
+    versions.map((v) => '<tr><td><strong data-i18n-skip>' + esc(versionLabel(v.id)) + '</strong><span class="cell-detail" title="' + esc(v.dir) + '">' + esc(v.dir) +
+      '</span></td><td>' + esc(v.mcVersion || v.id) + '</td><td>' + esc(v.loader) + '</td><td><div class="table-actions">' +
+      '<button class="btn btn-ghost btn-sm" data-action="launch-version" data-id="' + esc(v.id) + '">启动</button>' +
+      rowMenu('更多', '<button data-action="rename-version" data-id="' + esc(v.id) + '">重命名</button>' +
+        '<button data-action="open-version-dir" data-path="' + esc(v.dir) + '">打开目录</button>') + '</div></td></tr>').join('') + '</tbody></table>';
+}
+
 
 /* ---------------- Modpacks ---------------- */
 
 function pageModpacks() {
-  const loaderVersions = state.installed.filter((v) => v.loader !== '原版');
-  return '<div class="toolbar">' +
-    '<div><div class="card-title">整合包中心</div><div class="card-subtitle">导入 PCL2 常见的 .minecraft 整合包、Modrinth .mrpack，或直接在线安装</div></div>' +
-    '<div class="spacer"></div>' +
-    '<button class="btn btn-ghost" data-action="goto-resources-modpack">' + icon('download') + '在线整合包</button>' +
-    '<button class="btn btn-primary" data-action="import-modpack">' + icon('box') + '导入本地整合包</button>' +
-    '</div>' +
-    (state.modpackResult ? '<div class="card" style="border-color:#BFD9F3;background:linear-gradient(180deg,#fff,#F6FBFF)">' +
-      '<div class="card-title">' + icon('check', 17) + '最近导入</div><div class="card-subtitle">' + esc(state.modpackResult) + '</div></div>' : '') +
-    '<div class="card"><div class="card-head"><h3 class="card-title">已安装的整合包 / 加载器版本</h3>' +
-      '<span class="small muted">' + loaderVersions.length + ' 个</span></div>' +
-      (loaderVersions.length ? loaderVersions.map((v) => '<div class="content-row">' +
-        '<div class="version-icon">' + esc(v.loader.slice(0, 2).toUpperCase()) + '</div>' +
-        '<div style="min-width:0"><div class="content-name">' + esc(versionLabel(v.id)) + '</div>' +
-        '<div class="content-meta">' + esc(v.loader) + ' · ' + esc(v.mcVersion || '') + ' · ' + esc(v.dir) + '</div></div>' +
-        '<div class="spacer"></div><button class="btn btn-primary btn-sm" data-action="launch-version" data-id="' +
-        esc(v.id) + '">启动</button></div>').join('') : emptyState('还没有安装整合包。\n可以导入本地 zip / mrpack，或到「资源下载 → 整合包」在线安装。', 'box')) +
-    '</div>' +
-    '<div class="card" style="margin-top:12px"><div class="card-head"><h3 class="card-title">兼容格式</h3></div>' +
-      notice('Modrinth .mrpack', '自动解析 modrinth.index.json，安装基础版本、Fabric / Quilt / Forge / NeoForge 与全部文件，并校验 SHA-1。') +
-      notice('PCL2 / 官方 .minecraft 整合包', 'zip 根目录或单层目录中包含 .minecraft、versions、mods、config 时，会合并到游戏目录。') +
-      notice('CurseForge manifest', '会安装声明的 Minecraft 与加载器，并导入 overrides；清单里的远程文件需要 CurseForge API，界面会明确提示。') +
-    '</div>';
+  return '<div class="section-toolbar"><span class="section-meta">整合包与加载器版本</span><div class="spacer"></div>' +
+    '<button class="btn btn-ghost" data-action="goto-resources-modpack">在线下载</button>' +
+    '<button class="btn btn-primary" data-action="import-modpack">导入整合包</button></div>' +
+    (state.modpackResult ? '<p class="inline-note success-text">' + esc(state.modpackResult) + '</p>' : '') + modpackVersionList() +
+    '<details class="text-disclosure"><summary>支持哪些文件格式？</summary><dl class="format-list">' +
+      '<dt>Modrinth</dt><dd>.mrpack</dd><dt>PCL2 / 官方启动器</dt><dd>包含 .minecraft 的 zip 文件</dd>' +
+      '<dt>CurseForge</dt><dd>包含 manifest.json 与 overrides 的压缩包；部分文件需要 API Key。</dd></dl></details>';
 }
+
 
 /* ---------------- Servers ---------------- */
 
-function parseServerAddress(value) {
-  let text = String(value || '').trim();
-  if (!text) return null;
-  let host = text;
-  let port = 25565;
-  if (host.startsWith('[')) {
-    const end = host.indexOf(']');
-    if (end > 0) {
-      const rest = host.slice(end + 1);
-      host = host.slice(1, end);
-      if (rest.startsWith(':')) port = Number(rest.slice(1)) || 25565;
-    }
-  } else {
-    const match = host.match(/^(.*):(\d+)$/);
-    if (match) {
-      host = match[1];
-      port = Number(match[2]) || 25565;
-    }
-  }
-  host = host.trim();
-  if (!host) return null;
-  return { host, port };
-}
-
-function pageMultiplayer() {
-  const list = Array.isArray(state.config.multiplayerServers) ? state.config.multiplayerServers : [];
-  const rows = list.length ? list.map((item) => {
-    const ping = state.multiplayerPings[item.id];
-    const busy = state.multiplayerBusy === item.id;
-    const status = !ping ? { text: '未检测', color: 'gray' } : (ping.ok
-      ? { text: '在线', color: 'green' }
-      : { text: '离线', color: 'red' });
-    const detail = ping && ping.ok
-      ? (ping.version ? ping.version + ' · ' : '') + ping.online + '/' + ping.max + (ping.latency ? ' · ' + ping.latency + ' ms' : '')
-      : (ping && ping.error ? ping.error : item.host + ':' + item.port);
-    return '<div class="server-row">' +
-      '<div class="server-icon">' + icon('server', 18) + '</div>' +
-      '<div style="min-width:0;flex:1">' +
-        '<div class="server-name">' + esc(item.name || item.host) + ' ' + tag(status.text, status.color) + '</div>' +
-        '<div class="server-meta">' + esc(item.host + ':' + item.port) + ' · ' + esc(detail) + '</div>' +
-        (ping && ping.ok && ping.motd ? '<div class="server-meta" style="margin-top:3px;white-space:normal;line-height:1.45">' + esc(ping.motd.replace(/§./g, '').slice(0, 180)) + '</div>' : '') +
-      '</div>' +
-      '<button class="btn btn-ghost btn-sm" data-action="mp-ping" data-id="' + esc(item.id) + '"' + (busy ? ' disabled' : '') + '>' + (busy ? '检测中…' : '刷新') + '</button>' +
-      '<button class="btn btn-primary btn-sm" data-action="mp-join" data-id="' + esc(item.id) + '">加入</button>' +
-      '<button class="btn btn-ghost btn-sm" data-action="mp-remove" data-id="' + esc(item.id) + '">删除</button>' +
-    '</div>';
-  }).join('') : emptyState('还没有收藏服务器。\n在下面添加一个地址，然后点「刷新」检测状态。', 'server');
-  return '<div class="card"><div class="card-head"><h3 class="card-title">我的服务器</h3><div class="spacer"></div>' +
-    '<button class="btn btn-ghost btn-sm" data-action="mp-ping-all">刷新全部</button></div>' +
-    '<div class="server-list">' + rows + '</div></div>' +
-    '<div class="card" style="margin-top:12px"><div class="card-head"><h3 class="card-title">添加服务器</h3></div>' +
-    '<div class="row" style="gap:8px;flex-wrap:wrap;align-items:flex-end">' +
-      '<div class="field" style="margin:0;min-width:160px;flex:1"><label>名称</label><input class="input" id="mpName" placeholder="例如：Hypixel"></div>' +
-      '<div class="field" style="margin:0;min-width:240px;flex:2"><label>地址</label><input class="input" id="mpAddress" placeholder="play.example.com:25565"></div>' +
-      '<button class="btn btn-primary" data-action="mp-add">添加</button>' +
-    '</div>' +
-    '<div class="card-subtitle" style="margin-top:8px">支持 host:port；不填端口默认 25565。加入时会用当前选中的游戏版本启动并传入 --server。</div>' +
-  '</div>';
-}
-
 function pageServers() {
-  const selected = state.servers.find((s) => s.id === state.serverId) || state.servers[0];
-  const list = state.servers.length
-    ? state.servers.map((s) => '<div class="server-row ' + (selected && s.id === selected.id ? 'active' : '') + '" data-server-id="' + esc(s.id) + '">' +
-      '<div class="server-icon">' + icon('server', 18) + '</div>' +
-      '<div style="min-width:0"><div class="server-name">' + esc(s.name) + ' ' +
-      tag(s.running ? '运行中' : '已停止', s.running ? 'green' : 'gray') + '</div>' +
-      '<div class="server-meta">' + esc(s.type === 'local' ? (s.jar + ' · ' + s.dir) : (s.host + ':' + s.port)) + '</div></div>' +
-      '<div class="spacer"></div>' +
-      '<button class="btn btn-ghost btn-sm" data-action="select-server" data-id="' + esc(s.id) + '">控制台</button>' +
-      (s.type === 'local' ? '<button class="btn btn-ghost btn-sm" data-action="server-properties" data-id="' + esc(s.id) + '">属性</button>' +
-        '<button class="btn btn-ghost btn-sm" data-action="server-backups" data-id="' + esc(s.id) + '">备份</button>' +
-        '<button class="btn btn-ghost btn-sm" data-action="server-analyze" data-id="' + esc(s.id) + '">分析</button>' +
-        '<button class="btn btn-ghost btn-sm" data-action="server-java" data-id="' + esc(s.id) + '">Java</button>' : '') +
-      (s.type === 'remote' ? '<button class="btn btn-ghost btn-sm" data-action="edit-remote" data-id="' +
-        esc(s.id) + '">SSH 配置</button>' : '') +
-      (s.type === 'remote' && s.sshUser ? '<button class="btn btn-ghost btn-sm" data-action="server-ssh" data-id="' +
-        esc(s.id) + '">SSH</button>' : '') +
-      '<button class="btn btn-ghost btn-sm" data-action="server-players" data-id="' + esc(s.id) + '">玩家</button>' +
-      '<button class="btn ' + (s.running ? 'btn-danger' : 'btn-primary') + ' btn-sm" data-action="' +
-      (s.running ? 'stop-server' : 'start-server') + '" data-id="' + esc(s.id) + '">' +
-      (s.running ? '停止' : '启动') + '</button>' +
-      '<button class="btn btn-ghost btn-sm" data-action="remove-server" data-id="' + esc(s.id) + '">删除</button></div>').join('')
-    : emptyState('还没有服务器。添加本地服务端目录，或连接远程 RCON。', 'server');
-  return '<div class="toolbar"><div><div class="card-title">服务器管理</div>' +
-    '<div class="card-subtitle">本地 Paper / Fabric / Forge / NeoForge 服务端与远程 RCON。</div></div><div class="spacer"></div>' +
-    '<button class="btn btn-ghost" data-action="add-local-server">' + icon('folder') + '添加本地服务端</button>' +
-    '<button class="btn btn-ghost" data-action="create-server-wizard">' + icon('download') + '生成服务器</button>' +
-    '<button class="btn btn-ghost" data-action="install-mcsm">安装 MCSManager</button>' +
-    '<button class="btn btn-ghost" data-action="open-mcsm">MCSManager 面板</button>' +
-    (isDeveloper() ? '<button class="btn btn-ghost" data-action="open-tunnel">内网穿透</button>' : '') +
-    '<button class="btn btn-primary" data-action="add-remote-server">' + icon('server') + '添加远程 RCON</button></div>' +
-    '<div class="card"><div class="server-list">' + list + '</div></div>' +
-    (selected ? '<div class="card" style="margin-top:12px"><div class="card-head"><h3 class="card-title">' +
-      esc(selected.name) + ' · 控制台</h3><div class="spacer"></div><span class="small muted" id="serverStatusLine">状态检测中…</span>' +
-      '<button class="btn btn-ghost btn-sm" data-action="download-console" data-id="' +
-      esc(selected.id) + '">保存控制台信息</button><span class="small muted">' + esc(selected.type === 'local' ? selected.jar : 'RCON') +
-      '</span></div><pre class="server-console" id="serverConsole">' +
-      esc(state.serverLogs.join('\n') || '等待服务器输出…') + '</pre>' +
-      '<div class="server-command"><input class="input" id="serverCommand" placeholder="输入服务器命令，例如 list / say hello" />' +
+  const selected = state.servers.find((item) => item.id === state.serverId) || state.servers[0];
+  const addMenu = rowMenu('添加服务器', '<button data-action="add-local-server">添加本地服务端</button>' +
+    '<button data-action="create-server-wizard">生成服务器</button><button data-action="add-remote-server">连接远程 RCON</button>');
+  const advanced = isDeveloper() ? rowMenu('工具', '<button data-action="open-tunnel">内网穿透</button>' +
+    '<button data-action="install-mcsm">安装 MCSManager</button><button data-action="open-mcsm">MCSManager 面板</button>') : '';
+  const list = '<aside class="work-list"><div class="work-list-heading">服务器 <span>' + state.servers.length + '</span></div>' +
+    (state.servers.length ? state.servers.map((item) => '<button class="work-list-item ' + (selected && selected.id === item.id ? 'active' : '') +
+      '" data-action="select-server" data-id="' + esc(item.id) + '"' + (selected && selected.id === item.id ? ' aria-current="true"' : '') + '>' +
+      uiIcon('server') + '<span><strong data-i18n-skip>' + esc(item.name) + '</strong><small>' + (item.type === 'local' ? '本地' : '远程') +
+      ' · ' + (item.running ? '运行中' : '已停止') + '</small></span></button>').join('') : '<p class="list-placeholder">尚未添加</p>') + '</aside>';
+  let detail = quietEmpty('选择一个服务器', '添加本地服务端，或连接远程 RCON。');
+  if (selected) {
+    const idAttr = ' data-id="' + esc(selected.id) + '"';
+    let management = '<button data-action="server-players"' + idAttr + '>玩家与权限</button>';
+    if (selected.type === 'local') management += '<button data-action="server-properties"' + idAttr + '>服务器属性</button>' +
+      '<button data-action="server-backups"' + idAttr + '>备份与恢复</button><button data-action="server-java"' + idAttr + '>Java 设置</button>' +
+      '<button data-action="server-analyze"' + idAttr + '>崩溃分析</button>';
+    if (selected.type === 'remote') management += '<button data-action="edit-remote"' + idAttr + '>连接设置</button>' +
+      (selected.sshUser ? '<button data-action="server-ssh"' + idAttr + '>SSH 命令</button>' : '');
+    management += '<button class="danger-text" data-action="remove-server"' + idAttr + '>删除服务器</button>';
+    detail = '<div class="server-detail-head"><div><h2 data-i18n-skip>' + esc(selected.name) + '</h2><span class="section-meta">' +
+      esc(selected.type === 'local' ? selected.dir : selected.host + ':' + selected.port) + '</span></div><div class="section-actions">' +
+      rowMenu('管理', management) + '<button class="btn ' + (selected.running ? 'btn-ghost danger-text' : 'btn-primary') + '" data-action="' +
+      (selected.running ? 'stop-server' : 'start-server') + '"' + idAttr + '>' + (selected.running ? '停止' : '启动') + '</button></div></div>' +
+      '<div class="console-toolbar"><span id="serverStatusLine">' + (selected.running ? '运行中' : '已停止') + '</span><div class="spacer"></div>' +
+      '<button class="btn btn-ghost btn-sm" data-action="download-console"' + idAttr + '>导出日志</button></div>' +
+      '<pre class="server-console" id="serverConsole">' + esc(state.serverLogs.join('\n') || '等待服务器输出…') + '</pre>' +
+      '<div class="server-command"><input class="input" id="serverCommand" aria-label="服务器命令" placeholder="输入命令" />' +
       '<button class="btn btn-primary" data-action="send-server-command">发送</button></div>' +
-      '<div class="server-hints">' +
-      [['常用', [['玩家列表', 'list'], ['帮助', 'help'], ['公告', 'say 服务器公告'],
-        ['保存世界', 'save-all'], ['停止服务器', 'stop']]],
-      ['管理', [['给 OP', 'op '], ['取消 OP', 'deop '], ['白名单', 'whitelist list'],
-        ['踢出玩家', 'kick '], ['封禁玩家', 'ban ']]],
-      ['查看', [['TPS', 'tps'], ['当前难度', 'difficulty'], ['世界种子', 'seed'],
-        ['在线人数', 'list'], ['插件列表', 'plugins'], ['模组列表', 'mods']]]]
-        .map(([group, items]) => '<div class="server-hint-group"><span class="server-hint-label">' +
-          esc(group) + '：</span>' + items.map((h) =>
-            '<button class="server-hint" data-action="fill-server-command" data-command="' +
-            esc(h[1]) + '">' + esc(h[0]) + '</button>').join('') + '</div>').join('') +
-      '</div>' + (selected.type === 'remote'
-        ? '<div class="card" style="margin-top:10px"><div class="card-head"><h3 class="card-title">远程日志</h3>' +
-          '<div class="spacer"></div><button class="btn btn-ghost btn-sm" data-action="refresh-remote-log">刷新日志</button></div>' +
-          '<pre class="server-console" id="remoteLogBox" style="min-height:120px">' +
-          esc(state.remoteLogText || '尚未读取远程日志') + '</pre></div>' : '') + '</div>' : '');
+      '<details class="text-disclosure command-disclosure"><summary>常用命令</summary><div class="command-shortcuts">' +
+      [['玩家列表','list'],['帮助','help'],['保存世界','save-all'],['停止服务器','stop'],['给 OP','op '],['取消 OP','deop '],
+        ['白名单','whitelist list'],['踢出玩家','kick '],['封禁玩家','ban '],['TPS','tps'],['当前难度','difficulty'],['世界种子','seed'],
+        ['插件列表','plugins'],['模组列表','mods'],['公告','say ']].map(([label,command]) => '<button class="btn btn-ghost btn-sm" data-action="fill-server-command" data-command="' +
+          esc(command) + '">' + label + '</button>').join('') + '</div></details>' +
+      (selected.type === 'remote' ? '<details class="text-disclosure"><summary>远程日志</summary><button class="btn btn-ghost btn-sm" data-action="refresh-remote-log">刷新日志</button>' +
+        '<pre class="server-console" id="remoteLogBox">' + esc(state.remoteLogText || '尚未读取远程日志') + '</pre></details>' : '');
+  }
+  return '<div class="section-toolbar"><span class="section-meta">本地服务端与远程连接</span><div class="spacer"></div>' + advanced + addMenu +
+    '</div><div class="split-workspace server-workspace">' + list + '<section class="work-detail">' + detail + '</section></div>';
 }
+
 
 async function refreshServerStatus() {
   if (state.page !== 'servers' || !state.serverId || state.serverPollBusy) return;
@@ -1191,26 +1026,13 @@ async function refreshServerStatus() {
   try {
     const st = await api.serverStatus(id);
     if (state.serverId !== id) return;
-    const server = state.servers.find((item) => item.id === id);
-    if (server) server.running = !!st.running;
-    const row = Array.from(document.querySelectorAll('[data-server-id]'))
-      .find((item) => item.dataset.serverId === id);
-    if (row) {
-      const badge = row.querySelector('.server-name .tag');
-      if (badge) { badge.textContent = st.running ? '运行中' : (st.mode === 'local' ? '已停止' : '未连接'); badge.className = 'tag tag-' + (st.running ? 'green' : 'gray'); }
-      const toggle = row.querySelector('[data-action="start-server"], [data-action="stop-server"]');
-      if (toggle) {
-        toggle.dataset.action = st.running ? 'stop-server' : 'start-server';
-        toggle.textContent = st.running ? '停止' : '启动';
-        toggle.className = 'btn ' + (st.running ? 'btn-danger' : 'btn-primary') + ' btn-sm';
-      }
-    }
     const line = $('serverStatusLine');
     if (line) {
+      const server = state.servers.find((item) => item.id === id);
       line.textContent = st.running
-        ? '● 运行中' + (st.latency !== undefined ? ' · RCON ' + st.latency + 'ms' : '')
-        : (st.mode === 'local' ? '○ 未启动' : '○ 未连接') + (st.error ? ' · ' + st.error : '');
-      line.style.color = st.running ? '#238A55' : '#B06A2B';
+        ? '运行中' + (st.latency !== undefined ? ' · ' + st.latency + 'ms' : '')
+        : (server && server.type === 'local' ? '已停止' : '未连接') + (st.error ? ' · ' + st.error : '');
+      line.style.color = st.running ? '#238A55' : st.error ? '#B06A2B' : '#6b7787';
     }
     if (st.mode === 'remote') {
       const logs = await api.serverLogs(id, 100);
@@ -1621,14 +1443,13 @@ async function sendServerCommand() {
   const input = $('serverCommand');
   if (!input || !state.serverId || !input.value.trim()) return;
   const command = input.value.trim();
+  input.value = '';
   try {
     const res = await api.serverCommand(state.serverId, command);
-    if (!res.ok) { toast(res.error || '发送失败', 'error'); return; }
-    input.value = '';
     if (!res.reply) state.serverLogs.push('> ' + command);
     state.serverLogs = state.serverLogs.slice(-300);
     render();
-  } catch (e) { toast(String(e.message || '发送失败').replace(/^Error invoking remote method[^:]*:\s*(?:Error:\s*)?/, ''), 'error'); }
+  } catch (e) { toast(e.message || '发送失败', 'error'); }
 }
 
 async function openServerProperties(id) {
@@ -1778,135 +1599,184 @@ async function openServerAnalyze(id) {
 /* ---------------- Accounts ---------------- */
 
 function pageAccounts() {
-  return '<div class="account-grid" style="margin-bottom:14px">' +
-      '<div class="login-card" data-action="account-mode" data-value="microsoft"><div class="login-icon ms">' + icon('microsoft', 20) + '</div>' +
-        '<div class="login-title">微软账户</div><div class="login-desc">Xbox Live 完整认证链，登录后使用正版档案与皮肤。</div></div>' +
-      '<div class="login-card" data-action="account-mode" data-value="third"><div class="login-icon third">' + icon('server', 20) + '</div>' +
-        '<div class="login-title">第三方登录</div><div class="login-desc">authlib-injector / Yggdrasil，支持 LittleSkin 等皮肤站。</div></div>' +
-      '<div class="login-card" data-action="account-mode" data-value="offline"><div class="login-icon offline">' + icon('user', 20) + '</div>' +
-        '<div class="login-title">离线账户</div><div class="login-desc">本地生成与 Java 端一致的 UUID，适合单机与测试。</div></div>' +
-    '</div>' +
-    accountForm() +
-    '<div class="card" style="margin-top:12px"><div class="card-head"><h3 class="card-title">已登录账户</h3>' +
-      '<span class="small muted">' + state.accounts.length + ' 个</span></div>' +
-      (state.accounts.length ? state.accounts.map((a) => '<div class="account-row">' + avatar(a.name, 'lg') +
-        '<div><div class="account-name">' + esc(a.name) + (a.id === state.activeAccountId ? tag('当前', 'blue') : '') + '</div>' +
-        '<div class="account-meta">' + esc(accountKind(a.kind)) + ' · ' + esc(String(a.uuid).slice(0, 13)) +
-        (a.server ? ' · ' + esc(a.server) : '') + '</div></div><div class="spacer"></div>' +
-        (a.id === state.activeAccountId ? '' : '<button class="btn btn-soft btn-sm" data-action="select-account" data-id="' + esc(a.id) + '">设为当前</button>') +
-        (a.kind !== 0 ? '<button class="btn btn-ghost btn-sm" data-action="refresh-account" data-id="' + esc(a.id) + '">刷新凭据</button>' : '') +
-        '<button class="btn btn-danger btn-sm" data-action="remove-account" data-id="' + esc(a.id) + '">移除</button>' +
-        '</div>').join('') : emptyState('还没有账户，选择上面的登录方式添加。', 'user')) +
-    '</div>' +
-    '<div class="card" style="margin-top:12px"><div class="card-subtitle">' +
-      '微软登录会打开独立窗口，由微软官方页面处理密码，启动器不会接触你的密码。' +
-      (state.config.msClientId ? ' 当前 client id：' + esc(state.config.msClientId) + '。' : '') +
-      '</div></div>';
+  const account = state.accounts.find((a) => a.id === state.accountInspectId) || currentAccount();
+  const adding = state.accountAdding || !account;
+  const list = '<aside class="work-list"><div class="work-list-heading">已添加 <span>' + state.accounts.length + '</span></div>' +
+    state.accounts.map((a) => '<button class="work-list-item ' + (!adding && account && a.id === account.id ? 'active' : '') +
+      '" data-action="inspect-account" data-id="' + esc(a.id) + '">' + avatar(a.name) + '<span><strong data-i18n-skip>' + esc(a.name) +
+      '</strong><small>' + esc(accountKind(a.kind)) + (a.id === state.activeAccountId ? ' · 当前' : '') + '</small></span></button>').join('') +
+    '<button class="btn btn-ghost add-account-button" data-action="add-account-view">添加账户</button></aside>';
+  let detail;
+  if (adding) {
+    detail = '<h2 class="detail-title">添加账户</h2><div class="page-tabs account-methods">' +
+      [['microsoft','微软账户'],['third','第三方'],['offline','离线账户']].map(([id,label]) => '<button class="page-tab ' +
+        (accountMode === id ? 'active' : '') + '" data-action="account-mode" data-value="' + id + '">' + label + '</button>').join('') + '</div>' + accountForm();
+  } else {
+    detail = '<div class="account-profile">' + avatar(account.name, 'lg') + '<div><h2 data-i18n-skip>' + esc(account.name) + '</h2>' +
+      '<span class="section-meta">' + esc(accountKind(account.kind)) + '</span></div></div>' +
+      '<dl class="property-list"><dt>玩家名</dt><dd data-i18n-skip>' + esc(account.name) + '</dd><dt>登录方式</dt><dd>' + esc(accountKind(account.kind)) + '</dd>' +
+      (account.uuid ? '<dt>UUID</dt><dd class="mono">' + esc(account.uuid) + '</dd>' : '') +
+      (account.server ? '<dt>验证服务器</dt><dd>' + esc(account.server) + '</dd>' : '') +
+      '<dt>启动账户</dt><dd>' + (account.id === state.activeAccountId ? '当前使用' : '未选用') + '</dd></dl>' +
+      '<div class="profile-actions">' + (account.id !== state.activeAccountId ? '<button class="btn btn-primary" data-action="select-account" data-id="' + esc(account.id) + '">设为启动账户</button>' : '') +
+      (account.kind !== 0 ? '<button class="btn btn-ghost" data-action="refresh-account" data-id="' + esc(account.id) + '">刷新登录状态</button>' : '') +
+      '<button class="btn btn-ghost danger-text" data-action="remove-account" data-id="' + esc(account.id) + '">移除账户</button></div>';
+  }
+  return '<div class="split-workspace account-workspace">' + list + '<section class="work-detail account-detail">' + detail + developerAccountCard() + '</section></div>';
 }
+
 
 let accountMode = 'microsoft';
 let accountError = '';
 
-function accountForm() {
-  if (accountMode === 'offline') {
-    return '<div class="card"><div class="card-head"><h3 class="card-title">离线登录</h3>' +
-      '<button class="btn btn-ghost btn-sm" data-action="account-mode" data-value="">收起</button></div>' +
-      '<div class="field"><label>玩家名（1-16 个字符）</label><div class="input-row">' +
-        '<input class="input" id="offlineName" placeholder="例如 Steve" maxlength="16" />' +
-        '<button class="btn btn-primary" data-action="login-offline">添加账户</button></div></div>' +
-      '<div class="card-subtitle">UUID 使用 MD5("OfflinePlayer:" + 玩家名) 并设置为 v3，与 Java 端离线模式完全一致。</div>' +
-      (accountError ? '<div class="empty" style="padding:10px 0 0;color:var(--red)">' + esc(accountError) + '</div>' : '') + '</div>';
-  }
-  if (accountMode === 'third') {
-    return '<div class="card"><div class="card-head"><h3 class="card-title">第三方登录</h3>' +
-      '<button class="btn btn-ghost btn-sm" data-action="account-mode" data-value="">收起</button></div>' +
-      '<div class="grid-2"><div class="field"><label>验证服务器</label><input class="input" id="thirdServer" value="https://littleskin.cn/api/yggdrasil" /></div>' +
-      '<div class="field"><label>邮箱 / 用户名</label><input class="input" id="thirdUser" placeholder="皮肤站账号" /></div></div>' +
-      '<div class="field"><label>密码</label><input class="input" id="thirdPass" type="password" placeholder="皮肤站密码" /></div>' +
-      '<div class="row"><button class="btn btn-primary" data-action="login-third">登录</button><span class="small muted">遵循 authlib-injector / Yggdrasil 协议</span></div>' +
-      (accountError ? '<div class="empty" style="padding:10px 0 0;color:var(--red)">' + esc(accountError) + '</div>' : '') + '</div>';
-  }
-  return '<div class="card"><div class="card-head"><h3 class="card-title">微软账户登录</h3>' +
-    '<button class="btn btn-primary" data-action="login-ms"' + (state.msBusy ? ' disabled' : '') + '>' +
-    icon('microsoft', 15) + (state.msBusy ? '等待网页登录…' : '打开微软登录窗口') + '</button></div>' +
-    '<div class="card-subtitle">使用 OAuth2 授权码 → Xbox Live → XSTS → Minecraft Services → 玩家档案。' +
-    '登录窗口是微软官方页面，支持双重验证。若没有 Minecraft: Java 版，会明确提示。</div>' +
-    (accountError ? '<div class="empty" style="padding:10px 0 0;color:var(--red)">' + esc(accountError) + '</div>' : '') + '</div>';
+function developerAccountCard() {
+  if (!SHOW_DEVELOPER_ACCOUNT) return '';
+  const dev = state.config.developerAccount || {};
+  const accounts = Array.from(new Set(BUILTIN_DEVELOPERS.concat(dev && dev.name ? [dev.name] : [])));
+  return '<div class="card" style="margin-top:12px"><div class="card-head">' +
+    '<h3 class="card-title">开发者账户</h3>' + (dev.enabled ? tag('已启用', 'green') : tag('未启用', 'gray')) + '</div>' +
+    '<div class="card-subtitle">仅开发者版可用，用于区分内部测试身份。当前功能暂时隐藏。开发者：' + esc(accounts.join('、')) + '</div>' +
+    '<div class="field"><label>开发者名称</label><input class="input" id="developerAccountName" value="' +
+      esc(dev.name || '') + '" placeholder="例如：EMCL Dev" /></div>' +
+    '<div class="row"><button class="btn btn-primary btn-sm" data-action="developer-account-save">保存开发者账户</button>' +
+    (dev.enabled ? '<button class="btn btn-ghost btn-sm" data-action="developer-account-remove">移除</button>' : '') +
+    '</div></div>';
 }
+
+async function saveDeveloperAccount() {
+  const input = $('developerAccountName');
+  const name = input ? input.value.trim() : '';
+  if (!name) { toast('请输入开发者名称', 'error'); return; }
+  const res = await api.patchConfig({ developerAccount: { name, enabled: true, createdAt: Date.now() } });
+  state.config = res.config || Object.assign({}, state.config, { developerAccount: { name, enabled: true } });
+  toast('开发者账户已保存', 'success');
+  render();
+}
+
+async function removeDeveloperAccount() {
+  const res = await api.patchConfig({ developerAccount: null });
+  state.config = res.config || Object.assign({}, state.config, { developerAccount: null });
+  toast('开发者账户已移除', 'success');
+  render();
+}
+
+function accountForm() {
+  const error = accountError ? '<p class="inline-error" role="alert">' + esc(accountError) + '</p>' : '';
+  if (accountMode === 'offline') return '<div class="account-form"><p class="form-intro">用于单机游戏或支持离线登录的服务器。</p>' +
+    '<div class="field"><label for="offlineName">玩家名</label><input class="input" id="offlineName" placeholder="1–16 个字符" maxlength="16" autocomplete="off"></div>' +
+    '<button class="btn btn-primary" data-action="login-offline">添加账户</button>' + error + '</div>';
+  if (accountMode === 'third') return '<div class="account-form"><p class="form-intro">使用皮肤站或第三方验证账户。</p>' +
+    '<div class="field"><label for="thirdServer">验证服务器</label><input class="input" id="thirdServer" value="https://littleskin.cn/api/yggdrasil"></div>' +
+    '<div class="field"><label for="thirdUser">邮箱 / 用户名</label><input class="input" id="thirdUser" autocomplete="username"></div>' +
+    '<div class="field"><label for="thirdPass">密码</label><input class="input" id="thirdPass" type="password" autocomplete="current-password"></div>' +
+    '<button class="btn btn-primary" data-action="login-third">登录</button>' + error + '</div>';
+  return '<div class="account-form"><p class="form-intro">登录拥有 Minecraft: Java Edition 的微软账户。</p>' +
+    '<button class="btn btn-primary" data-action="login-ms"' + (state.msBusy ? ' disabled' : '') + '>' + icon('microsoft', 16) +
+      (state.msBusy ? '等待网页登录…' : '使用微软账户登录') + '</button>' +
+    '<p class="form-footnote">将在微软官方窗口完成登录。</p>' + error + '</div>';
+}
+
 
 /* ---------------- Settings ---------------- */
 
 function announcerCard() {
-  if (!state.config) return '';
-  const a = state.announcer || {};
-  const ready = a.configured === true && !a.error;
-  const items = (state.remoteAnnouncements || []).slice(0, 5);
-  return '<div class="card"><div class="card-head"><h3 class="card-title">全网公告发布</h3>' +
-    '<span class="small">' + tag(ready ? '已连接' : '未配置', ready ? 'green' : 'orange') + '</span></div>' +
-    '<div class="card-subtitle">' + (ready
-      ? '已连接 api.emcl.life。发布后所有正在运行的 EMCL 会在下次检查（启动时 / 每 6 小时）收到。'
-      : '配置公告发布密码后，可在这里直接向所有 EMCL 发布公告。') +
-      (a.error ? '<div class="card-subtitle" style="color:var(--red);margin-top:6px">' + esc(a.error) + '</div>' : '') + '</div>' +
-    '<div class="row" style="margin-top:10px;flex-wrap:wrap">' +
-      '<button class="btn btn-ghost" data-action="configure-announcer-token">' + icon('settings', 14) +
-        (ready ? '更换密码' : '配置密码') + '</button>' +
-      '<button class="btn btn-primary" data-action="compose-remote-announcement"' +
-        (ready ? '' : ' disabled') + '>' + icon('plus', 14) + '发布公告</button>' +
-      (ready ? '<button class="btn btn-ghost" data-action="refresh-remote-announcements">刷新公告</button>' : '') +
-    '</div>' +
-    (items.length ? '<div class="announce-list" style="margin-top:10px">' + items.map((x) =>
-      '<div class="content-row"><div style="min-width:0"><div class="content-name">' + esc(x.title) + '</div>' +
-      '<div class="content-meta">' + esc(x.date) + ' · ' + esc(x.tag || '公告') +
-      (x.pinned ? ' · 置顶' : '') + '</div></div><div class="spacer"></div>' +
-      '<button class="btn btn-danger btn-sm" data-action="delete-remote-announcement" data-id="' +
-      esc(x.id) + '">删除</button></div>').join('') + '</div>' : '') +
-    '</div>';
+  return '';
+  // 开发者版不提供全网公告发布，公告由正式版后台统一发布。
+  if (isDeveloper()) return '';
+  if (!state.config || state.config.localAdmin !== true) return '';
+  const account = state.announcer || {}, ready = account.configured === true && !account.error;
+  const items = (state.remoteAnnouncements || []).slice(0,5);
+  return '<section class="settings-section"><div class="option-row no-rule"><div><div class="option-title">全网公告</div>' +
+    '<div class="option-hint">' + (ready ? '已连接 ' + esc(account.login || account.repo || '') : '尚未配置发布账户') + '</div></div>' +
+    '<div class="option-control"><button class="btn btn-ghost" data-action="configure-announcer-token">' + (ready ? '更换 Token' : '配置 Token') + '</button>' +
+    '<button class="btn btn-primary" data-action="compose-remote-announcement"' + (ready ? '' : ' disabled') + '>发布公告</button></div></div>' +
+    (account.error ? '<p class="inline-error">' + esc(account.error) + '</p>' : '') +
+    (ready ? '<button class="btn btn-ghost btn-sm" data-action="refresh-remote-announcements">刷新公告</button>' : '') +
+    (items.length ? '<div class="published-notices">' + items.map((item) => '<div class="content-row"><div><strong>' + esc(item.title) + '</strong><span class="cell-detail">' +
+      esc(item.date) + '</span></div><div class="spacer"></div><button class="btn btn-ghost btn-sm danger-text" data-action="delete-remote-announcement" data-id="' +
+      esc(item.id) + '">删除</button></div>').join('') + '</div>' : '') + '</section>';
 }
 
-function announcementTypeCard() {
-  if (!state.config) return '';
-  const selected = Array.isArray(state.config.announcementTypes)
-    ? state.config.announcementTypes
-    : ['公告', '更新', '维护', '活动', '重要'];
-  return '<div class="card"><div class="card-head"><h3 class="card-title">接收的公告类型</h3></div>' +
-    '<div class="card-subtitle">只显示勾选的类型；全部取消时显示全部公告。</div>' +
-    '<div class="row" style="margin-top:10px;flex-wrap:wrap">' +
-    ['公告', '更新', '维护', '活动', '重要'].map((type) =>
-      '<label class="check-line" style="margin-right:14px"><input type="checkbox" data-action="toggle-announcement-type" data-type="' +
-      esc(type) + '"' + (selected.includes(type) ? ' checked' : '') + '> ' + esc(type) + '</label>').join('') +
-    '</div></div>';
-}
 
-function updateSettingsCard() {
-  const u = state.update;
-  let status = '尚未检查';
+function devUpdateCard() {
+  if (!isDeveloper()) return '';
+  const u = state.devUpdate;
+  let status = '尚未检查 update 分支';
   let tone = 'muted';
-  if (state.updateChecking) {
-    status = '正在检查…';
-  } else if (u && u.hasUpdate) {
-    status = '发现新版本 ' + u.latest;
-    tone = 'blue';
-  } else if (u && u.ok) {
-    status = '已是最新';
-  } else if (u && u.error) {
-    status = '检查失败：' + u.error;
-  }
-  return '<div class="card"><div class="card-head"><h3 class="card-title">更新</h3>' +
+  if (state.devUpdateBusy) { status = '正在处理…'; tone = 'blue'; }
+  else if (u && u.ok && u.hasUpdate) { status = '发现开发者更新 ' + u.latest; tone = 'blue'; }
+  else if (u && u.ok) { status = '已是最新'; }
+  else if (u && u.error) { status = '检查失败：' + u.error; tone = 'red'; }
+  return '<div class="card"><div class="card-head"><h3 class="card-title">开发者更新</h3>' +
     '<span class="small">' + tag(status, tone) + '</span></div>' +
+    '<div class="card-subtitle">每小时检查 public 仓库的 <b>update</b> 分支；只接受官方地址的 app.asar 更新包。</div>' +
     '<div class="kv"><span class="k">当前版本</span><span class="v">' + esc(displayVersion()) + '</span></div>' +
-    '<div class="kv"><span class="k">自动检查</span><span class="v">启动后自动检查，每 6 小时一次</span></div>' +
-    (u && u.hasUpdate ? '<div class="update-card" style="margin-top:10px;padding:10px;border:1px solid #F0D3A4;border-radius:10px">' +
-      '<div class="update-mark">' + icon('download', 20) + '</div><div><div class="update-title">EMCL ' + esc(u.latest) + '</div>' +
-      '<div class="update-sub">' + esc((u.notes || []).slice(0, 2).join(' · ') || '有新版本可用') + '</div></div>' +
-      '<div class="update-actions"><button class="btn btn-ghost btn-sm" data-action="show-update">详情</button>' +
-      '<button class="btn btn-primary btn-sm" data-action="open-update">下载</button></div></div>' : '') +
-    '<div class="row" style="margin-top:10px"><button class="btn btn-soft" data-action="check-update"' +
-      (state.updateChecking ? ' disabled' : '') + '>' + icon('refresh', 14) +
-      (state.updateChecking ? '检查中…' : '检查更新') + '</button>' +
-      '<button class="btn btn-ghost" data-action="open-repo">GitHub 仓库</button></div>' +
+    '<div class="kv"><span class="k">最近检查</span><span class="v">' + (u && u.checkedAt ? new Date(u.checkedAt).toLocaleString('zh-CN') : '—') + '</span></div>' +
+    (u && u.hasUpdate ? '<div class="update-card" style="margin-top:10px;padding:10px;border:1px solid #BBD9F2;border-radius:10px">' +
+      '<div class="update-mark">' + icon('download', 20) + '</div><div><div class="update-title">EMCL 开发者版 ' + esc(u.latest) + '</div>' +
+      '<div class="update-sub">' + esc((u.notes || []).slice(0, 3).join(' · ') || '有新的开发者更新可用') + '</div></div>' +
+      '<div class="update-actions"><button class="btn btn-primary btn-sm" data-action="dev-install-update">立即更新</button></div></div>' : '') +
+    '<div class="row" style="margin-top:10px;flex-wrap:wrap">' +
+      '<button class="btn btn-soft" data-action="dev-check-update"' + (state.devUpdateBusy ? ' disabled' : '') + '>' + icon('refresh', 14) + (state.devUpdateBusy ? '检查中…' : '检查更新') + '</button>' +
+      '<button class="btn btn-ghost" data-action="dev-submit-update">提交更新</button>' +
+    '</div>' +
     (u && u.error ? '<div class="card-subtitle" style="color:var(--red);margin-top:8px">' + esc(u.error) + '</div>' : '') +
     '</div>';
 }
+
+function openDevSubmitUpdateModal() {
+  const current = displayVersion();
+  openModal({
+    title: '提交开发者更新',
+    desc: '会调用本地 dev-submit-update.ps1：从开发者源码构建 app.asar，写入 update 分支并生成更新包。',
+    body: '<div class="field"><label>版本号</label><input class="input" id="devUpdateVersion" value="' + esc(current) + '" placeholder="例如 1.26.25.27" /></div>' +
+      '<div class="field"><label>更新说明（每行一条）</label><textarea class="input" id="devUpdateNotes" rows="5" placeholder="修复…&#10;新增…"></textarea></div>' +
+      '<div class="card-subtitle">提交前请确认源码已保存、工作区干净；构建和推送可能需要几分钟。</div>',
+    actions: [{ label: '取消', kind: 'ghost', action: 'close-modal' },
+      { label: '构建并提交', kind: 'primary', action: 'dev-submit-update-confirm' }]
+  });
+}
+
+async function checkDevUpdate(force) {
+  if (!isDeveloper()) return;
+  state.devUpdateBusy = true;
+  render();
+  try {
+    const result = await api.devUpdateCheck(!!force);
+    state.devUpdate = result;
+    if (result && result.ok && result.hasUpdate) toast('发现开发者更新 ' + result.latest, 'success');
+    else if (result && result.ok) toast('开发者版已是最新', 'success');
+    else if (result && result.error) toast(result.error, 'error');
+  } catch (e) { toast(e.message || '检查开发者更新失败', 'error'); }
+  finally { state.devUpdateBusy = false; render(); }
+}
+
+async function submitDevUpdate() {
+  const version = $('devUpdateVersion') ? $('devUpdateVersion').value.trim() : '';
+  const notes = $('devUpdateNotes') ? $('devUpdateNotes').value.trim() : '';
+  if (!version) { toast('请填写版本号', 'error'); return; }
+  closeModal();
+  state.devUpdateBusy = true;
+  render();
+  toast('正在构建并提交开发者更新，请稍候', 'success');
+  try {
+    const result = await api.devUpdatePublish({ version, notes });
+    if (!result || !result.ok) throw new Error(result && result.error || '提交失败');
+    toast('开发者更新已提交', 'success');
+    await checkDevUpdate(true);
+  } catch (e) { toast(e.message || '提交失败', 'error'); }
+  finally { state.devUpdateBusy = false; render(); }
+}
+
+function updateSettingsCard() {
+  const update = state.update;
+  const status = state.updateChecking ? '正在检查…' : update && update.hasUpdate ? '发现新版本 ' + update.latest : update && update.ok ? '已是最新版本' : '尚未检查';
+  return '<section class="settings-section">' + settingOption('软件更新', status,
+    '<button class="btn btn-ghost" data-action="check-update"' + (state.updateChecking ? ' disabled' : '') + '>检查更新</button>' +
+    (update && update.hasUpdate ? '<button class="btn btn-primary" data-action="show-update">查看更新</button>' : '')) +
+    (update && update.error ? '<p class="inline-error">' + esc(update.error) + '</p>' : '') + '</section>';
+}
+
 
 const SKIN_LIBRARY = [
   { file: 'skinmc/techy', name: 'Techy', tag: 'SkinMC 社区', url: 'https://skinmc.net/skins/creations/038c1f51-18be-43bc-86b3-b06a9983325c' },
@@ -1920,119 +1790,118 @@ const SKIN_LIBRARY = [
 ];
 
 function pageSkins() {
-  const s = state.skinData;
   const account = currentAccount();
-  const current = s && s.ok && s.dataUrl
-    ? '<div class="skin-current">' +
-        '<canvas id="skinCurrentCanvas" class="skin-front-canvas" width="160" height="330"></canvas>' +
-        '<div class="skin-current-info"><div class="card-title">' + esc(s.name || (currentAccount() && currentAccount().name) || '未登录') + '</div>' +
-        '<div class="card-subtitle">' + (s.isDefault ? '默认 Steve · ' : (s.model === 'slim' ? 'Slim · ' : 'Classic · ')) +
-          (account && account.kind === 0 ? '离线账户不支持在线皮肤' :
-            (s.source === 'microsoft' ? '微软账户' : s.source === 'thirdparty' ? '第三方验证' : '未登录')) + '</div>' +
-        '<div class="row" style="margin-top:10px">' + (account && account.kind !== 0
-          ? '<button class="btn btn-ghost btn-sm" data-action="skin-refresh">刷新皮肤</button>' : '') +
-        (account && account.kind === 1 ? '<button class="btn btn-ghost btn-sm" data-action="skin-upload">上传本地皮肤</button>' : '') + '</div>' +
-        '<div class="skin-layer-controls">' +
-          [['hat', '帽子'], ['jacket', '外套'], ['sleeves', '袖子'], ['pants', '裤腿']].map(([key, label]) =>
-            '<label class="skin-layer"><input type="checkbox" data-skin-layer="' + key + '"' +
-              (state.skinLayers[key] !== false ? ' checked' : '') + '><span>' + label + '</span></label>').join('') +
-        '</div></div></div>'
-    : emptyState(account && account.kind === 0 ? '离线账户默认使用 Steve 皮肤，不支持在线皮肤。' :
-      state.skinLoading ? '正在读取当前账户的皮肤…' :
-      (state.skinError || (account ? '当前账户没有可用皮肤。' : '登录账户后可以预览皮肤。')), 'user');
-
-  if (account && account.kind === 0) {
-    return '<div class="skin-page"><div class="card skin-current-card">' +
-      '<div class="card-head"><h3 class="card-title">当前皮肤</h3><span class="tag tag-blue">仅正面预览</span></div>' +
-      current + '</div></div>';
-  }
-
-  const capes = s && Array.isArray(s.capes) ? s.capes : [];
-  const capeList = capes.length
-    ? capes.map((c) => '<div class="cape-row">' +
-        (c.url ? '<img src="' + esc(c.url) + '" alt="" />' : '<div class="cape-placeholder"></div>') +
-        '<div class="cape-info"><div class="setting-title">' + esc(c.alias || '披风') + '</div>' +
-        '<div class="setting-desc">' + (c.active ? '当前使用' : '可用') + '</div></div>' +
-        (c.active ? '<span class="tag tag-green">使用中</span>' : '<button class="btn btn-ghost btn-sm" data-action="skin-cape" data-id="' + esc(c.id) + '">使用</button>') +
-        '</div>').join('')
-    : '<div class="card-subtitle">当前账户没有可用披风，或账户不支持披风。</div>';
-
-  return '<div class="skin-page">' +
-    '<div class="card skin-model-card"><div class="card-head"><h3 class="card-title">模型</h3><span class="small muted">Steve / Alex</span></div>' +
-      '<div class="field" style="margin:0"><select class="select" data-skin-variant>' +
-        '<option value="steve"' + (state.skinVariant !== 'slim' ? ' selected' : '') + '>Steve（Classic）</option>' +
-        '<option value="slim"' + (state.skinVariant === 'slim' ? ' selected' : '') + '>Alex（Slim）</option>' +
-      '</select></div>' +
-      '<div class="card-subtitle">先选择模型，再点推荐皮肤的“使用”或上传本地皮肤。</div></div>' +
-    '<div class="card skin-current-card"><div class="card-head"><h3 class="card-title">当前皮肤</h3>' +
-      '<span class="tag tag-blue">仅正面预览</span></div>' + current +
-      '<div class="skin-note">这里只显示模型正面，不加载 3D 皮肤。推荐皮肤来自 SkinMC 社区，版权归原作者所有；使用前请确认作者许可。</div></div>' +
-    '<div class="card"><div class="card-head"><h3 class="card-title">推荐皮肤</h3>' +
-      '<span class="small muted">' + SKIN_LIBRARY.length + ' 款来自 SkinMC</span></div>' +
-      '<div class="skin-grid">' + SKIN_LIBRARY.map((item) =>
-        '<div class="skin-card">' +
-          '<img src="assets/skins/' + item.file + '-preview.png" alt="' + esc(item.name) + '" />' +
-          '<div class="skin-card-name">' + esc(item.name) + '</div>' +
-          '<div class="skin-card-tag"><a href="' + item.url + '" data-action="open-url" data-url="' + item.url + '">' + item.tag + '</a></div>' +
-          '<button class="btn btn-primary btn-sm" data-action="skin-apply" data-file="' + item.file + '">使用</button>' +
-        '</div>').join('') + '</div></div>' +
-    '<div class="card"><div class="card-head"><h3 class="card-title">披风</h3>' +
-      '<button class="btn btn-ghost btn-sm" data-action="skin-cape-off">隐藏披风</button></div>' +
-      '<div class="cape-list">' + capeList + '</div></div>' +
-    '<input type="file" id="skinFileInput" accept="image/png" style="display:none" />' +
-    '</div>';
+  const data = state.skinData && state.skinData.accountId === (account ? account.id : '') ? state.skinData : null;
+  const online = account && account.kind !== 0;
+  const canUpload = account && account.kind === 1;
+  const status = state.skinLoading ? '正在同步账户皮肤…' : state.skinError ? '' : !account ? '登录正版账户后显示当前皮肤。' :
+    account.kind === 0 ? '离线账户使用默认 Steve 预览。' : data ?
+      (data.isDefault ? '当前账户未设置自定义皮肤，显示默认 Steve。' : '已同步当前账户皮肤。') : '等待同步账户皮肤。';
+  const capes = data && Array.isArray(data.capes) ? data.capes : [];
+  return '<div class="skin-workspace"><section class="skin-inspector">' +
+    '<div class="skin-inspector-heading"><h2>当前皮肤</h2>' + (online ? '<button class="btn btn-ghost btn-sm" data-action="skin-refresh"' +
+      (state.skinLoading ? ' disabled' : '') + '>刷新</button>' : '') + '</div>' +
+    (data || !online ? '<canvas id="skinCurrentCanvas" class="skin-front-canvas" width="160" height="330" aria-label="当前皮肤正面预览"></canvas>' :
+      '<div class="skin-preview-placeholder">' + uiIcon('skin') + '<span>' + (state.skinLoading ? '正在获取皮肤' : '皮肤暂不可用') + '</span></div>') +
+    '<div class="skin-owner" data-i18n-skip>' + esc(data ? data.name : account ? account.name : 'Steve') + '</div>' +
+    '<p class="skin-sync-status" role="status">' + esc(status) + '</p>' +
+    (online && data && data.fetchedAt ? '<p class="skin-sync-time">更新于 ' + esc(new Date(data.fetchedAt).toLocaleTimeString()) + ' · 每分钟自动同步</p>' : '') +
+    '<div class="field skin-model-field"><label for="skinModel">上传皮肤模型</label><select id="skinModel" class="select" data-skin-variant' + (canUpload ? '' : ' disabled') + '>' +
+      '<option value="steve"' + (state.skinVariant !== 'slim' ? ' selected' : '') + '>Steve / Classic</option>' +
+      '<option value="slim"' + (state.skinVariant === 'slim' ? ' selected' : '') + '>Alex / Slim</option></select></div>' +
+    (canUpload ? '<button class="btn btn-ghost skin-upload-button" data-action="skin-upload">上传皮肤</button>' : '') +
+    '<details class="text-disclosure"><summary>显示图层</summary><div class="skin-layer-controls">' +
+      [['hat','帽子'],['jacket','外套'],['sleeves','袖子'],['pants','裤腿']].map(([key,label]) => '<label class="skin-layer"><input type="checkbox" data-skin-layer="' + key + '"' +
+        (state.skinLayers[key] !== false ? ' checked' : '') + '><span>' + label + '</span></label>').join('') + '</div></details>' +
+    (state.skinError ? '<p class="inline-error">' + esc(state.skinError) + '</p>' : '') + '</section>' +
+    '<section class="skin-library">' + sectionHeading('可用皮肤', SKIN_LIBRARY.length + ' 款') +
+      '<div class="skin-grid">' + SKIN_LIBRARY.map((item) => '<article class="skin-card">' +
+        '<img src="assets/skins/' + item.file + '-preview.png" alt="' + esc(item.name) + '" loading="lazy">' +
+        '<div class="skin-card-bottom"><a class="skin-card-name" href="' + item.url + '" data-action="open-url" data-url="' + item.url +
+          '" data-i18n-skip>' + esc(item.name) + '</a>' + (canUpload ? '<button class="btn btn-ghost btn-sm" data-action="skin-apply" data-file="' + item.file + '">使用</button>' : '') + '</div></article>').join('') + '</div>' +
+      '<details class="text-disclosure skin-capes"><summary>披风 <span class="section-meta">' + capes.length + '</span></summary>' +
+        (capes.length ? '<div class="cape-list">' + capes.map((cape) => '<div class="cape-row">' +
+          (cape.url ? '<img src="' + esc(cape.url) + '" alt="">' : '') + '<span>' + esc(cape.alias || '披风') + '</span><div class="spacer"></div>' +
+          (cape.active ? '<span class="section-meta">使用中</span>' : canUpload ? '<button class="btn btn-ghost btn-sm" data-action="skin-cape" data-id="' + esc(cape.id) + '">使用</button>' : '') +
+          '</div>').join('') + '</div>' : '<p class="inline-note">当前账户没有可用披风。</p>') +
+        (canUpload ? '<button class="btn btn-ghost btn-sm" data-action="skin-cape-off">隐藏披风</button>' : '') + '</details>' +
+      '<p class="attribution">皮肤来自 SkinMC 社区，版权归原作者。使用前请查看作者许可。</p></section>' +
+    '<input type="file" id="skinFileInput" accept="image/png" hidden></div>';
 }
 
+
 async function loadSkinPage(force = false) {
-  if (state.skinLoading) return;
+  const accountId = currentAccount() ? currentAccount().id : '';
+  if (state.skinLoading && state.skinRequestAccountId === accountId && !force) return;
+  const requestId = ++state.skinRequestId;
+  state.skinRequestAccountId = accountId;
   state.skinLoading = true;
   state.skinError = '';
-  state.skinData = null;
+  if (!state.skinData || state.skinData.accountId !== accountId) state.skinData = null;
   render();
   try {
     const data = await api.getSkin(force);
+    if (requestId !== state.skinRequestId || (currentAccount() ? currentAccount().id : '') !== accountId) return;
+    if (!data || !data.ok) throw new Error(data && data.error || '读取皮肤失败');
     state.skinData = data;
     if (data && data.model) state.skinVariant = data.model === 'slim' ? 'slim' : 'steve';
-    if (data && data.ok === false) state.skinError = data.error || '读取皮肤失败';
   } catch (e) {
+    if (requestId !== state.skinRequestId || (currentAccount() ? currentAccount().id : '') !== accountId) return;
+    state.skinData = null;
     state.skinError = e.message || '读取皮肤失败';
   } finally {
-    state.skinLoading = false;
-    render();
-    setTimeout(drawSkinCanvas, 30);
+    if (requestId === state.skinRequestId) {
+      state.skinLoading = false;
+      if (state.page === 'skins') render();
+    }
   }
 }
 
 function drawSkinCanvas() {
   const canvas = $('skinCurrentCanvas');
-  const src = state.skinData && state.skinData.dataUrl;
+  const accountId = currentAccount() ? currentAccount().id : '';
+  const data = state.skinData && state.skinData.accountId === accountId ? state.skinData : null;
+  const src = data && data.dataUrl || '../../assets/default-skin.png';
   if (!canvas || !src) return;
   const img = new Image();
   img.onload = () => {
+    if (!canvas.isConnected || (currentAccount() ? currentAccount().id : '') !== accountId) return;
     const ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = false;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const scale = 10;
-    const part = (sx, sy, sw, sh, dx, dy) => {
-      ctx.drawImage(img, sx, sy, sw, sh, dx, dy, sw * scale, sh * scale);
+    const legacy = img.naturalHeight === 32;
+    const armWidth = !legacy && data && data.model === 'slim' ? 3 : 4;
+    const armX = 40 - armWidth * scale;
+    const part = (sx, sy, sw, sh, dx, dy, mirrored = false) => {
+      ctx.save();
+      if (mirrored) { ctx.translate(dx + sw * scale, dy); ctx.scale(-1, 1); }
+      ctx.drawImage(img, sx, sy, sw, sh, mirrored ? 0 : dx, mirrored ? 0 : dy, sw * scale, sh * scale);
+      ctx.restore();
     };
     part(8, 8, 8, 8, 40, 10);
     part(20, 20, 8, 12, 40, 90);
-    part(36, 52, 4, 12, 0, 90);
-    part(44, 20, 4, 12, 120, 90);
-    part(20, 52, 4, 12, 40, 210);
-    part(4, 20, 4, 12, 80, 210);
+    part(44, 20, armWidth, 12, armX, 90);
+    part(legacy ? 44 : 36, legacy ? 20 : 52, armWidth, 12, 120, 90, legacy);
+    part(4, 20, 4, 12, 40, 210);
+    part(legacy ? 4 : 20, legacy ? 20 : 52, 4, 12, 80, 210, legacy);
     const layers = state.skinLayers || {};
     if (layers.hat !== false) part(40, 8, 8, 8, 40, 10);
-    if (layers.jacket !== false) part(20, 36, 8, 12, 40, 90);
-    if (layers.sleeves !== false) {
-      part(52, 52, 4, 12, 0, 90);
-      part(44, 36, 4, 12, 120, 90);
+    if (!legacy && layers.jacket !== false) part(20, 36, 8, 12, 40, 90);
+    if (!legacy && layers.sleeves !== false) {
+      part(44, 36, armWidth, 12, armX, 90);
+      part(52, 52, armWidth, 12, 120, 90);
     }
-    if (layers.pants !== false) {
-      part(4, 52, 4, 12, 40, 210);
-      part(0, 36, 4, 12, 80, 210);
+    if (!legacy && layers.pants !== false) {
+      part(4, 36, 4, 12, 40, 210);
+      part(4, 52, 4, 12, 80, 210);
     }
+  };
+  img.onerror = () => {
+    if (!canvas.isConnected || !data || state.skinData !== data || data.isDefault) return;
+    state.skinData = null;
+    state.skinError = '皮肤图片无法解码，请刷新重试';
+    if (state.page === 'skins') render();
   };
   img.src = src;
 }
@@ -2101,170 +1970,122 @@ async function disableCape() {
   } catch (e) { toast(e.message || '隐藏披风失败', 'error'); }
 }
 
-function pageSettings() {
-  const c = state.config;
-  const java = state.java;
-  return '<div class="settings-grid">' +
-    '<div class="stack">' +
-      '<div class="card"><div class="card-head"><h3 class="card-title">游戏目录</h3>' +
-        '<button class="btn btn-ghost btn-sm" data-action="open-dir">打开目录</button></div>' +
-        '<div class="card-subtitle mono" style="word-break:break-all">' + esc(c.gameDir) + '</div>' +
-        '<div class="row" style="margin-top:12px"><button class="btn btn-primary" data-action="choose-dir">' + icon('folder') + '选择 .minecraft 文件夹</button>' +
-        '<button class="btn btn-ghost" data-action="import-folder">' + icon('box') + '导入 PCL2 游戏目录</button></div>' +
-        '<div class="card-subtitle" style="margin-top:10px">目录结构与 PCL2 完全一致：versions / libraries / assets / mods / saves / resourcepacks。' +
-        '切换目录后会自动扫描版本。</div></div>' +
-
-      '<div class="card"><div class="card-head"><h3 class="card-title">Java 运行时</h3>' +
-        '<span class="small ' + (java && java.ok && !java.tooOld ? '' : 'muted') + '">' +
-          (java && java.ok ? 'Java ' + java.major + ' · ' + esc(java.version) +
-            (java.tooOld ? '（当前版本需要 ' + java.required + '）' : '') : '未检测到') + '</span></div>' +
-        '<div class="card-subtitle mono" style="word-break:break-all">' + esc(java && java.path ? java.path : '尚未选择 Java') + '</div>' +
-        '<div class="row" style="margin-top:12px;flex-wrap:wrap">' +
-          '<button class="btn btn-primary" data-action="choose-java">选择 java.exe</button>' +
-          '<button class="btn btn-ghost" data-action="detect-java">自动检测</button>' +
-          '<button class="btn btn-ghost" data-action="download-java" data-major="25">下载 Java 25</button>' +
-          '<button class="btn btn-ghost" data-action="download-java" data-major="21">Java 21</button>' +
-          '<button class="btn btn-ghost" data-action="download-java" data-major="17">Java 17</button>' +
-          '<button class="btn btn-ghost" data-action="download-java" data-major="8">Java 8</button>' +
-        '</div>' +
-        '<div class="card-subtitle" style="margin-top:10px">26.x 需要 Java 25；1.20.5+ 需要 Java 21；1.18+ 推荐 Java 17；1.17 及更早用 Java 8/16。' +
-        '没有 Java 时启动器可自动下载 Adoptium JRE。</div></div>' +
-
-      '<div class="card"><div class="card-head"><h3 class="card-title">内存与 JVM</h3>' +
-        '<span class="small muted">' + esc(c.minMemory) + ' ~ ' + esc(c.maxMemory) + ' MB</span></div>' +
-        '<div class="field"><label>最大内存</label><div class="memory-row">' +
-          '<input type="range" min="1024" max="16384" step="256" value="' + esc(c.maxMemory) + '" data-range="maxMemory" />' +
-          '<span class="memory-value" id="maxMemoryLabel">' + esc(c.maxMemory) + ' MB</span></div></div>' +
-        '<div class="field"><label>最小内存</label><div class="memory-row">' +
-          '<input type="range" min="256" max="8192" step="256" value="' + esc(c.minMemory) + '" data-range="minMemory" />' +
-          '<span class="memory-value" id="minMemoryLabel">' + esc(c.minMemory) + ' MB</span></div></div>' +
-        '<div class="field"><label>额外 JVM 参数</label><input class="input" id="jvmArgs" value="' + esc(c.jvmArgs) + '" data-change="jvmArgs" placeholder="-XX:+UseG1GC" /></div>' +
-        '<div class="field"><label>垃圾回收器</label><select class="select" data-change="gc">' +
-          ['G1GC', 'ZGC', 'SerialGC', 'ParallelGC', ''].map((g) => '<option value="' + g + '"' +
-            (c.gc === g ? ' selected' : '') + '>' + (g || '跟随 JVM 默认') + '</option>').join('') + '</select></div></div>' +
-
-      '<div class="card"><div class="card-head"><h3 class="card-title">日志</h3></div>' +
-        '<div class="card-subtitle">启动日志会保存到启动器数据目录的 logs 文件夹，可在「日志」页查看和复制。</div>' +
-        '<div class="row" style="margin-top:12px"><button class="btn btn-ghost" data-action="goto-logs">查看日志</button>' +
-        '<button class="btn btn-ghost" data-action="open-logs">打开日志目录</button></div></div>' +
-    '</div>' +
-
-    '<div class="stack">' +
-      '<div class="card"><div class="card-head"><h3 class="card-title">下载与安装</h3></div>' +
-        '<div class="setting-row"><div class="setting-info"><div class="setting-title">版本下载源</div>' +
-          '<div class="setting-desc">国内网络推荐 BMCLAPI 镜像。</div></div>' +
-          '<div class="setting-control"><select class="select" style="width:150px" data-change="downloadSource">' +
-            '<option value="bmclapi"' + (c.downloadSource === 'bmclapi' ? ' selected' : '') + '>BMCLAPI 镜像</option>' +
-            '<option value="mojang"' + (c.downloadSource === 'mojang' ? ' selected' : '') + '>Mojang 官方</option></select></div></div>' +
-        '<div class="setting-row"><div class="setting-info"><div class="setting-title">版本隔离</div>' +
-          '<div class="setting-desc">每个版本的 mods / saves / resourcepacks / config 独立，库与资源共享。与 PCL2 的版本隔离等价。</div></div>' +
-          '<div class="setting-control"><label class="switch"><input type="checkbox" data-change="isolation"' +
-            (c.isolation ? ' checked' : '') + '><span></span></label></div></div>' +
-        '<div class="setting-row"><div class="setting-info"><div class="setting-title">启动后最小化启动器</div>' +
-          '<div class="setting-desc">游戏启动后释放前台空间。</div></div>' +
-          '<div class="setting-control"><label class="switch"><input type="checkbox" data-change="closeAfterLaunch"' +
-            (c.closeAfterLaunch ? ' checked' : '') + '><span></span></label></div></div></div>' +
-
-      '<div class="card"><div class="card-head"><h3 class="card-title">界面语言</h3></div>' +
-        '<div class="field"><label>显示语言</label><select class="select" data-change="language" data-i18n-skip>' +
-          '<option value="zh-CN"' + ((c.language || 'zh-CN') === 'zh-CN' ? ' selected' : '') + '>简体中文</option>' +
-          '<option value="zh-TW"' + (c.language === 'zh-TW' ? ' selected' : '') + '>繁體中文</option>' +
-          '<option value="en-US"' + (c.language === 'en-US' ? ' selected' : '') + '>English</option>' +
-          '<option value="ja-JP"' + (c.language === 'ja-JP' ? ' selected' : '') + '>日本語</option>' +
-          '<option value="ko-KR"' + (c.language === 'ko-KR' ? ' selected' : '') + '>한국어</option>' +
-          '<option value="fr-FR"' + (c.language === 'fr-FR' ? ' selected' : '') + '>Français</option>' +
-          '<option value="ru-RU"' + (c.language === 'ru-RU' ? ' selected' : '') + '>Русский</option>' +
-        '</select>' +
-        '<div class="card-subtitle">开发者版先提供多种语言。切换后界面会重新加载。</div></div></div>' +
-
-      '<div class="card"><div class="card-head"><h3 class="card-title">外观模式</h3></div>' +
-        '<div class="field"><select class="select" data-change="colorMode">' +
-          '<option value="light"' + ((c.colorMode || 'light') === 'light' ? ' selected' : '') + '>浅色</option>' +
-          '<option value="dark"' + (c.colorMode === 'dark' ? ' selected' : '') + '>深色</option>' +
-          '<option value="system"' + (c.colorMode === 'system' ? ' selected' : '') + '>跟随系统</option>' +
-        '</select><div class="card-subtitle">深色模式会同步切换窗口、卡片、输入框和弹窗配色。</div></div></div>' +
-
-      '<div class="card"><div class="card-head"><h3 class="card-title">兼容模式</h3></div>' +
-        '<div class="setting-row"><div class="setting-info"><div class="setting-title">软件渲染</div>' +
-          '<div class="setting-desc">显卡或 OpenGL 异常、界面黑屏时开启。会降低动画性能，重启后生效。</div></div>' +
-          '<div class="setting-control"><label class="switch"><input type="checkbox" data-change="softwareRenderer"' + (c.softwareRenderer ? ' checked' : '') + '><span></span></label></div></div></div>' +
-
-      '<div class="card"><div class="card-head"><h3 class="card-title">主题</h3><span class="small muted">蓝色为主</span></div>' +
-        '<div class="setting-row"><div class="setting-info"><div class="setting-title">强调色</div>' +
-          '<div class="setting-desc">默认 PCL 蓝，修改后全局立即生效。</div></div>' +
-          '<div class="swatches">' + ['#2F7FD1', '#1F9D62', '#8A5CD1', '#D9891B', '#D4517E'].map((color) =>
-            '<button class="swatch ' + (c.accent.toLowerCase() === color.toLowerCase() ? 'active' : '') +
-            '" style="background:' + color + '" data-action="set-theme" data-color="' + color + '" title="' + color + '"></button>').join('') +
-          '</div></div></div>' +
-
-      announcerCard() +
-      announcementTypeCard() +
-      updateSettingsCard() +
-
-      '<div class="card"><div class="card-head"><h3 class="card-title">关于</h3></div>' +
-        '<div class="kv"><span class="k">版本</span><span class="v">' + esc(displayVersion()) + '</span></div>' +
-        '<div class="kv"><span class="k">开发人员</span><span class="v">末影哥、szy</span></div>' +
-        '<div class="kv"><span class="k">应用</span><span class="v">EMCL' + (isDeveloper() ? ' 开发者版本' : '') + '</span></div>' +
-        '<div class="kv"><span class="k">全名</span><span class="v">Enderman MineCraft Launcher' + (isDeveloper() ? '（开发者版本）' : '') + '</span></div>' +
-        (isDeveloper() ? '<div class="kv"><span class="k">版本类型</span><span class="v">Developer Edition</span></div>' : '') +
-        '<div class="kv"><span class="k">Minecraft</span><span class="v">Java Edition</span></div>' +
-        '<div class="kv"><span class="k">数据源</span><span class="v">Mojang · BMCLAPI · Modrinth</span></div>' +
-        '<div class="card-subtitle" style="margin-top:10px">本应用与 Mojang Studios、Microsoft 无隶属关系。' +
-        'Minecraft 是 Mojang Studios 的商标。请使用你拥有合法授权的游戏账户。</div></div>' +
-    '</div></div>';
+function settingOption(title, hint, controls) {
+  return '<div class="option-row"><div class="option-info"><div class="option-title">' + esc(title) + '</div>' +
+    (hint ? '<div class="option-hint">' + esc(hint) + '</div>' : '') + '</div><div class="option-control">' + controls + '</div></div>';
 }
+
+function pageSettings() {
+  const c = state.config, java = state.java;
+  const groups = [['game','游戏'],['runtime','Java 与内存'],['downloads','下载'],['appearance','外观'],
+    ...(c.localAdmin === true ? [['developer','开发者']] : []), ['about','关于']];
+  const section = groups.some(([id]) => id === state.settingsSection) ? state.settingsSection : 'game';
+  const toggle = (key, label) => '<label class="switch"><input type="checkbox" data-change="' + key + '" aria-label="' + label + '"' +
+    (c[key] ? ' checked' : '') + '><span></span></label>';
+  let content = '';
+  if (section === 'game') content = '<h2 class="detail-title">游戏</h2>' +
+    '<section class="settings-section"><div class="option-title">游戏目录</div><code class="path-value">' + esc(c.gameDir) + '</code>' +
+    '<div class="inline-actions"><button class="btn btn-ghost" data-action="choose-dir">更改目录</button><button class="btn btn-ghost" data-action="open-dir">打开目录</button>' +
+    '<button class="btn btn-ghost" data-action="import-folder">导入已有游戏</button></div></section>' +
+    settingOption('版本隔离', '为每个版本使用独立的模组、存档和配置。', toggle('isolation','版本隔离')) +
+    settingOption('启动后最小化', '游戏启动后收起启动器窗口。', toggle('closeAfterLaunch','启动后最小化')) +
+    settingOption('启动日志', '查看游戏输出与错误信息。', '<button class="btn btn-ghost" data-action="goto-logs">查看日志</button>');
+  if (section === 'runtime') {
+    const javaState = java && java.ok ? 'Java ' + java.major + (java.tooOld ? ' · 需要 ' + java.required : ' · 已就绪') : '未检测到 Java';
+    content = '<h2 class="detail-title">Java 与内存</h2><section class="settings-section"><div class="option-row no-rule"><div><div class="option-title">Java 运行时</div>' +
+      '<div class="option-hint">' + esc(javaState) + '</div></div><div class="option-control">' +
+      rowMenu('下载 Java', [25,21,17,8].map((major) => '<button data-action="download-java" data-major="' + major + '">Java ' + major + '</button>').join('')) + '</div></div>' +
+      '<code class="path-value">' + esc(java && java.path || '自动选择可用的 Java') + '</code><div class="inline-actions">' +
+      '<button class="btn btn-ghost" data-action="choose-java">手动选择</button><button class="btn btn-ghost" data-action="detect-java">重新检测</button></div></section>' +
+      settingOption('最大内存', '游戏可使用的内存上限。', '<div class="memory-row"><input type="range" min="1024" max="16384" step="256" value="' + c.maxMemory +
+        '" data-range="maxMemory" aria-label="最大内存"><output class="memory-value" id="maxMemoryLabel">' + c.maxMemory + ' MB</output></div>') +
+      settingOption('最小内存', '游戏启动时分配的内存。', '<div class="memory-row"><input type="range" min="256" max="8192" step="256" value="' + c.minMemory +
+        '" data-range="minMemory" aria-label="最小内存"><output class="memory-value" id="minMemoryLabel">' + c.minMemory + ' MB</output></div>') +
+      '<details class="text-disclosure advanced-jvm"><summary>高级 JVM 设置</summary><div class="field"><label for="jvmArgs">额外 JVM 参数</label>' +
+      '<input class="input" id="jvmArgs" value="' + esc(c.jvmArgs || '') + '" data-change="jvmArgs"></div>' +
+      '<div class="field"><label for="gcSelect">垃圾回收器</label><select id="gcSelect" class="select" data-change="gc">' +
+      ['G1GC','ZGC','SerialGC','ParallelGC',''].map((value) => '<option value="' + value + '"' + (c.gc === value ? ' selected' : '') + '>' +
+        (value || '跟随 JVM 默认') + '</option>').join('') + '</select></div></details>';
+  }
+  if (section === 'downloads') content = '<h2 class="detail-title">下载</h2>' +
+    settingOption('下载源', '版本清单与游戏文件的下载来源。', '<select class="select" data-change="downloadSource" aria-label="下载源">' +
+      '<option value="bmclapi"' + (c.downloadSource === 'bmclapi' ? ' selected' : '') + '>BMCLAPI 镜像</option>' +
+      '<option value="mojang"' + (c.downloadSource === 'mojang' ? ' selected' : '') + '>Mojang 官方</option></select>') +
+    (isDeveloper() ? settingOption('CurseForge', '管理资源下载所使用的密钥。', '<button class="btn btn-ghost" data-action="cf-key-manager">密钥管理</button>') : '');
+  if (section === 'appearance') content = '<h2 class="detail-title">外观</h2>' +
+    settingOption('外观模式', '深色模式会同步切换窗口、卡片和输入框。', '<select class="select" data-change="colorMode" aria-label="外观模式">' +
+      [['light','浅色'],['dark','深色'],['system','跟随系统']].map(([id,label]) => '<option value="' + id + '"' + ((c.colorMode || 'light') === id ? ' selected' : '') + '>' + label + '</option>').join('') + '</select>') +
+    settingOption('界面语言', '更改后重新加载界面。', '<select class="select" data-change="language" aria-label="界面语言" data-i18n-skip>' +
+      [['zh-CN','简体中文'],['zh-TW','繁體中文'],['en-US','English'],['ja-JP','日本語'],['ko-KR','한국어'],['fr-FR','Français'],['ru-RU','Русский']].map(([id,label]) =>
+        '<option value="' + id + '"' + ((c.language || 'zh-CN') === id ? ' selected' : '') + '>' + label + '</option>').join('') + '</select>') +
+    settingOption('强调色', '', '<div class="swatches">' + ['#2F7FD1','#1F9D62','#8A5CD1','#D9891B','#D4517E'].map((color) =>
+      '<button class="swatch ' + (c.accent.toLowerCase() === color.toLowerCase() ? 'active' : '') + '" style="background:' + color + '" data-action="set-theme" data-color="' + color +
+      '" title="' + color + '" aria-label="' + color + '"></button>').join('') + '</div>');
+  if (section === 'developer') content = '<h2 class="detail-title">开发者</h2>' + announcerCard();
+  if (section === 'about') content = '<h2 class="detail-title">EMCL</h2><p class="about-name">Enderman MineCraft Launcher</p>' +
+    '<p class="section-meta">' + (isDeveloper() ? '开发者版本 · ' : '') + esc(displayVersion()) + '</p>' + updateSettingsCard() +
+    '<div class="inline-actions"><button class="btn btn-ghost" data-action="open-url" data-url="' + OFFICIAL_URL + '">官网</button>' +
+    '<button class="btn btn-ghost" data-action="open-repo">GitHub</button><button class="btn btn-ghost" data-action="open-feedback">反馈</button></div>' +
+    '<details class="text-disclosure"><summary>版权与数据源</summary><p class="form-footnote">本应用与 Mojang Studios、Microsoft 无隶属关系。Minecraft 是 Mojang Studios 的商标。</p>' +
+    '<p class="form-footnote">数据源：Mojang、BMCLAPI、Modrinth。图标：Tabler Icons（MIT）。</p></details>';
+  return '<div class="settings-workspace"><nav class="settings-navigation" aria-label="设置分类">' +
+    groups.map(([id,label]) => '<button class="settings-link ' + (section === id ? 'active' : '') + '" data-action="settings-section" data-value="' + id +
+      '" aria-pressed="' + (section === id) + '">' + label + '</button>').join('') + '</nav><section class="settings-detail">' + content + '</section></div>';
+}
+
 
 /* ---------------- Logs ---------------- */
 
-function logLineClass(line) {
-  const text = String(line && line.text || '');
-  if (line && line.level === 'error') return 'error';
-  if (/error|exception|fatal|崩溃|失败|^\s*at\s+\S+\(/i.test(text)) return 'error';
-  if ((line && line.level === 'warn') || /warn|警告/i.test(text)) return 'warn';
-  return 'info';
-}
-
-function activeLogLines() {
-  return state.logVersionId === state.launchVersionId && state.logLines.length
-    ? state.logLines
-    : (state.latestLog ? state.latestLog.split(/\r?\n/).map((text) => ({ level: 'out', text })) : []);
-}
-
 function pageLogs() {
-  const all = activeLogLines();
-  const lines = state.logFilter === 'error' ? all.filter((l) => logLineClass(l) === 'error') : all;
-  const versions = state.installed.map((v) => '<option value="' + esc(v.id) + '"' +
-    (state.logVersionId === v.id ? ' selected' : '') + '>' + esc(v.id) + '</option>').join('');
-  const progress = state.launching || state.launchWaiting
-    ? '<span class="log-inline-progress">启动进度 ' + Math.round(state.launchProgress || 0) + '% · ' + esc(state.launchProgressText) + '</span>' : '';
-  return '<div class="toolbar log-toolbar"><div><div class="card-title">启动日志</div>' +
-    '<div class="card-subtitle">' + esc(state.logVersionId || '请选择实例') + ' · ' +
-      esc(state.logVersionId === state.launchVersionId ? (state.launchLogFile || '当前会话') : '最近一次启动') +
-      '</div></div><div class="spacer"></div>' +
-    '<label class="log-instance-label">实例 <select class="select" data-change="log-version">' + versions + '</select></label>' + progress +
-    '<button class="btn ' + (state.logFilter === 'all' ? 'btn-soft' : 'btn-ghost') + '" data-action="log-filter" data-value="all">全部</button>' +
-    '<button class="btn ' + (state.logFilter === 'error' ? 'btn-soft' : 'btn-ghost') + '" data-action="log-filter" data-value="error">只看错误</button>' +
-    '<button class="btn btn-ghost" data-action="detach-log">' + icon('terminal') + '独立窗口</button>' +
-    '<button class="btn btn-ghost" data-action="copy-log">' + icon('copy') + '复制全部</button>' +
-    '<button class="btn btn-ghost" data-action="open-logs">' + icon('folder') + '打开日志目录</button>' +
-    '<button class="btn btn-ghost" data-action="clear-log">' + icon('trash') + '清空日志</button>' +
-    '<button class="btn btn-soft" data-action="open-feedback">' + icon('info') + '提交错误</button>' +
-    '<button class="btn btn-primary" data-action="refresh-log">' + icon('refresh') + '刷新</button></div>' +
-    '<div class="log-box" id="logBox">' + (lines.length ? lines.map((l) =>
-      '<span class="log-line ' + logLineClass(l) + '">' + esc(l.text) + '</span>').join('') : '日志为空。启动一次游戏后，这里会显示 Java 输出。') + '</div>';
+  const lines = state.logLines.length ? state.logLines : state.latestLog ? state.latestLog.split(/\r?\n/).map((text) => ({level:'out',text})) : [];
+  return '<div class="log-workspace"><div class="section-toolbar log-toolbar"><span class="log-file" title="' + esc(state.launchLogFile || '') + '">' +
+    esc(state.launchLogFile || '当前启动日志') + '</span><div class="spacer"></div>' +
+    '<button class="btn btn-ghost" data-action="copy-log">复制</button><button class="btn btn-ghost" data-action="refresh-log">刷新</button>' +
+    rowMenu('更多', '<button data-action="open-logs">打开日志目录</button><button data-action="open-feedback">提交错误</button>' +
+      '<button class="danger-text" data-action="clear-log">清空日志</button>') + '</div>' +
+    '<div class="log-viewer"><div class="log-box" id="logBox" role="log" aria-label="启动日志" tabindex="0">' + lines.map((line) =>
+      '<span class="log-line ' + (line.level === 'err' || line.level === 'error' ? 'err' : 'out') + '">' + esc(line.text) + '</span>').join('') + '</div>' +
+      (!lines.length ? '<div class="log-empty">暂无日志<span>启动游戏后，输出会显示在这里。</span></div>' : '') + '</div></div>';
 }
 
-async function openDetachedLog() {
-  const text = activeLogLines().map((line) => line.text).join('\n');
-  const res = await api.detachLog('EMCL 日志 · ' + (state.logVersionId || '最新日志'), text || '暂无日志');
-  if (!res || !res.ok) toast((res && res.error) || '无法打开日志窗口', 'error');
-}
 
 /* ---------------- Actions ---------------- */
 
 async function handleAction(action, el) {
   const dataset = el.dataset || {};
   switch (action) {
+    case 'settings-section':
+      state.settingsSection = dataset.value;
+      render();
+      $('content').scrollTop = 0;
+      break;
+    case 'add-account-view':
+      state.accountAdding = true;
+      accountError = '';
+      render();
+      break;
+    case 'inspect-account':
+      state.accountInspectId = dataset.id;
+      state.accountAdding = false;
+      render();
+      break;
+    case 'download-section':
+      state.downloadTab = dataset.value === 'versions' ? 'versions' : 'resources';
+      if (dataset.value === 'versions') {
+        render();
+        if (!state.manifest && !state.manifestLoading) await loadManifest(false);
+      } else {
+        state.resourceKind = dataset.value;
+        state.resourceHits = [];
+        state.resourceError = '';
+        state.resourceFallback = false;
+        state.contentData = null;
+        render();
+        if (dataset.value === 'recommend') await loadRecommendations(false);
+        else await loadContent();
+      }
+      render();
+      break;
     case 'goto':
       if (dataset.tab) state.downloadTab = dataset.tab;
       setPage(dataset.page);
@@ -2279,11 +2100,23 @@ async function handleAction(action, el) {
       }
       render();
       break;
+    case 'launcher-center': showLauncherCenter(); break;
+    case 'open-version-picker':
+      state.pickerQuery = '';
+      setPage('versionPicker');
+      $('pickerSearch')?.focus();
+      break;
+    case 'picker-back': setPage('home'); document.querySelector('[data-action="open-version-picker"]')?.focus(); break;
+    case 'pick-version':
+      await selectVersion(dataset.id);
+      setPage('home');
+      document.querySelector('[data-action="open-version-picker"]')?.focus();
+      break;
     case 'goto-accounts': setPage('accounts'); break;
     case 'goto-logs': setPage('logs'); break;
     case 'goto-versions': setPage('versions'); break;
     case 'goto-modpacks': setPage('modpacks'); break;
-    case 'goto-resources-modpack': state.resourceKind = 'modpack'; setPage('resources'); break;
+    case 'goto-resources-modpack': state.resourceKind = 'modpack'; state.downloadTab = 'resources'; setPage('resources'); break;
     case 'copy-error': await copyErrorInfo(); break;
     case 'email-error': await emailErrorInfo(); break;
     case 'open-url': await api.openExternal(dataset.url); break;
@@ -2293,19 +2126,6 @@ async function handleAction(action, el) {
     case 'skin-cape-off': await disableCape(); break;
     case 'skin-upload': $('skinFileInput') && $('skinFileInput').click(); break;
     case 'save-version-name': await confirmVersionName(); break;
-    case 'enable-software-render': {
-      await api.patchConfig({ softwareRenderer: true });
-      state.config.softwareRenderer = true;
-      try { await api.relaunch(); } catch { toast('已开启软件渲染，请手动重启启动器'); }
-      break;
-    }
-    case 'open-gl-continue': {
-      const pending = state.pendingOpenGLLaunch;
-      state.pendingOpenGLLaunch = null;
-      closeModal();
-      if (pending) await doLaunch(pending.versionId, pending.accountId, { ...(pending.options || {}), skipOpenGL: true });
-      break;
-    }
     case 'launch': await doLaunch(); break;
     case 'launch-with-account':
       closeModal();
@@ -2356,28 +2176,8 @@ async function handleAction(action, el) {
     }
     case 'repair-version': await repairVersion(dataset.id); break;
     case 'auto-repair-all': await autoRepairAll(); break;
-    case 'mp-ping': await pingMultiplayer(dataset.id); break;
-    case 'mp-ping-all': await pingAllMultiplayer(); break;
-    case 'mp-add': await addMultiplayer(); break;
-    case 'mp-remove':
-      if (!confirm('从收藏列表删除这个服务器？')) break;
-      await removeMultiplayer(dataset.id);
-      break;
-    case 'mp-join': {
-      const item = (state.config.multiplayerServers || []).find((s) => s.id === dataset.id);
-      if (item) await doLaunch(null, null, { server: { host: item.host, port: item.port } });
-      break;
-    }
     case 'launch-version': await doLaunch(dataset.id); break;
     case 'select-version': await selectVersion(dataset.id); break;
-    case 'version-java': await openVersionJava(dataset.id); break;
-    case 'save-version-java': await saveVersionJava(); break;
-    case 'pick-version-java':
-      if ($('versionJavaPath')) $('versionJavaPath').value = dataset.path || '';
-      break;
-    case 'clear-version-java':
-      if ($('versionJavaPath')) $('versionJavaPath').value = '';
-      break;
     case 'rename-version':
       askVersionName('给版本起名', versionLabel(dataset.id), async (name) => {
         if (name) await setVersionName(dataset.id, name);
@@ -2429,12 +2229,14 @@ async function handleAction(action, el) {
     case 'toggle-content': await toggleContent(dataset.kind, dataset.path, dataset.enabled === '1'); break;
     case 'remove-content': await removeContent(dataset.kind, dataset.path, dataset.name); break;
     case 'refresh-content': await loadContent(); render(); break;
-    case 'account-mode': accountMode = dataset.value || 'microsoft'; accountError = ''; render(); break;
+    case 'account-mode': accountMode = dataset.value || 'microsoft'; state.accountAdding = true; accountError = ''; render(); break;
     case 'login-offline': await loginOffline(); break;
     case 'login-ms': await loginMicrosoft(); break;
     case 'login-third': await loginThird(); break;
     case 'select-account': await selectAccount(dataset.id); break;
     case 'remove-account': await removeAccount(dataset.id); break;
+    case 'developer-account-save': await saveDeveloperAccount(); break;
+    case 'developer-account-remove': await removeDeveloperAccount(); break;
     case 'refresh-account': await refreshAccount(dataset.id); break;
     case 'open-feedback': openFeedbackModal(); break;
     case 'add-local-server': await addLocalServer(); break;
@@ -2480,7 +2282,7 @@ async function handleAction(action, el) {
       state.pendingMismatch = [];
       state.skipModCheckOnce = true;
       closeModal();
-      if (pending) await doLaunch(pending.id, pending.accountId, pending.options);
+      if (pending) await doLaunch(pending.id, pending.accountId);
       break;
     }
     case 'disable-mismatched-mods': {
@@ -2493,7 +2295,7 @@ async function handleAction(action, el) {
       closeModal();
       if (!res.ok) { toast(res.error || '禁用失败', 'error'); break; }
       toast('已禁用 ' + res.disabled.length + ' 个不匹配模组', 'success');
-      await doLaunch(pending.id, pending.accountId, pending.options);
+      await doLaunch(pending.id, pending.accountId);
       break;
     }
     case 'fill-server-command': {
@@ -2553,8 +2355,6 @@ async function handleAction(action, el) {
     case 'set-theme': await setTheme(dataset.color); break;
     case 'open-logs': await openLogs(); break;
     case 'copy-log': await copyLog(); break;
-    case 'log-filter': state.logFilter = dataset.value || 'all'; render(); break;
-    case 'detach-log': await openDetachedLog(); break;
     case 'clear-log':
       if (!confirm('清空所有启动日志？此操作不会删除游戏文件。')) break;
       try {
@@ -2569,12 +2369,21 @@ async function handleAction(action, el) {
       break;
     case 'refresh-log': await loadLatestLog(); render(); break;
     case 'check-update': await checkForUpdates(true); break;
-    case 'refresh-all': await refreshAll(); break;
+    case 'dev-check-update': await checkDevUpdate(true); break;
+    case 'dev-install-update': state.devUpdateBusy = true; render(); try { const r = await api.devUpdateInstall(state.devUpdate); if (!r.ok) throw new Error(r.error || '更新失败'); } catch (e) { toast(e.message, 'error'); state.devUpdateBusy = false; render(); } break;
+    case 'dev-submit-update': openDevSubmitUpdateModal(); break;
+    case 'dev-submit-update-confirm': await submitDevUpdate(); break;
+    case 'refresh-all':
+      await refreshAll();
+      if (document.querySelector('.launcher-center') && !state.noticeOpenId) showLauncherCenter();
+      break;
     case 'show-update': showUpdateModal(); break;
     case 'open-update': await openUpdate(); break;
-    case 'start-update': await startUpdate(); break;
     case 'open-repo': await openOfficialRepo(); break;
-    case 'mark-notices-read': await markAnnouncementsSeen(); break;
+    case 'mark-notices-read':
+      await markAnnouncementsSeen();
+      if (document.querySelector('.launcher-center')) showLauncherCenter();
+      break;
     case 'open-announcement': await openAnnouncement(dataset.id); break;
     case 'notice-dismiss':
       if (Date.now() - state.noticeOpenedAt < 1200) break;
@@ -2588,17 +2397,6 @@ async function handleAction(action, el) {
     case 'compose-local-announcement': openLocalAnnouncementComposer(); break;
     case 'save-local-announcement': await saveLocalAnnouncement(); break;
     case 'delete-local-announcement': await deleteLocalAnnouncement(dataset.id); break;
-    case 'toggle-announcement-type': {
-      const selected = new Set(Array.isArray(state.config.announcementTypes) ? state.config.announcementTypes : []);
-      const type = String(dataset.type || '');
-      if (!type) break;
-      if (selected.has(type)) selected.delete(type); else selected.add(type);
-      await api.patchConfig({ announcementTypes: Array.from(selected) });
-      state.config.announcementTypes = Array.from(selected);
-      await loadAnnouncements(true);
-      render();
-      break;
-    }
     case 'configure-announcer-token': openAnnouncerTokenModal(); break;
     case 'save-announcer-token': await saveAnnouncerToken(); break;
     case 'clear-announcer-token': await clearAnnouncerToken(); break;
@@ -2644,7 +2442,7 @@ async function refreshAll() {
       api.listAnnouncements(true)
     ]);
     state.update = update;
-    state.announcements = filterAnnouncements((announcements && announcements.items) || []);
+    state.announcements = (announcements && announcements.items) || [];
     state.announcementError = announcements && announcements.ok === false
       ? (announcements.error || '公告刷新失败') : '';
     if (unseenPopupAnnouncements().length) scheduleAnnouncementPopup();
@@ -2676,8 +2474,6 @@ async function checkForUpdates(force = true, notify = true) {
       state.notifiedUpdate = result.latest;
       if (fresh && notify) toast('发现新版本 ' + result.latest, 'success');
       if (notify) showUpdateModal();
-    } else if (result.store) {
-      if (notify) toast('Microsoft Store 版本请通过 Store 更新', 'success');
     } else if (result.ok && notify) {
       toast('当前已是最新版本 ' + (result.current || state.appVersion), 'success');
     } else if (!result.ok && notify) {
@@ -2749,7 +2545,7 @@ function openLocalAnnouncementComposer() {
 }
 
 async function loadAnnouncerStatus() {
-  if (!state.config) return;
+  if (!state.config || state.config.localAdmin !== true) return;
   try {
     const s = await api.announcerStatus();
     state.announcer = s || { configured: false, login: '', repo: '', error: '' };
@@ -2773,16 +2569,16 @@ async function loadRemoteAnnouncements() {
 function openAnnouncerTokenModal() {
   const a = state.announcer || {};
   openModal({
-    title: '配置公告发布密码',
-    desc: '输入 EMCL 公告发布密码，用于登录 api.emcl.life。密码不会写入公告内容。',
+    title: '配置全网公告 Token',
+    desc: '需要一个 GitHub Fine-grained Token，权限只勾选该仓库的 Contents: Read and write。Token 会使用 Windows DPAPI 加密后保存在本机。',
     body: '<div class="field"><label>GitHub Token</label>' +
-      '<input class="input" id="announcerTokenInput" type="password" placeholder="公告发布密码" />' +
-      '<div class="card-subtitle">发布接口：api.emcl.life。不要把密码发给别人。</div></div>' +
+      '<input class="input" id="announcerTokenInput" type="password" placeholder="github_pat_..." />' +
+      '<div class="card-subtitle">仓库：MC-Enderman7810/EndermanMineCraftLauncher。不要把 Token 发给别人。</div></div>' +
       (a.error ? '<div class="card-subtitle" style="color:var(--red)">' + esc(a.error) + '</div>' : ''),
     actions: [
-      ...(a.configured ? [{ label: '清除密码', kind: 'ghost', action: 'clear-announcer-token' }] : []),
+      ...(a.configured ? [{ label: '清除 Token', kind: 'ghost', action: 'clear-announcer-token' }] : []),
       { label: '取消', kind: 'ghost', action: 'close-modal' },
-      { label: '登录并验证', kind: 'primary', action: 'save-announcer-token' }
+      { label: '保存并验证', kind: 'primary', action: 'save-announcer-token' }
     ]
   });
 }
@@ -2791,48 +2587,39 @@ async function saveAnnouncerToken() {
   const input = $('announcerTokenInput');
   const token = input ? input.value.trim() : '';
   if (!token) {
-    toast('请输入公告发布密码', 'error');
+    toast('请输入 GitHub Token', 'error');
     return;
   }
   const res = await api.announcerSetToken(token);
   if (!res.ok) {
-    toast(res.error || '登录失败', 'error');
+    toast(res.error || 'Token 验证失败', 'error');
     return;
   }
   closeModal();
   await loadAnnouncerStatus();
-  toast('公告发布密码已验证', 'success');
+  toast('公告 Token 已保存', 'success');
 }
 
 async function clearAnnouncerToken() {
-  if (!confirm('清除本机保存的公告发布密码？')) return;
+  if (!confirm('清除本机保存的公告 Token？')) return;
   await api.announcerClearToken();
   closeModal();
   await loadAnnouncerStatus();
-  toast('公告发布密码已清除');
+  toast('Token 已清除');
 }
 
 function openRemoteAnnouncementComposer() {
   if (!state.announcer || state.announcer.configured !== true) {
-    toast('请先配置公告发布密码', 'error');
+    toast('请先配置 Token', 'error');
     return;
   }
-  const typeBoxes = ['公告', '更新', '维护', '活动', '重要'].map((type) =>
-    '<label class="check-line" style="margin-right:14px"><input type="checkbox" name="remoteAnnType" value="' + esc(type) + '"' +
-    (type === '公告' ? ' checked' : '') + '> ' + esc(type) + '</label>').join('');
   openModal({
     title: '向所有 EMCL 发布公告',
-    desc: '发布后写入 api.emcl.life，所有正在运行的 EMCL 会在下次检查（启动时 / 每 6 小时）收到。',
+    desc: '发布后会立即写入云端公告文件。所有已安装 EMCL 会在下次检查（启动时 / 每 6 小时）收到。',
     body: '<div class="field"><label>标题</label><input class="input" id="remoteAnnTitle" maxlength="80" placeholder="例如：服务器维护通知" /></div>' +
       '<div class="field"><label>正文</label><textarea class="input" id="remoteAnnBody" rows="5" placeholder="公告内容，支持换行"></textarea></div>' +
-      '<div class="field"><label>公告类型</label><div class="row" style="flex-wrap:wrap">' + typeBoxes + '</div></div>' +
-      '<div class="field"><label>指定目标（可选）</label><input class="input" id="remoteAnnTargets" placeholder="玩家名/账户 ID，多个用逗号分隔；留空发给全部" /></div>' +
-      '<div class="field"><label>发布对象</label><div class="row" style="flex-wrap:wrap">' +
-        '<label class="check-line" style="margin-right:14px"><input type="checkbox" name="remoteAnnAudience" value="release" checked> 发布版</label>' +
-        '<label class="check-line" style="margin-right:14px"><input type="checkbox" name="remoteAnnAudience" value="dev" checked> 开发者版</label>' +
-        '<label class="check-line" style="margin-right:14px"><input type="checkbox" name="remoteAnnAudience" value="sianh" checked> 特供版</label>' +
-      '</div></div>' +
-      '<div class="field"><label>置顶</label><label class="check-line"><input type="checkbox" id="remoteAnnPinned" /> 置顶显示</label></div>',
+      '<div class="grid-2"><div class="field"><label>标签</label><input class="input" id="remoteAnnTag" value="公告" maxlength="20" /></div>' +
+      '<div class="field"><label>置顶</label><label class="check-line"><input type="checkbox" id="remoteAnnPinned" /> 置顶显示</label></div></div>',
     actions: [
       { label: '取消', kind: 'ghost', action: 'close-modal' },
       { label: '发布到所有 EMCL', kind: 'primary', action: 'publish-remote-announcement' }
@@ -2843,15 +2630,13 @@ function openRemoteAnnouncementComposer() {
 async function publishRemoteAnnouncement() {
   const title = $('remoteAnnTitle') ? $('remoteAnnTitle').value.trim() : '';
   const body = $('remoteAnnBody') ? $('remoteAnnBody').value.trim() : '';
-  const types = Array.from(document.querySelectorAll('input[name="remoteAnnType"]:checked')).map((el) => el.value);
-  const targets = $('remoteAnnTargets') ? $('remoteAnnTargets').value.split(',').map((x) => x.trim()).filter(Boolean) : [];
-  const audience = Array.from(document.querySelectorAll('input[name="remoteAnnAudience"]:checked')).map((el) => el.value);
+  const tagValue = $('remoteAnnTag') ? $('remoteAnnTag').value.trim() : '公告';
   const pinned = $('remoteAnnPinned') ? $('remoteAnnPinned').checked : false;
   if (!title || !body) {
     toast('标题和正文不能为空', 'error');
     return;
   }
-  const res = await api.announcerPublish({ title, body, types, audience, targets, pinned });
+  const res = await api.announcerPublish({ title, body, tag: tagValue, pinned });
   if (!res.ok) {
     toast(res.error || '发布失败', 'error');
     return;
@@ -2879,44 +2664,10 @@ async function refreshRemoteAnnouncements() {
   toast('公告已刷新');
 }
 
-const ANNOUNCEMENT_TYPES = ['公告', '更新', '维护', '活动', '重要'];
-
-function acceptedAnnouncementTypes() {
-  const list = state.config && Array.isArray(state.config.announcementTypes)
-    ? state.config.announcementTypes.map((x) => String(x))
-    : [];
-  return list.length ? list : ANNOUNCEMENT_TYPES.slice();
-}
-
-function announcementAccepted(item) {
-  const selected = acceptedAnnouncementTypes();
-  if (!selected.length) return true;
-  const tags = String((item && (item.tag || item.type)) || '公告').split(',').map((x) => x.trim());
-  return tags.some((x) => selected.includes(x));
-}
-
-function announcementAudienceAccepted(item) {
-  const audience = String((item && item.audience) || 'both').toLowerCase();
-  const audienceList = audience.split(',').map((x) => x.trim());
-  const audienceOk = audienceList.includes('all') || audienceList.includes('both') ||
-    (isDeveloper() ? audienceList.includes('dev') : audienceList.includes('release'));
-  if (!audienceOk) return false;
-  const targets = String((item && item.targets) || '').split(',').map((x) => x.trim().toLowerCase()).filter(Boolean);
-  if (!targets.length) return true;
-  const account = currentAccount();
-  const names = [account && account.name, account && account.id, state.config && state.config.lastAccountId]
-    .filter(Boolean).map((x) => String(x).toLowerCase());
-  return targets.some((target) => names.includes(target));
-}
-
-function filterAnnouncements(items) {
-  return (Array.isArray(items) ? items : []).filter((item) => announcementAccepted(item) && announcementAudienceAccepted(item));
-}
-
 async function loadAnnouncements(force = false) {
   try {
     const result = await api.listAnnouncements(force);
-    state.announcements = filterAnnouncements(result.items || []);
+    state.announcements = result.items || [];
     state.announcementError = result.ok ? '' : (result.error || '');
     if (unseenPopupAnnouncements().length) scheduleAnnouncementPopup();
     render();
@@ -2932,56 +2683,21 @@ function showUpdateModal() {
     return;
   }
   const notes = (u.notes || []).map((n) => '<li>' + esc(n) + '</li>').join('');
-  const auto = !u.store && u.platform === 'win32';
+  const mandatory = u.mandatory === true;
   openModal({
-    title: 'EMCL ' + u.latest + ' 可用',
-    desc: '当前版本 ' + (u.current || state.appVersion) +
+    title: (mandatory ? '必须更新 · EMCL ' : 'EMCL ') + u.latest + ' 可用',
+    desc: (mandatory ? '这是开发者版强制更新。' : '') + '当前版本 ' + (u.current || state.appVersion) +
       (u.releaseDate ? ' · 发布于 ' + u.releaseDate : ''),
     body: '<div class="card" style="background:#FBFDFF;box-shadow:none;padding:12px">' +
       (notes ? '<ul style="margin:0;padding-left:18px;font-size:11px;line-height:1.9;color:var(--text-2)">' +
         notes + '</ul>' : '<div class="card-subtitle">该版本包含问题修复与体验改进。</div>') +
-      '</div>' +
-      (auto ? '<div class="card-subtitle" style="margin-top:8px">启动器会自动下载并静默安装，完成后重新打开。</div>' : ''),
-    actions: auto
-      ? [{ label: '稍后', kind: 'ghost', action: 'close-modal' },
-        { label: '立即自动更新', kind: 'primary', action: 'start-update' }]
-      : [{ label: u.store ? '前往 Microsoft Store' : '前往下载', kind: 'primary', action: 'open-update' }]
+      (mandatory ? '<div class="card-subtitle" style="margin-top:8px;color:var(--orange)">更新完成后需要重新输入开发者密码。</div>' : '') +
+      '</div>',
+    actions: mandatory
+      ? [{ label: '前往下载', kind: 'primary', action: 'open-update' }]
+      : [{ label: '稍后', kind: 'ghost', action: 'close-modal' },
+        { label: '前往下载', kind: 'primary', action: 'open-update' }]
   });
-}
-
-async function startUpdate() {
-  const u = state.update;
-  if (!u) return;
-  if (u.store || (u.platform && u.platform !== 'win32') || state.updateInstalling) {
-    if (u.store || (u.platform && u.platform !== 'win32')) await openUpdate();
-    return;
-  }
-  state.updateInstalling = true;
-  state.updateProgress = 0;
-  state.updateProgressText = '准备下载更新';
-  closeModal();
-  toast('开始下载更新 ' + u.latest);
-  try {
-    let downloaded = null;
-    if (u.asarUrl && !u.store) {
-      try {
-        const patch = await api.downloadAsarUpdate(u);
-        if (patch.ok) {
-          const patched = await api.installAsarUpdate(patch);
-          if (patched.ok) return;
-        }
-      } catch (e) { /* fall back to full package */ }
-    }
-    downloaded = await api.downloadUpdate(u);
-    if (!downloaded.ok) throw new Error(downloaded.error || '下载失败');
-    toast('更新下载完成，正在安装', 'success');
-    const installed = await api.installUpdate(downloaded);
-    if (!installed.ok) throw new Error(installed.error || '安装失败');
-  } catch (e) {
-    state.updateInstalling = false;
-    toast(e.message || '自动更新失败', 'error');
-    if (confirm('自动更新失败，是否打开下载页手动更新？')) await openUpdate();
-  }
 }
 
 async function openUpdate() {
@@ -3070,7 +2786,7 @@ async function dismissNotice() {
 
 async function viewAllNotices() {
   await dismissNotice();
-  setPage('home');
+  showLauncherCenter();
 }
 
 async function openAnnouncement(id) {
@@ -3103,7 +2819,7 @@ async function loadManifest(force) {
   try {
     const manifest = await api.listVersions(force);
     state.manifest = manifest;
-    toast('版本清单已更新：' + manifest.versions.length + ' 个版本', 'success');
+    if (force) toast('版本清单已更新：' + manifest.versions.length + ' 个版本', 'success');
   } catch (e) {
     toast(e.message || '拉取版本清单失败', 'error');
   } finally {
@@ -3324,141 +3040,7 @@ function openLaunchAccountPicker(versionId) {
   });
 }
 
-async function pingMultiplayer(id) {
-  const item = (state.config.multiplayerServers || []).find((s) => s.id === id);
-  if (!item) return;
-  state.multiplayerBusy = id;
-  render();
-  try {
-    state.multiplayerPings[id] = await api.pingServer(item.host, item.port);
-  } catch (e) {
-    state.multiplayerPings[id] = { ok: false, error: e.message || '检测失败' };
-  } finally {
-    state.multiplayerBusy = '';
-    render();
-  }
-}
-
-async function pingAllMultiplayer() {
-  const list = state.config.multiplayerServers || [];
-  if (!list.length) return;
-  state.multiplayerBusy = 'all';
-  render();
-  await Promise.all(list.map(async (item) => {
-    try {
-      state.multiplayerPings[item.id] = await api.pingServer(item.host, item.port);
-    } catch (e) {
-      state.multiplayerPings[item.id] = { ok: false, error: e.message || '检测失败' };
-    }
-  }));
-  state.multiplayerBusy = '';
-  render();
-}
-
-async function addMultiplayer() {
-  const nameEl = document.getElementById('mpName');
-  const addressEl = document.getElementById('mpAddress');
-  const parsed = parseServerAddress(addressEl ? addressEl.value : '');
-  if (!parsed) {
-    toast('请输入服务器地址，例如 play.example.com:25565', 'error');
-    return;
-  }
-  const name = (nameEl && nameEl.value.trim()) || parsed.host;
-  const list = Array.isArray(state.config.multiplayerServers) ? state.config.multiplayerServers.slice() : [];
-  if (list.some((s) => s.host === parsed.host && Number(s.port) === parsed.port)) {
-    toast('这个服务器已经在列表里了', 'error');
-    return;
-  }
-  const item = { id: 'mp-' + Date.now().toString(36), name, host: parsed.host, port: parsed.port };
-  list.push(item);
-  const res = await api.patchConfig({ multiplayerServers: list });
-  state.config = res.config || Object.assign({}, state.config, { multiplayerServers: list });
-  await pingMultiplayer(item.id);
-}
-
-async function removeMultiplayer(id) {
-  const list = (state.config.multiplayerServers || []).filter((s) => s.id !== id);
-  const res = await api.patchConfig({ multiplayerServers: list });
-  state.config = res.config || Object.assign({}, state.config, { multiplayerServers: list });
-  delete state.multiplayerPings[id];
-  render();
-}
-
-async function openVersionJava(versionId) {
-  state.versionJavaTarget = versionId;
-  let list = [];
-  try { list = await api.detectJava(); } catch { /* ignore */ }
-  const saved = (state.config.versionJava || {})[versionId] || '';
-  const isoMap = state.config.versionIsolation || {};
-  const isolated = Object.prototype.hasOwnProperty.call(isoMap, versionId) ? !!isoMap[versionId] : !!state.config.isolation;
-  const choices = (list || []).map((j) =>
-    '<button class="account-pick" data-action="pick-version-java" data-path="' + esc(j.path) + '">' +
-      '<span class="account-pick-main"><b>Java ' + esc(String(j.major || '?')) + '</b><small>' +
-      esc(j.version || '') + ' · ' + esc(j.path) + '</small></span></button>').join('');
-  openModal({
-    title: '版本设置',
-    desc: '为 ' + versionId + ' 单独指定 Java 和版本隔离。',
-    body: '<div class="field"><label>Java 路径（留空 = 自动选择）</label><input class="input" id="versionJavaPath" value="' +
-      esc(saved) + '" placeholder="自动匹配所需 Java 版本" /></div>' +
-      '<label class="row" style="gap:8px;margin:12px 0;font-size:12px"><input type="checkbox" id="versionIsolation"' +
-      (isolated ? ' checked' : '') + ' /> 为此版本开启版本隔离（独立 mods / saves / config）</label>' +
-      '<div class="row" style="margin:8px 0;gap:6px"><button class="btn btn-ghost btn-sm" data-action="clear-version-java">自动选择</button>' +
-      '<button class="btn btn-ghost btn-sm" data-action="download-java" data-major="8">下载 Java 8</button>' +
-      '<button class="btn btn-ghost btn-sm" data-action="download-java" data-major="17">下载 Java 17</button>' +
-      '<button class="btn btn-ghost btn-sm" data-action="download-java" data-major="21">下载 Java 21</button></div>' +
-      (choices ? '<div class="account-pick-list" style="margin-top:8px">' + choices + '</div>' : '') +
-      '<div class="card-subtitle" style="margin-top:8px">1.8.9 必须使用 Java 8；1.17–1.20.4 通常用 Java 17；1.20.5+ 用 Java 21。版本隔离只影响这个实例。</div>',
-    actions: [{ label: '取消', kind: 'ghost', action: 'close-modal' },
-      { label: '保存', kind: 'primary', action: 'save-version-java' }]
-  });
-}
-
-async function saveVersionJava() {
-  const id = state.versionJavaTarget;
-  if (!id) return;
-  const value = $('versionJavaPath') ? $('versionJavaPath').value.trim() : '';
-  const isolation = $('versionIsolation') ? !!$('versionIsolation').checked : false;
-  const next = Object.assign({}, state.config.versionJava || {});
-  const nextIsolation = Object.assign({}, state.config.versionIsolation || {});
-  if (value) next[id] = value;
-  else delete next[id];
-  nextIsolation[id] = isolation;
-  const res = await api.patchConfig({ versionJava: next, versionIsolation: nextIsolation });
-  state.config = res.config || Object.assign({}, state.config, {
-    versionJava: next,
-    versionIsolation: nextIsolation
-  });
-  closeModal();
-  toast('版本设置已保存', 'success');
-  render();
-}
-
-let openGLSupport = null;
-function detectOpenGL() {
-  if (openGLSupport !== null) return openGLSupport;
-  try {
-    const canvas = document.createElement('canvas');
-    const gl = canvas.getContext('webgl2') || canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-    openGLSupport = !!gl;
-  } catch { openGLSupport = false; }
-  return openGLSupport;
-}
-
-function showOpenGLWarning() {
-  openModal({
-    title: 'OpenGL 检测',
-    desc: '您的设备没有opengl,将无法正常启动游戏，是否打开软件渲染。',
-    body: '<div class="card-subtitle">软件渲染可以修复启动器界面黑屏，但 Minecraft Java 版仍需要显卡驱动提供 OpenGL。建议同时更新显卡驱动。</div>',
-    className: 'notice-modal',
-    actions: [
-      { label: '取消', kind: 'ghost', action: 'close-modal' },
-      { label: '仍然启动', kind: 'ghost', action: 'open-gl-continue' },
-      { label: '打开软件渲染', kind: 'primary', action: 'enable-software-render' }
-    ]
-  });
-}
-
-async function doLaunch(versionId, accountId, options) {
+async function doLaunch(versionId, accountId) {
   if (state.launching || state.gameRunning) return;
   const id = versionId || currentVersionId();
   if (!id) {
@@ -3466,7 +3048,7 @@ async function doLaunch(versionId, accountId, options) {
     setPage('versions');
     return;
   }
-  if (!accountId && state.accounts.length > 1 && !(options && options.server)) {
+  if (isDeveloper() && !accountId && state.accounts.length > 1) {
     openLaunchAccountPicker(id);
     return;
   }
@@ -3476,7 +3058,7 @@ async function doLaunch(versionId, accountId, options) {
       const mismatched = (compat && compat.mismatched) || [];
       const conflicts = (compat && compat.conflicts) || [];
       if (mismatched.length || conflicts.length) {
-        state.pendingLaunch = { id, accountId, options };
+        state.pendingLaunch = { id, accountId };
         state.pendingMismatch = mismatched.slice();
         const rows = mismatched.slice(0, 20).map((f) =>
           '<div class="content-row"><span class="content-name">' + esc(f) + '</span></div>').join('') +
@@ -3500,26 +3082,20 @@ async function doLaunch(versionId, accountId, options) {
     state.skipModCheckOnce = false;
   } catch { /* 兼容性检查失败不阻止启动 */ }
   clearTimeout(state.launchWaitTimer);
-  state.launchWaitTimer = null;
-  state.launchExited = false;
-  state.launchVersionId = id;
-  state.logVersionId = id;
-  state.latestLog = '';
+  state.launchingVersionId = id;
   state.launching = true;
   state.launchProgress = 3;
   state.launchProgressText = '准备启动';
   state.logLines = [];
   render();
   try {
-    const res = await api.launch(id, accountId, options);
+    const res = await api.launch(id, accountId);
     if (!res.ok) {
-      toast(res.error || '启动失败', 'error');
       state.launching = false;
       render();
       showErrorModal('启动失败', res.error || '未知错误');
       return;
     }
-    if (state.launchExited || res.exited) return;
     state.gameRunning = true;
     state.launchWaiting = true;
     state.launchProgress = 72;
@@ -3535,9 +3111,7 @@ async function doLaunch(versionId, accountId, options) {
       state.activeAccountId = accountId;
       state.config.lastAccountId = accountId;
     }
-    toast('游戏启动中，PID ' + res.pid, 'success');
   } catch (e) {
-    toast(e.message || '启动失败', 'error');
     showErrorModal('启动失败', e.message || '未知错误');
   } finally {
     state.launching = false;
@@ -3768,7 +3342,7 @@ async function doSearch() {
   render();
   try {
     const vid = state.resourceVersionId || currentVersionId();
-    const res = await api.searchContent(state.resourceKind, expandResourceQuery(state.resourceQuery),
+    const res = await api.searchContent(state.resourceKind, state.resourceQuery,
       gameVersionOf(vid), loaderOf(vid), state.resourceSource);
     if (!res.ok) throw new Error(res.error || '搜索失败');
     state.resourceHits = res.hits || [];
@@ -3872,6 +3446,8 @@ async function loginOffline() {
     if (!res.ok) throw new Error(res.error || '登录失败');
     state.accounts = res.accounts;
     state.activeAccountId = res.activeAccountId;
+    state.accountInspectId = res.activeAccountId;
+    state.accountAdding = false;
     accountError = '';
     toast('离线账户已添加', 'success');
     render();
@@ -3891,6 +3467,8 @@ async function loginMicrosoft() {
     if (!res.ok) throw new Error(res.error || '登录失败');
     state.accounts = res.accounts;
     state.activeAccountId = res.activeAccountId;
+    state.accountInspectId = res.activeAccountId;
+    state.accountAdding = false;
     toast('微软账户登录成功', 'success');
   } catch (e) {
     accountError = e.message;
@@ -3910,6 +3488,8 @@ async function loginThird() {
     if (!res.ok) throw new Error(res.error || '登录失败');
     state.accounts = res.accounts;
     state.activeAccountId = res.activeAccountId;
+    state.accountInspectId = res.activeAccountId;
+    state.accountAdding = false;
     accountError = '';
     toast('第三方账户已添加', 'success');
     render();
@@ -3996,8 +3576,6 @@ async function downloadJava(major) {
   const res = await api.downloadJava(major);
   if (!res.ok) { toast(res.error || '下载失败', 'error'); return; }
   state.java = res.java;
-  const input = $('versionJavaPath') || $('serverJavaPath');
-  if (input && res.java && res.java.path) input.value = res.java.path;
   toast('Java ' + major + ' 已安装', 'success');
   render();
 }
@@ -4011,25 +3589,23 @@ async function setTheme(color) {
 }
 
 async function openLogs() {
-  const file = await api.latestLogPath(state.logVersionId || state.launchVersionId);
-  if (file) await api.showItem(file);
-  else toast('该实例还没有启动日志', 'error');
+  if (state.launchLogFile) await api.showItem(state.launchLogFile);
+  else await api.openPath(state.config.gameDir);
 }
 
 async function loadLatestLog() {
-  const versionId = state.logVersionId;
   try {
-    const log = await api.latestLog(versionId);
-    if (state.logVersionId !== versionId) return;
-    state.latestLog = log;
+    state.latestLog = await api.latestLog();
   } catch {
-    if (state.logVersionId === versionId) state.latestLog = '';
+    state.latestLog = '';
   }
   if (state.page === 'logs') render();
 }
 
 async function copyLog() {
-  const text = activeLogLines().map((l) => '[' + l.level + '] ' + l.text).join('\n');
+  const text = state.logLines.length
+    ? state.logLines.map((l) => '[' + l.level + '] ' + l.text).join('\n')
+    : state.latestLog;
   if (!text) { toast('没有可复制的日志', 'error'); return; }
   try {
     await navigator.clipboard.writeText(text);
@@ -4043,8 +3619,12 @@ async function copyLog() {
 
 function openModal({ title, desc, body, actions, className }) {
   const root = $('modalRoot');
+  if (!root.classList.contains('open')) state.modalReturnFocus = document.activeElement;
   root.classList.add('open');
-  root.innerHTML = '<div class="modal' + (className ? ' ' + className : '') + '"><h3>' + esc(title) + '</h3>' +
+  root.classList.toggle('drawer-root', className === 'launcher-center');
+  root.innerHTML = '<div class="modal' + (className ? ' ' + className : '') + '" role="dialog" aria-modal="true" aria-labelledby="modalTitle" tabindex="-1">' +
+    (className === 'launcher-center' ? '<div class="notification-heading"><h3 id="modalTitle">' + esc(title) +
+      '</h3><button class="notification-close" data-action="close-modal" aria-label="关闭通知">' + icon('close', 18) + '</button></div>' : '<h3 id="modalTitle">' + esc(title) + '</h3>') +
     (desc ? '<div class="modal-desc">' + esc(desc) + '</div>' : '') +
     (body || '') +
     '<div class="modal-actions">' + (actions || []).map((a) => {
@@ -4054,6 +3634,10 @@ function openModal({ title, desc, body, actions, className }) {
       return '<button class="btn ' + (a.kind === 'primary' ? 'btn-primary' : 'btn-ghost') +
         '" data-action="' + esc(a.action) + '"' + extra + '>' + esc(a.label) + '</button>';
     }).join('') + '</div></div>';
+  requestAnimationFrame(() => {
+    const target = root.querySelector('input:not([disabled]), select:not([disabled]), button:not([disabled]), [role="dialog"]');
+    if (target) target.focus();
+  });
 }
 
 function closeModal() {
@@ -4061,7 +3645,12 @@ function closeModal() {
   clearNoticeRetry();
   const root = $('modalRoot');
   root.classList.remove('open');
+  root.classList.remove('drawer-root');
   root.innerHTML = '';
+  const target = state.modalReturnFocus;
+  if (target && target.isConnected) target.focus();
+  else if (state.page === 'home') document.querySelector('.scene-notices')?.focus();
+  state.modalReturnFocus = null;
 }
 
 function redactSensitive(text) {
@@ -4112,7 +3701,7 @@ function buildFeedbackReport() {
 
 function openFeedbackModal() {
   const version = (state.appVersion || (typeof displayVersion === 'function' ? displayVersion() : '')).replace(/^v/, '');
-  const url = 'https://www.emcl.life/feedback/?app=' + encodeURIComponent('EMCL 发布版') +
+  const url = 'https://www.emcl.life/feedback/?app=' + encodeURIComponent('开发者版') +
     '&version=' + encodeURIComponent(version);
   api.openExternal(url).then((res) => {
     if (res && res.ok === false) toast(res.error || '打开反馈页面失败', 'error');
@@ -4190,7 +3779,7 @@ async function copyErrorInfo() {
     return (line && (line.text || line.message)) || String(line);
   }).join('\n');
   try {
-    const latest = await api.latestLog(state.launchVersionId || state.logVersionId);
+    const latest = await api.latestLog();
     const text = typeof latest === 'string' ? latest : (latest && latest.text);
     if (text) {
       logs += '\n\n--- 最近启动日志 ---\n' + text.split(/\r?\n/).slice(-250).join('\n');
@@ -4224,7 +3813,7 @@ async function emailErrorInfo() {
     return (line && (line.text || line.message)) || String(line);
   }).join('\n');
   try {
-    const latest = await api.latestLog(state.launchVersionId || state.logVersionId);
+    const latest = await api.latestLog();
     const text = typeof latest === 'string' ? latest : (latest && latest.text);
     if (text) logs += '\n\n--- 最近启动日志 ---\n' + text.split(/\r?\n/).slice(-150).join('\n');
   } catch { /* ignore */ }
@@ -4241,12 +3830,14 @@ async function emailErrorInfo() {
     '最近日志：',
     logs || '（无）'
   ].join('\n').slice(0, 1800);
+  const subject = '[EMCL] ' + err.title;
   const url = 'mailto:' + SUPPORT_EMAIL +
-    '?subject=' + encodeURIComponent('[EMCL] ' + err.title) +
+    '?subject=' + encodeURIComponent(subject) +
     '&body=' + encodeURIComponent(body);
   try {
     const ok = await api.openExternal(url);
-    toast(ok ? '已打开邮件客户端，请确认发送' : '无法打开邮件客户端', ok ? 'success' : 'error');
+    if (!ok) toast('无法打开邮件客户端', 'error');
+    else toast('已打开邮件客户端，请确认发送', 'success');
   } catch {
     toast('无法打开邮件客户端', 'error');
   }
@@ -4262,16 +3853,12 @@ window.addEventListener('error', (event) => {
 });
 
 function bind() {
-  $('nav').addEventListener('click', (e) => {
+  document.querySelector('.sidebar').addEventListener('click', (e) => {
     const btn = e.target.closest('[data-nav]');
     if (btn) setPage(btn.dataset.nav);
   });
   $('accountMini').addEventListener('click', () => setPage('accounts'));
-  $('accountChip').addEventListener('click', () => setPage('accounts'));
-  $('websiteChip').addEventListener('click', () => api.openExternal(OFFICIAL_URL));
-  $('feedbackChip').addEventListener('click', () => openFeedbackModal());
-  $('updateChip').addEventListener('click', () => showUpdateModal());
-  $('noticeChip').addEventListener('click', () => setPage('home'));
+  $('workspaceHelp').addEventListener('click', () => showLauncherCenter());
 
   $('winMin').addEventListener('click', () => api.windowMinimize());
   $('winMax').addEventListener('click', () => api.windowMaximize());
@@ -4281,6 +3868,9 @@ function bind() {
     const el = e.target.closest('[data-action]');
     if (!el) return;
     if (el.tagName === 'BUTTON' && el.disabled) return;
+    if (el.tagName === 'A') e.preventDefault();
+    const menu = el.closest('.action-menu');
+    if (menu) menu.open = false;
     try { await handleAction(el.dataset.action, el); }
     catch (err) { toast(err.message || '操作失败', 'error'); }
   });
@@ -4292,6 +3882,7 @@ function bind() {
     }
     if (e.target.dataset && e.target.dataset.skinVariant) {
       state.skinVariant = e.target.value === 'slim' ? 'slim' : 'steve';
+      drawSkinCanvas();
       return;
     }
     if (e.target.dataset && e.target.dataset.skinLayer) {
@@ -4299,18 +3890,15 @@ function bind() {
       drawSkinCanvas();
       return;
     }
-    if (e.target.id === 'homeVersion') {
-      await selectVersion(e.target.value);
-      return;
-    }
     const el = e.target.closest('[data-change]');
     if (el) {
       const key = el.dataset.change;
-      if (key === 'log-version') {
-        state.logVersionId = el.value;
-        state.latestLog = '';
+      if (key === 'version-filter') {
+        state.versionFilter = el.value;
         render();
-        await loadLatestLog();
+      } else if (key === 'resource-source') {
+        await selectResourceSource(el.value);
+        if (el.isConnected) el.value = state.resourceSource;
       } else if (key === 'resource-version') {
         state.resourceVersionId = el.value;
         state.resourceHits = [];
@@ -4360,9 +3948,25 @@ function bind() {
     if (e.target.id === 'versionSearch') {
       state.versionQuery = e.target.value;
     }
+    if (e.target.id === 'pickerSearch') {
+      state.pickerQuery = e.target.value;
+      const list = document.querySelector('.version-picker-list');
+      if (list) {
+        const query = state.pickerQuery.trim().toLocaleLowerCase();
+        let visible = 0;
+        list.querySelectorAll('.version-picker-row').forEach((row) => {
+          row.hidden = !!query && !row.textContent.toLocaleLowerCase().includes(query);
+          if (!row.hidden) visible++;
+        });
+        const empty = document.querySelector('.version-picker-no-match');
+        if (empty) empty.hidden = visible > 0;
+      }
+    }
   });
 
   $('content').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.target.id === 'offlineName') { loginOffline(); return; }
+    if (e.key === 'Enter' && e.target.id === 'thirdPass') { loginThird(); return; }
     if (e.key === 'Enter' && e.target.id === 'versionSearch') {
       state.versionQuery = e.target.value;
       render();
@@ -4383,8 +3987,44 @@ function bind() {
     }
     const el = e.target.closest('[data-action]');
     if (!el) return;
+    const menu = el.closest('.action-menu');
+    if (menu) menu.open = false;
     try { await handleAction(el.dataset.action, el); }
     catch (err) { toast(err.message || '操作失败', 'error'); }
+  });
+  document.addEventListener('toggle', (e) => {
+    const menu = e.target;
+    if (!(menu instanceof HTMLDetailsElement) || !menu.classList.contains('action-menu') || !menu.open) return;
+    document.querySelectorAll('.action-menu[open]').forEach((other) => { if (other !== menu) other.open = false; });
+    requestAnimationFrame(() => {
+      if (!menu.open || !menu.isConnected) return;
+      const box = menu.querySelector('.action-menu-items');
+      const anchor = menu.querySelector('summary').getBoundingClientRect();
+      const size = box.getBoundingClientRect();
+      box.style.left = Math.max(12, Math.min(anchor.right - size.width, innerWidth - size.width - 12)) + 'px';
+      box.style.top = Math.max(12, Math.min(anchor.bottom + 5, innerHeight - size.height - 12)) + 'px';
+    });
+  }, true);
+  document.addEventListener('pointerdown', (e) => {
+    if (!e.target.closest('.action-menu')) document.querySelectorAll('.action-menu[open]').forEach((menu) => { menu.open = false; });
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') document.querySelectorAll('.action-menu[open]').forEach((menu) => { menu.open = false; menu.querySelector('summary').focus(); });
+  });
+  window.addEventListener('resize', () => document.querySelectorAll('.action-menu[open]').forEach((menu) => { menu.open = false; }));
+  document.addEventListener('scroll', (e) => {
+    if (e.target instanceof Element && e.target.closest('.action-menu-items')) return;
+    document.querySelectorAll('.action-menu[open]').forEach((menu) => { menu.open = false; });
+  }, true);
+  $('modalRoot').addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !state.noticeOpenId) { e.preventDefault(); closeModal(); return; }
+    if (e.key !== 'Tab') return;
+    const items = Array.from($('modalRoot').querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href]'))
+      .filter((el) => el.getClientRects().length);
+    if (!items.length) return;
+    const first = items[0], last = items[items.length - 1];
+    if (e.shiftKey && (document.activeElement === first || !items.includes(document.activeElement))) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && (document.activeElement === last || !items.includes(document.activeElement))) { e.preventDefault(); first.focus(); }
   });
 }
 
@@ -4393,7 +4033,6 @@ async function patchSetting(key, value) {
     const res = await api.patchConfig({ [key]: value });
     state.config = res.config;
     applyAccent(state.config.accent);
-    applyColorMode(state.config.colorMode || 'light');
     if (key === 'gameDir') toast('游戏目录已更新');
   } catch (e) {
     toast(e.message || '保存失败', 'error');
@@ -4401,6 +4040,13 @@ async function patchSetting(key, value) {
 }
 
 (async function init() {
+  if (!api || typeof api.getState !== 'function') {
+    $('content').innerHTML = '<div class="bridge-help" role="alert"><h2>请从启动器打开此页面</h2>' +
+      '<p>直接在浏览器中打开源文件时，无法连接启动器功能。</p>' +
+      '<p>运行 <code>npm run start:dev</code> 启动开发版，或运行 ' +
+      '<code>npm run preview:ui</code> 后访问 <code>http://127.0.0.1:4174</code> 查看界面预览。</p></div>';
+    return;
+  }
   bind();
   try {
     const s = await api.getState();
@@ -4412,11 +4058,8 @@ async function patchSetting(key, value) {
     state.appVersion = s.appVersion || '';
     state.tasks = s.tasks || [];
     state.resourceVersionId = currentVersionId();
-    state.logVersionId = currentVersionId();
     state.firstRun = s.config.firstRun;
     state.page = 'home';
-    openGLSupport = detectOpenGL();
-    if (!openGLSupport && !state.config.softwareRenderer) setTimeout(showOpenGLWarning, 900);
     if (window.EMCL_I18N) window.EMCL_I18N.setLanguage(state.config.language || 'zh-CN');
     render();
     loadLatestLog();
@@ -4456,6 +4099,11 @@ async function patchSetting(key, value) {
   });
 
   setInterval(refreshServerStatus, 6000);
+  setInterval(() => {
+    if (state.page === 'skins' && document.visibilityState === 'visible' && !state.skinLoading && currentAccount() && currentAccount().kind !== 0) {
+      loadSkinPage(true);
+    }
+  }, 60000);
 
   api.onLaunchProgress((info) => {
     if (!info) return;
@@ -4474,13 +4122,13 @@ async function patchSetting(key, value) {
     }
     state.logLines.push(line);
     if (state.logLines.length > 600) state.logLines.shift();
-    if (state.page === 'logs' && state.logVersionId === state.launchVersionId &&
-        (state.logFilter !== 'error' || logLineClass(line) === 'error')) {
+    if (state.page === 'logs') {
       const box = $('logBox');
       if (box) {
         const span = document.createElement('span');
-        span.className = 'log-line ' + logLineClass(line);
+        span.className = 'log-line ' + (line.level === 'err' ? 'err' : 'out');
         span.textContent = line.text;
+        document.querySelector('.log-empty')?.remove();
         box.appendChild(span);
         box.scrollTop = box.scrollHeight;
       }
@@ -4488,8 +4136,6 @@ async function patchSetting(key, value) {
   });
 
   api.onLaunchExit((info) => {
-    if (state.launchExited) return;
-    state.launchExited = true;
     clearTimeout(state.launchWaitTimer);
     state.launchWaitTimer = null;
     state.gameRunning = false;
@@ -4498,15 +4144,7 @@ async function patchSetting(key, value) {
     state.launchProgress = 0;
     state.launchProgressText = '';
     if (info && info.code === 0) toast('游戏已退出', 'success');
-    else {
-      const errors = state.logLines.filter((line) => logLineClass(line) === 'error').slice(-8);
-      const context = (errors.length ? errors : state.logLines.slice(-12))
-        .map((line) => String(line.text || '')).join('\n').trim();
-      const reason = info && info.signal ? '进程错误：' + info.signal :
-        '退出码：' + (info && info.code !== undefined ? info.code : '未知');
-      showErrorModal('游戏启动失败 · ' + (state.launchVersionId || '当前实例'),
-        reason + (context ? '\n\n最近错误日志：\n' + context : '\n请打开该实例的日志查看详细信息。'));
-    }
+    else toast('游戏进程结束，退出码 ' + (info ? info.code : '?'), '');
     render();
   });
 
@@ -4516,6 +4154,12 @@ async function patchSetting(key, value) {
   });
 
   api.onWindowMaximized(() => {});
+
+  api.onDevUpdateStatus((update) => {
+    if (!update) return;
+    state.devUpdate = update;
+    if (state.page === 'settings') render();
+  });
 
   api.onUpdateStatus((update) => {
     if (!update) return;
@@ -4528,29 +4172,9 @@ async function patchSetting(key, value) {
     render();
   });
 
-  api.onUpdateProgress((progress) => {
-    if (!progress) return;
-    state.updateProgress = Number(progress.percent) || 0;
-    state.updateProgressText = progress.text || '';
-    if (state.updateProgress === 0 && state.updateProgressText) toast(state.updateProgressText);
-    if (state.updateProgress >= 100) toast('更新包下载完成', 'success');
-  });
-
-  api.onUpdateReady((download) => {
-    if (!download || !download.ok) return;
-    state.updateReady = true;
-    state.updateInstalling = true;
-    toast('更新已下载，正在自动安装并重启', 'success');
-  });
-
-  api.onUpdateError((result) => {
-    if (!result || !result.error) return;
-    toast('自动更新失败：' + result.error, 'error');
-  });
-
   api.onAnnouncements((result) => {
     if (!result || !result.ok) return;
-    state.announcements = filterAnnouncements(result.items || []);
+    state.announcements = result.items || [];
     if (unseenPopupAnnouncements().length) scheduleAnnouncementPopup();
     render();
   });

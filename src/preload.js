@@ -143,5 +143,6 @@ contextBridge.exposeInMainWorld('emcl', {
   onVersionsChanged: (callback) => on('versions:changed', callback),
   onWindowMaximized: (callback) => on('window:maximized', callback),
   onUpdateStatus: (callback) => on('update:status', callback),
-  onAnnouncements: (callback) => on('announcements:changed', callback)
+  onAnnouncements: (callback) => on('announcements:changed', callback),
+  onDevUpdateStatus: () => () => {}
 });

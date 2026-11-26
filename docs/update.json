@@ -1,14 +1,14 @@
 {
-  "version": "1.26.26.35",
-  "releaseDate": "2026-11-25",
+  "version": "1.26.26.36",
+  "releaseDate": "2026-11-26",
   "notes": [
-    "打开版本时自动检测 OpenGL",
-    "无 OpenGL 时提示并支持软件渲染",
-    "修复网站公告深色样式"
+    "发布版 UI 同步开发者版",
+    "发布版移除公告发布入口",
+    "修复图标和深色样式"
   ],
   "url": "https://www.emcl.life/download.html",
-  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.35.exe?v=35",
-  "sha256": "F1F86FC6254DDA491E885E4A8021F258C85CF33224114B93B974D4B3D73AFB00",
-  "asarUrl": "https://www.emcl.life/downloads/updates/app-1.26.26.35.asar",
-  "asarSha256": "90749E8A214EA127C44F647CC444912E0BDE935319E4C023C823ED778CF24D33"
+  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.36.exe?v=36",
+  "sha256": "0F8EF80950D192238879647F5C1856BEE6E58BF50530F2930D2B1257B4499884",
+  "asarUrl": "https://www.emcl.life/downloads/updates/app-1.26.26.36.asar",
+  "asarSha256": "9085F7C386862788F4AD568E95BCE59A55F4F1D755D814652C575F1480D78BF1"
 }
