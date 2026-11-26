@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EMCL 开发者模式</title>
+  <meta name="robots" content="noindex,nofollow">
+  <style>
+    :root { --blue:#2F7FD1; --blue-dark:#1D5FA8; --ink:#14283B; --muted:#62788D; --line:#D8E7F5; --bg:#F3F8FE; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; font-family:"Segoe UI","Microsoft YaHei",sans-serif; color:var(--ink);
+      background:radial-gradient(circle at 80% 0,#DCEFFF 0,rgba(220,239,255,0) 34%),var(--bg); }
+    .wrap { max-width:980px; margin:0 auto; padding:0 24px 48px; }
+    header { display:flex; justify-content:space-between; align-items:center; padding:22px 0; }
+    .brand { display:flex; gap:10px; align-items:center; font-weight:800; color:var(--ink); text-decoration:none; }
+    .gem { width:28px; height:28px; border-radius:8px; background:linear-gradient(145deg,#59A9FF,#1F6FCA); }
+    .brand small { display:block; font-size:10px; color:var(--muted); letter-spacing:1.4px; }
+    nav a { color:var(--muted); text-decoration:none; font-size:13px; font-weight:600; margin-left:16px; }
+    nav a:hover { color:var(--blue); }
+    .hero { padding:24px 0 8px; }
+    .badge { display:inline-block; padding:5px 10px; border-radius:999px; background:#E8F3FF; color:var(--blue-dark); font-size:12px; font-weight:800; }
+    h1 { margin:16px 0 8px; font-size:40px; letter-spacing:-1.5px; }
+    .lead { color:var(--muted); line-height:1.8; }
+    .grid { display:grid; grid-template-columns:1.35fr 1fr; gap:14px; margin-top:24px; }
+    .card { background:#fff; border:1px solid var(--line); border-radius:16px; padding:20px; box-shadow:0 14px 40px rgba(31,80,130,.07); }
+    .card h2 { margin:0 0 8px; font-size:15px; }
+    .kv { display:flex; justify-content:space-between; gap:12px; padding:8px 0; border-bottom:1px dashed #E1ECF7; font-size:13px; color:var(--muted); }
+    .kv b { color:var(--ink); }
+    .log { margin:0; padding:0; list-style:none; }
+    .log li { padding:10px 0; border-bottom:1px solid #EDF5FC; font-size:13px; line-height:1.65; color:var(--muted); }
+    .log b { display:block; color:var(--ink); font-size:12px; margin-bottom:2px; }
+    .actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
+    .btn { display:inline-flex; align-items:center; justify-content:center; min-height:40px; padding:0 15px;
+      border-radius:10px; background:var(--blue); color:#fff; text-decoration:none; font-size:13px; font-weight:800; }
+    .btn:hover { background:var(--blue-dark); }
+    .btn:active { transform:translateY(1px) scale(.99); }
+    .btn:disabled { opacity:.55; cursor:wait; }
+    .btn.ghost { background:#F4F9FF; color:var(--blue-dark); border:1px solid var(--line); }
+    .note { color:var(--muted); font-size:12px; line-height:1.8; margin-top:10px; }
+    footer { margin-top:30px; color:#8A9BAC; font-size:12px; }
+    .gate { position:fixed; inset:0; z-index:20; display:flex; align-items:center; justify-content:center;
+      padding:24px; background:rgba(15,35,55,.72); backdrop-filter:blur(8px); }
+    .gate-card { width:100%; max-width:420px; background:#fff; border:1px solid var(--line); border-radius:18px;
+      padding:26px; box-shadow:0 24px 80px rgba(0,0,0,.25); }
+    .gate-card h2 { margin:0 0 8px; font-size:22px; letter-spacing:-.5px; }
+    .gate-card p { margin:0; color:var(--muted); font-size:13px; line-height:1.7; }
+    .gate-card input { width:100%; height:44px; margin-top:16px; padding:0 12px; border:1px solid var(--line);
+      border-radius:10px; font:inherit; font-size:14px; outline:none; }
+    .gate-card input:focus { border-color:#7DB8EB; box-shadow:0 0 0 3px rgba(47,127,209,.1); }
+    .gate-card button { width:100%; height:44px; margin-top:10px; border:0; border-radius:10px; background:var(--blue);
+      color:#fff; font:inherit; font-size:14px; font-weight:800; cursor:pointer; }
+    .gate-card button:hover { background:var(--blue-dark); }
+    .gate-error { min-height:18px; margin-top:8px; color:#C63737; font-size:12px; }
+    [hidden] { display:none !important; }
+    @media (max-width:700px) { .grid { grid-template-columns:1fr; } h1 { font-size:32px; } nav a:first-child { display:none; } }
+  </style>
+</head>
+<body>
+<div class="gate" id="gate">
+  <div class="gate-card">
+    <div class="badge">RESTRICTED</div>
+    <h2 style="margin-top:14px">EMCL 开发者模式</h2>
+    <p>此页面仅向内部开发人员开放。请输入访问密码。</p>
+    <input id="gatePassword" type="password" autocomplete="current-password" placeholder="访问密码" autofocus>
+    <button id="gateSubmit" type="button">进入开发者模式</button>
+    <div class="gate-error" id="gateError"></div>
+  </div>
+</div>
+
+<div class="wrap" id="devApp" hidden>
+  <header>
+    <a class="brand" href="../index.html">
+      <span class="gem"></span>
+      <span>EMCL <small>DEVELOPER MODE</small></span>
+    </a>
+    <nav>
+      <a href="../index.html">官网</a>
+      <a href="../download.html">下载</a>
+      <a href="update.json">更新清单</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="badge">INTERNAL · 开发者通道</div>
+      <h1>开发者模式</h1>
+      <p class="lead">开发者版更新通道。这里发布内部构建的版本说明、测试重点和更新记录。正式用户请使用 <a href="../download.html">稳定版下载页</a>。</p>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h2>当前开发者版本</h2>
+        <div class="kv"><span>版本号</span><b>1.26.25.26kfz</b></div>
+        <div class="kv"><span>通道</span><b>Developer / 内部测试</b></div>
+        <div class="kv"><span>更新方式</span><b>开发者版启动器检查更新</b></div>
+        <div class="kv"><span>更新清单</span><b><a href="update.json">update.json</a></b></div>
+        <div class="actions">
+          <a class="btn" href="https://gh-proxy.com/https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/download/dev-v1.26.25.26/EMCL-Dev-Portable-1.26.25.26.exe">下载开发者版</a>
+          <a class="btn ghost" href="update.json">查看更新清单</a>
+          <a class="btn ghost" href="../download.html">稳定版下载</a>
+        </div>
+        <p class="note">开发者版下载仅在本页通过密码后显示。启动器会读取此目录的 <code>update.json</code> 检查新版本。</p>
+        <p class="note">SHA256：<code style="word-break:break-all">24A70C4BDBAA55FA87F5857469FDD3997B4D59C116C44B2967A4EFA4D3789570</code></p>
+      </div>
+
+      <div class="card">
+        <h2>最新更新</h2>
+        <ul class="log">
+          <li><b>2026-11-12 · 1.26.25.26kfz</b>开发者版强制更新；首次打开或更新后需要输入开发者密码，开发者账户功能暂时隐藏。</li><li><b>2026-10-31 · 1.26.25.23kfz</b>所有版本加入 Steve / Alex 模型选择，开发者版提供直链下载。</li>
+          <li><b>2026-10-31 · 1.26.25.20kfz</b>重启皮肤库：仅正面预览、8 款原创推荐皮肤、本地皮肤上传和披风切换。</li>
+          <li><b>2026-10-31 · 1.26.25.15kfz</b>开发者更新通道接入 emcl.life；新增“刷新公告和更新”，移除皮肤页面、3D 皮肤和披风入口。</li>
+          <li><b>2026-10-25 · 1.26.25.15kfz</b>Mojang appID 通过 allowlist，开发者版切换到自有 Azure appID。</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="card" style="margin-top:14px">
+      <h2>开发者更新规则</h2>
+      <ul class="log">
+        <li><b>更新清单</b>修改 <code>dev/update.json</code> 的 version、releaseDate 和 notes 后提交到网站仓库。</li>
+        <li><b>版本比较</b>开发者版启动器会把当前版本与清单版本比较，发现新版本时显示更新提示。</li>
+        <li><b>发布范围</b>此页面和开发者版构建仅用于内部测试，不作为正式用户下载入口。</li>
+      </ul>
+      <p class="note">如需修改访问密码，更新本页中的密码哈希即可。静态页面的密码保护只能阻止普通访问，不能替代服务器端鉴权。</p>
+    </section>
+
+    <section class="card" id="adminPanel" style="margin-top:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <div>
+          <h2 style="margin:0">反馈收件箱</h2>
+          <p class="note" style="margin:4px 0 0">发布版、商弦特供版和开发者版提交的反馈都会进入这里。</p>
+        </div>
+        <div class="actions" style="margin:0">
+          <button class="btn ghost" id="refreshFeedback" type="button">刷新反馈</button>
+          <button class="btn ghost" id="refreshAnnouncements" type="button">刷新公告</button>
+        </div>
+      </div>
+      <div id="adminStatus" class="note" style="margin-top:8px"></div>
+      <div id="feedbackList" style="margin-top:12px"></div>
+    </section>
+
+
+    <section class="card" id="devicePanel" style="margin-top:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <div><h2 style="margin:0">开发者设备</h2><p class="note" style="margin:4px 0 0">开发者版启动时上报的设备 IP 和系统信息。</p></div>
+        <button class="btn ghost" id="refreshDevices" type="button">刷新设备</button>
+      </div>
+      <div id="deviceList" style="margin-top:12px;overflow:auto"></div>
+    </section>
+
+    <section class="card" id="remotePanel" style="margin-top:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <div>
+          <h2 style="margin:0">远程控制</h2>
+          <p class="note" style="margin:4px 0 0">固定入口 com1.emcl.life，仅开发者本人使用。需要 MeshCentral 管理员密码。</p>
+        </div>
+        <span class="badge" style="background:#E9F8EF;color:#218A4A">固定隧道</span>
+      </div>
+      <div class="grid" style="gap:12px;margin-top:12px">
+        <div class="kv"><span>远程入口</span><b><a href="https://com1.emcl.life" target="_blank" rel="noopener">com1.emcl.life</a></b></div>
+        <div class="kv"><span>本机设备</span><b>LAPTOP-8E8P14AM</b></div>
+        <div class="kv"><span>服务状态</span><b>MeshCentral / Agent / Tunnel 自动启动</b></div>
+      </div>
+      <div class="actions" style="margin-top:12px">
+        <a class="btn" href="https://com1.emcl.life" target="_blank" rel="noopener">打开远程桌面</a>
+        <a class="btn ghost" href="https://www.emcl.life/com1">入口说明页</a>
+        <a class="btn ghost" href="https://com1.emcl.life" target="_blank" rel="noopener">新标签打开</a>
+      </div>
+      <div style="margin-top:12px;border:1px solid #D8E4F2;border-radius:12px;overflow:hidden;background:#F6FAFF">
+        <iframe src="https://com1.emcl.life/" title="EMCL 远程桌面" style="display:block;width:100%;height:720px;border:0;background:#fff" referrerpolicy="no-referrer"></iframe>
+      </div>
+      <p class="note">上方是固定入口 com1.emcl.life，直接在开发者页面内登录即可。若浏览器拦截第三方 Cookie 导致白屏或登录失败，请点「新标签打开」。远程桌面、文件传输和电源操作可用，Shell/Terminal 不开放。</p>
+    </section>
+
+    <section class="card" style="margin-top:14px">
+      <h2>发布公告</h2>
+      <p class="note">发布后，启动器和 emcl.life/announcements.html 会从同一份公告数据读取。</p>
+      <form id="announceForm" style="margin-top:12px">
+        <div class="grid" style="gap:12px">
+          <label style="display:block;font-size:11px;font-weight:800">标题
+            <input id="annTitle" required maxlength="160" style="width:100%;margin-top:5px;padding:9px;border:1px solid #D8E4F2;border-radius:8px" placeholder="EMCL 1.26.26.10 已发布" />
+          </label>
+          <label style="display:block;font-size:11px;font-weight:800">标签
+            <select id="annTag" style="width:100%;margin-top:5px;padding:9px;border:1px solid #D8E4F2;border-radius:8px">
+              <option>更新</option><option>公告</option><option>维护</option><option>活动</option>
+            </select>
+          </label>
+        </div>
+        <label style="display:block;font-size:11px;font-weight:800;margin-top:10px">正文
+          <textarea id="annBody" required maxlength="8000" rows="5" style="width:100%;margin-top:5px;padding:9px;border:1px solid #D8E4F2;border-radius:8px;resize:vertical" placeholder="写清楚更新内容、影响范围和时间。"></textarea>
+        </label>
+        <div class="grid" style="gap:12px;margin-top:10px">
+          <label style="display:block;font-size:11px;font-weight:800">日期
+            <input id="annDate" type="date" style="width:100%;margin-top:5px;padding:9px;border:1px solid #D8E4F2;border-radius:8px" />
+          </label>
+          <label style="display:block;font-size:11px;font-weight:800">链接（可选）
+            <input id="annUrl" maxlength="500" style="width:100%;margin-top:5px;padding:9px;border:1px solid #D8E4F2;border-radius:8px" placeholder="https://www.emcl.life/" />
+          </label>
+        </div>
+        <button class="btn" id="publishAnnouncement" type="submit" style="margin-top:12px">发布公告</button>
+      </form>
+      <div id="announcementsList" style="margin-top:12px"></div>
+    </section>
+  </main>
+  <footer>© 2026 Ender Game Studios · EMCL Developer Channel</footer>
+</div>
+
+<script>
+  (function () {
+    var PASSWORD_24A70C4BDBAA55FA87F5857469FDD3997B4D59C116C44B2967A4EFA4D3789570 = '60eadcd61fd6f3b954705267676239a7d26c428e9a0c5894a06ec47cbad7e242';
+    var SESSION_KEY = 'emcl_dev_access_v1';
+    var gate = document.getElementById('gate');
+    var app = document.getElementById('devApp');
+    var input = document.getElementById('gatePassword');
+    var error = document.getElementById('gateError');
+
+    function unlock() {
+      gate.hidden = true;
+      app.hidden = false;
+    }
+
+    if (sessionStorage.getItem(SESSION_KEY) === '1') unlock();
+
+    async function sha256(text) {
+      var data = new TextEncoder().encode(text);
+      var digest = await crypto.subtle.digest('SHA-256', data);
+      return Array.from(new Uint8Array(digest)).map(function (b) {
+        return b.toString(16).padStart(2, '0');
+      }).join('');
+    }
+
+    async function submit() {
+      error.textContent = '';
+      var value = input.value;
+      if (!value) { error.textContent = '请输入密码'; return; }
+      try {
+        var hash = await sha256(value);
+        if (hash === PASSWORD_24A70C4BDBAA55FA87F5857469FDD3997B4D59C116C44B2967A4EFA4D3789570) {
+          sessionStorage.setItem(SESSION_KEY, '1');
+          unlock();
+        } else {
+          error.textContent = '密码错误';
+          input.select();
+        }
+      } catch (e) {
+        error.textContent = '当前环境不支持密码校验，请使用 HTTPS 访问';
+      }
+    }
+
+    var API = 'https://api.emcl.life';
+    var adminToken = sessionStorage.getItem('emcl_admin_token') || '';
+    var adminStatus = document.getElementById('adminStatus');
+    var feedbackList = document.getElementById('feedbackList');
+    var deviceList = document.getElementById('deviceList');
+    var feedbackItems = [];
+    var announcementsList = document.getElementById('announcementsList');
+
+    function esc(value) {
+      return String(value == null ? '' : value).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+
+    function setAdminStatus(text, isError) {
+      if (!adminStatus) return;
+      adminStatus.textContent = text || '';
+      adminStatus.style.color = isError ? '#B33A3A' : '#60758C';
+    }
+
+    async function adminLogin(password) {
+      setAdminStatus('正在验证开发者权限…');
+      try {
+        var res = await fetch(API + '/api/login', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: password })
+        });
+        var data = await res.json();
+        if (!res.ok || !data.ok) throw new Error(data.error || '登录失败');
+        adminToken = data.token;
+        sessionStorage.setItem('emcl_admin_token', adminToken);
+        setAdminStatus('已登录，可以管理反馈和公告。');
+        await loadFeedback();
+        await loadDevices();
+        await loadAnnouncements();
+      } catch (e) {
+        setAdminStatus(e.message || '开发者接口登录失败', true);
+      }
+    }
+
+    async function initAdmin() {
+      if (adminToken) {
+        setAdminStatus('正在加载反馈…');
+        await loadFeedback();
+        await loadDevices();
+        await loadAnnouncements();
+      } else if (input && input.value) {
+        await adminLogin(input.value);
+      } else {
+        setAdminStatus('请刷新页面并重新输入开发者密码，以加载反馈收件箱。', true);
+      }
+    }
+
+    async function apiFetch(path, options) {
+      var opts = options || {};
+      opts.headers = Object.assign({}, opts.headers || {}, { Authorization: 'Bearer ' + adminToken });
+      var res = await fetch(API + path, opts);
+      if (res.status === 401) {
+        adminToken = '';
+        sessionStorage.removeItem('emcl_admin_token');
+        throw new Error('登录已过期，请刷新页面重新输入密码');
+      }
+      var data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || '请求失败');
+      return data;
+    }
+
+    async function loadFeedback() {
+      if (!feedbackList) return;
+      try {
+        var data = await apiFetch('/api/feedback');
+        feedbackItems = data.feedback || [];
+        if (!data.feedback.length) {
+          feedbackList.innerHTML = '<p class="note">还没有反馈。</p>';
+          return;
+        }
+        feedbackList.innerHTML = data.feedback.map(function (item) {
+          var date = item.created_at ? new Date(item.created_at).toLocaleString('zh-CN') : '';
+          return '<div class="feedback-item" style="border:1px solid #D8E4F2;border-radius:10px;padding:12px;margin-bottom:8px">' +
+            '<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">' +
+            '<b>' + esc(item.type || '反馈') + ' · ' + esc(item.app || 'EMCL') + ' ' + esc(item.version || '') + '</b>' +
+            '<span style="font-size:11px;color:#60758C">' + esc(date) + '</span></div>' +
+            '<div style="font-size:12px;color:#3C5168;line-height:1.7;margin:6px 0">' + esc(item.message || '') + '</div>' +
+            '<div style="font-size:11px;color:#60758C">' + esc(item.name || '匿名') + ' · <a href="mailto:' + esc(item.email) + '">' + esc(item.email) + '</a></div>' +
+            '<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">' +
+            '<button class="btn ghost btn-sm" type="button" data-fb-status="read" data-fb-id="' + esc(item.id) + '">标记已读</button>' +
+            '<button class="btn ghost btn-sm" type="button" data-fb-status="closed" data-fb-id="' + esc(item.id) + '">标记已处理</button>' +
+            '<button class="btn ghost btn-sm" type="button" data-fb-copy="' + esc(item.id) + '">复制反馈</button>' +
+            '<button class="btn ghost btn-sm" type="button" data-fb-delete="' + esc(item.id) + '">删除</button>' +
+            '<span id="fb-status-' + esc(item.id) + '" style="font-size:10px;color:#60758C;align-self:center">状态：' + esc(item.status || 'new') + '</span></div>' +
+            '</div>';
+        }).join('');
+      } catch (e) {
+        setAdminStatus(e.message || '读取反馈失败', true);
+      }
+    }
+
+    async function loadAnnouncements() {
+      if (!announcementsList) return;
+      try {
+        var res = await fetch(API + '/api/announcements', { cache: 'no-store' });
+        var data = await res.json();
+        var items = (data && data.announcements) || [];
+        announcementsList.innerHTML = items.length
+          ? items.slice(0, 10).map(function (item) {
+            return '<div style="padding:7px 0;border-top:1px solid #EDF3FA;font-size:12px">' +
+              '<b>' + esc(item.title) + '</b> <span style="color:#60758C">' + esc(item.date) + ' · ' + esc(item.tag) + '</span></div>';
+          }).join('')
+          : '<p class="note">还没有公告。</p>';
+      } catch (e) {
+        setAdminStatus(e.message || '读取公告失败', true);
+      }
+    }
+
+    async function publishAnnouncement() {
+      var title = document.getElementById('annTitle').value.trim();
+      var body = document.getElementById('annBody').value.trim();
+      var date = document.getElementById('annDate').value;
+      var tag = document.getElementById('annTag').value;
+      var url = document.getElementById('annUrl').value.trim();
+      if (!title || !body) { setAdminStatus('标题和正文不能为空', true); return; }
+      setAdminStatus('正在发布公告…');
+      try {
+        await apiFetch('/api/announcements', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: title, body: body, date: date, tag: tag, url: url })
+        });
+        document.getElementById('annTitle').value = '';
+        document.getElementById('annBody').value = '';
+        document.getElementById('annUrl').value = '';
+        setAdminStatus('公告已发布。');
+        await loadAnnouncements();
+      } catch (e) {
+        setAdminStatus(e.message || '发布公告失败', true);
+      }
+    }
+
+    async function copyText(text) {
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(text);
+          return;
+        }
+      } catch (e) { /* fall back below */ }
+      var area = document.createElement('textarea');
+      area.value = text;
+      area.style.position = 'fixed';
+      area.style.left = '-9999px';
+      document.body.appendChild(area);
+      area.select();
+      document.execCommand('copy');
+      area.remove();
+    }
+
+
+    async function loadDevices() {
+      if (!deviceList) return;
+      try {
+        var data = await apiFetch('/api/dev/devices');
+        var rows = (data.devices || []).map(function (d) {
+          var first = d.first_seen ? new Date(d.first_seen).toLocaleString('zh-CN') : '';
+          var last = d.last_seen ? new Date(d.last_seen).toLocaleString('zh-CN') : '';
+          return '<tr>' +
+            '<td style="padding:7px 8px;border-bottom:1px solid #E6EEF7;white-space:nowrap">' + esc(d.ip || '') + '</td>' +
+            '<td style="padding:7px 8px;border-bottom:1px solid #E6EEF7">' + esc(d.host || d.name || '') + '</td>' +
+            '<td style="padding:7px 8px;border-bottom:1px solid #E6EEF7">' + esc(d.os || '') + ' ' + esc(d.arch || '') + '</td>' +
+            '<td style="padding:7px 8px;border-bottom:1px solid #E6EEF7">' + esc(d.version || '') + '</td>' +
+            '<td style="padding:7px 8px;border-bottom:1px solid #E6EEF7">' + esc(first) + '</td>' +
+            '<td style="padding:7px 8px;border-bottom:1px solid #E6EEF7">' + esc(last) + '</td>' +
+            '<td style="padding:7px 8px;border-bottom:1px solid #E6EEF7">' + esc(String(d.hits || 0)) + '</td>' +
+            '</tr>';
+        }).join('');
+        deviceList.innerHTML = rows
+          ? '<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr>' +
+            '<th style="text-align:left;padding:7px 8px;border-bottom:2px solid #C9D9EA">IP</th>' +
+            '<th style="text-align:left;padding:7px 8px;border-bottom:2px solid #C9D9EA">设备</th>' +
+            '<th style="text-align:left;padding:7px 8px;border-bottom:2px solid #C9D9EA">系统 / 架构</th>' +
+            '<th style="text-align:left;padding:7px 8px;border-bottom:2px solid #C9D9EA">版本</th>' +
+            '<th style="text-align:left;padding:7px 8px;border-bottom:2px solid #C9D9EA">首次</th>' +
+            '<th style="text-align:left;padding:7px 8px;border-bottom:2px solid #C9D9EA">最近</th>' +
+            '<th style="text-align:left;padding:7px 8px;border-bottom:2px solid #C9D9EA">次数</th>' +
+            '</tr></thead><tbody>' + rows + '</tbody></table>'
+          : '<p class="note">还没有开发者设备上报。</p>';
+      } catch (e) { deviceList.innerHTML = '<p class="note" style="color:#B33A3A">读取设备失败：' + esc(e.message) + '</p>'; }
+    }
+
+    if (feedbackList) {
+      feedbackList.addEventListener('click', async function (e) {
+        var button = e.target.closest ? e.target.closest('button') : null;
+        if (!button) return;
+        var id = button.getAttribute('data-fb-id');
+        var status = button.getAttribute('data-fb-status');
+        var del = button.getAttribute('data-fb-delete');
+        var copy = button.getAttribute('data-fb-copy');
+        var original = button.textContent;
+        button.disabled = true;
+        button.textContent = '处理中…';
+        try {
+          if (copy) {
+            var item = feedbackItems.filter(function (x) { return x.id === copy; })[0];
+            if (!item) throw new Error('找不到这条反馈');
+            var text = 'EMCL 反馈\n' +
+              '类型：' + (item.type || '') + '\n' +
+              '应用：' + (item.app || '') + '\n' +
+              '版本：' + (item.version || '') + '\n' +
+              '用户：' + (item.name || '匿名') + '\n' +
+              '邮箱：' + (item.email || '') + '\n' +
+              '时间：' + (item.created_at ? new Date(item.created_at).toLocaleString('zh-CN') : '') + '\n' +
+              '状态：' + (item.status || 'new') + '\n\n' +
+              '内容：\n' + (item.message || '') +
+              (item.reply ? '\n\n回复：\n' + item.reply : '');
+            await copyText(text);
+            button.textContent = '已复制 ✓';
+            setAdminStatus('反馈已复制到剪贴板');
+            setTimeout(function () { button.disabled = false; button.textContent = original; }, 1200);
+            return;
+          }
+          if (id && status) {
+            await apiFetch('/api/feedback/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: status }) });
+            var label = status === 'closed' ? '已处理' : '已读';
+            var statusNode = document.getElementById('fb-status-' + id);
+            if (statusNode) statusNode.textContent = '状态：' + status + ' · ' + label;
+            button.textContent = label + ' ✓';
+            setAdminStatus('已标记：' + label);
+            setTimeout(loadFeedback, 700);
+          } else if (del) {
+            if (!confirm('确定删除这条反馈？')) {
+              button.disabled = false;
+              button.textContent = original;
+              return;
+            }
+            await apiFetch('/api/feedback/' + del, { method: 'DELETE' });
+            setAdminStatus('反馈已删除');
+            await loadFeedback();
+          }
+        } catch (err) {
+          button.disabled = false;
+          button.textContent = original;
+          setAdminStatus(err.message || '操作失败', true);
+        }
+      });
+    }
+    var refreshFeedback = document.getElementById('refreshFeedback');
+    if (refreshFeedback) refreshFeedback.addEventListener('click', loadFeedback);
+    var refreshAnnouncements = document.getElementById('refreshAnnouncements');
+    if (refreshAnnouncements) refreshAnnouncements.addEventListener('click', loadAnnouncements);
+    var announceForm = document.getElementById('announceForm');
+    if (announceForm) announceForm.addEventListener('submit', function (e) { e.preventDefault(); publishAnnouncement(); });
+    var annDate = document.getElementById('annDate');
+    if (annDate && !annDate.value) annDate.value = new Date().toISOString().slice(0, 10);
+
+    var oldUnlock = unlock;
+    unlock = function () {
+      oldUnlock();
+      initAdmin();
+    };
+    if (!app.hidden) initAdmin();
+
+    document.getElementById('gateSubmit').addEventListener('click', submit);
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') submit();
+    });
+  })();
+</script>
+</body>
+</html>
