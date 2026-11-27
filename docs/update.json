@@ -7,8 +7,8 @@
     "发布版 UI 同步开发者版"
   ],
   "url": "https://www.emcl.life/download.html",
-  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Portable-1.26.26.38.exe?v=38",
-  "sha256": "2C7FFB706839E7F52ACAE373916F263390DD3CD6E031ACC1CD93335532E82B68",
+  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Setup-1.26.26.38.exe",
+  "sha256": "3D246ABA23093DC1BC745ACBBBC7898BD1DF646DD4230DCACEB5A792E77EA2B5",
   "asarUrl": "https://www.emcl.life/downloads/updates/app-1.26.26.38.asar",
   "asarSha256": "5D49B502E1478BEDEAE35FEC1F4D3A67A55567FB2AA4BCB59B82781015F507FE"
 }

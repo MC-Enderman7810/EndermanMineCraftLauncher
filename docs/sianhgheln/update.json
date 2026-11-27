@@ -7,6 +7,8 @@
     "深色模式修复"
   ],
   "url": "https://www.emcl.life/sianhgheln/",
-  "downloadUrl": "https://www.emcl.life/downloads/EMCL-SianhGheln-1.26.26.25.exe",
-  "sha256": "A32C7A87D34D13C9A3B2FBA6E90928DE89D62E7E998CD9596866B51B19A60158"
+  "downloadUrl": "https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/download/sianh-v1.26.26.25/EMCL-SianhGheln-Setup-1.26.26.25.exe",
+  "sha256": "758064860DF2336202CEE1828309211DE5284446C6C76A204B0BD94374F97A1D",
+  "asarUrl": "https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/download/sianh-v1.26.26.25/app-1.26.26.25.asar",
+  "asarSha256": "071404321AE2BDC31755E5E055227732D93690A599F7B1C0BF364901570B537A"
 }

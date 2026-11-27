@@ -1,13 +1,15 @@
 {
-  "version": "1.26.25.32kfz",
-  "releaseDate": "2026-11-26",
+  "version": "1.26.25.33kfz",
+  "releaseDate": "2026-11-27",
   "notes": [
-    "渲染辅助：OpenGL 兼容包/Mesa3D/日志分析",
-    "OpenGL 自动检测",
-    "版本选择中文修复"
+    "只提供安装包",
+    "应用内 asar 更新包",
+    "渲染辅助和 OpenGL 检测"
   ],
-  "url": "https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/tag/dev-v1.26.25.32",
-  "downloadUrl": "https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/download/dev-v1.26.25.32/EMCL-Dev-Portable-1.26.25.32.exe",
+  "url": "https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/tag/dev-v1.26.25.33",
+  "downloadUrl": "https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/download/dev-v1.26.25.33/EMCL-Dev-Setup-1.26.25.33.exe",
   "mandatory": true,
-  "sha256": "B6290D97F8D6F2D6B8F22D9CCFE5D96FB8C3A5625F79FD2928BFA5241BEF4954"
+  "sha256": "5CF24753DA4D1614E10A87F0FA3891437FC3B397D2929E1E4EBC9ED4D039C5C9",
+  "asarUrl": "https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/download/dev-v1.26.25.33/dev-app-1.26.25.33.asar",
+  "asarSha256": "25C4D96924973A1DE9B4CBEED0D12D616234A35CF9F4048D9E1A59446A8F13FA"
 }
