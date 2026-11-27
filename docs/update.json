@@ -1,14 +1,14 @@
 {
-  "version": "1.26.26.38",
-  "releaseDate": "2026-11-26",
+  "version": "1.26.26.39",
+  "releaseDate": "2026-11-27",
   "notes": [
-    "渲染辅助：OpenGL 兼容包、Mesa3D、日志分析",
-    "OpenGL 自动检测与软件渲染",
-    "发布版 UI 同步开发者版"
+    "启动器内直接下载并安装更新",
+    "只提供安装包",
+    "渲染辅助/OpenGL 检测"
   ],
   "url": "https://www.emcl.life/download.html",
-  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Setup-1.26.26.38.exe",
-  "sha256": "3D246ABA23093DC1BC745ACBBBC7898BD1DF646DD4230DCACEB5A792E77EA2B5",
-  "asarUrl": "https://www.emcl.life/downloads/updates/app-1.26.26.38.asar",
-  "asarSha256": "5D49B502E1478BEDEAE35FEC1F4D3A67A55567FB2AA4BCB59B82781015F507FE"
+  "downloadUrl": "https://www.emcl.life/downloads/EMCL-Setup-1.26.26.39.exe",
+  "sha256": "FD8EAAB5AAE78472FAA7733929B92676B7DD5B89ECB01FF0E08EDB0A12EA51C7",
+  "asarUrl": "https://www.emcl.life/downloads/updates/app-1.26.26.39.asar",
+  "asarSha256": "1CCD10F4B8E895BFF1E886C7AEDBC3F9328AED04BAB511F0743547983B9CF557"
 }

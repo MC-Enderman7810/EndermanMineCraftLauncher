@@ -1,15 +1,15 @@
 {
-  "version": "1.26.25.33kfz",
+  "version": "1.26.25.34kfz",
   "releaseDate": "2026-11-27",
   "notes": [
     "只提供安装包",
-    "应用内 asar 更新包",
-    "渲染辅助和 OpenGL 检测"
+    "启动器内下载 asar 更新",
+    "渲染辅助/OpenGL 检测"
   ],
-  "url": "https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/tag/dev-v1.26.25.33",
-  "downloadUrl": "https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/download/dev-v1.26.25.33/EMCL-Dev-Setup-1.26.25.33.exe",
+  "url": "https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/tag/dev-v1.26.25.34",
+  "downloadUrl": "https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/download/dev-v1.26.25.34/EMCL-Dev-Setup-1.26.25.34.exe",
   "mandatory": true,
-  "sha256": "5CF24753DA4D1614E10A87F0FA3891437FC3B397D2929E1E4EBC9ED4D039C5C9",
-  "asarUrl": "https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/download/dev-v1.26.25.33/dev-app-1.26.25.33.asar",
-  "asarSha256": "25C4D96924973A1DE9B4CBEED0D12D616234A35CF9F4048D9E1A59446A8F13FA"
+  "sha256": "A10CFF1DE0B41F6509B8057E810B58EC8121C7A15C6D0A17F35B3C2D428F0824",
+  "asarUrl": "https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/download/dev-v1.26.25.34/dev-app-1.26.25.34.asar",
+  "asarSha256": "B253E6B6D4D64C4675D575FE5CB9688CD7C5484A022CF7111E93617B1DA097DA"
 }

@@ -548,7 +548,7 @@ function homeUpdateCard() {
       (notes ? ' · ' + esc(notes) : '') + '</div></div>' +
     '<div class="update-actions">' +
       '<button class="btn btn-ghost btn-sm" data-action="show-update">更新内容</button>' +
-      '<button class="btn btn-primary btn-sm" data-action="open-update">前往下载</button>' +
+      '<button class="btn btn-primary btn-sm" data-action="download-update">立即更新</button>' +
     '</div>' + '</div>';
 }
 
@@ -2403,6 +2403,7 @@ async function handleAction(action, el) {
       if (document.querySelector('.launcher-center') && !state.noticeOpenId) showLauncherCenter();
       break;
     case 'show-update': showUpdateModal(); break;
+    case 'download-update': await downloadUpdateFromApp(); break;
     case 'open-update': await openUpdate(); break;
     case 'open-repo': await openOfficialRepo(); break;
     case 'mark-notices-read':
@@ -2719,10 +2720,27 @@ function showUpdateModal() {
       (mandatory ? '<div class="card-subtitle" style="margin-top:8px;color:var(--orange)">更新完成后需要重新输入开发者密码。</div>' : '') +
       '</div>',
     actions: mandatory
-      ? [{ label: '前往下载', kind: 'primary', action: 'open-update' }]
+      ? [{ label: '立即更新', kind: 'primary', action: 'download-update' }]
       : [{ label: '稍后', kind: 'ghost', action: 'close-modal' },
-        { label: '前往下载', kind: 'primary', action: 'open-update' }]
+        { label: '立即更新', kind: 'primary', action: 'download-update' }]
   });
+}
+
+async function downloadUpdateFromApp() {
+  const u = state.update;
+  if (!u || !u.hasUpdate) { toast('当前没有可用更新'); return; }
+  if (state.updateInstalling) return;
+  state.updateInstalling = true;
+  try {
+    toast('正在下载更新包…');
+    const download = u.asarUrl ? await api.downloadAsarUpdate(u) : await api.downloadUpdate(u);
+    toast('更新包已下载，正在安装…');
+    if (download && download.mode === 'asar') await api.installAsarUpdate(download);
+    else await api.installUpdate(download);
+  } catch (e) {
+    state.updateInstalling = false;
+    toast(e.message || '更新失败', 'error');
+  }
 }
 
 async function openUpdate() {
