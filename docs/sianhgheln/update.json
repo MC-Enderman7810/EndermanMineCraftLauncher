@@ -1,14 +1,14 @@
 {
-  "version": "1.26.26.25",
-  "releaseDate": "2026-11-26",
+  "version": "1.26.26.26",
+  "releaseDate": "2026-11-27",
   "notes": [
-    "新增渲染辅助页",
-    "OpenGL 检测和软件渲染提示",
-    "深色模式修复"
+    "只提供安装包",
+    "启动器内下载并安装更新",
+    "渲染辅助和 OpenGL 检测"
   ],
   "url": "https://www.emcl.life/sianhgheln/",
-  "downloadUrl": "https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/download/sianh-v1.26.26.25/EMCL-SianhGheln-Setup-1.26.26.25.exe",
-  "sha256": "758064860DF2336202CEE1828309211DE5284446C6C76A204B0BD94374F97A1D",
-  "asarUrl": "https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/download/sianh-v1.26.26.25/app-1.26.26.25.asar",
-  "asarSha256": "071404321AE2BDC31755E5E055227732D93690A599F7B1C0BF364901570B537A"
+  "downloadUrl": "https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/download/sianh-v1.26.26.26/EMCL-SianhGheln-Setup-1.26.26.26.exe",
+  "sha256": "579FAB84EFCD36F62DF66D383930679B01C06A209D6D3B89B25B4599240843F5",
+  "asarUrl": "https://github.com/MC-Enderman7810/EndermanMineCraftLauncher/releases/download/sianh-v1.26.26.26/app-1.26.26.26.asar",
+  "asarSha256": "5684B7A23BD0D00DE982E68A38FC18F53426D39E7981787718B2AD5914575F18"
 }
