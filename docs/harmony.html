@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>鸿蒙版 · EMCL</title>
+  <meta name="description" content="EMCL 鸿蒙版与鸿蒙电脑版下载。当前为未签名测试构建，需要 DevEco Studio 签名后安装。">
+  <style>
+    :root { --blue:#2F7FD1; --deep:#0B2B52; --ink:#14283B; --muted:#62788D; --line:#D8E7F5; --paper:#F3F8FE; }
+    * { box-sizing:border-box; }
+    body { margin:0; color:var(--ink); background:var(--paper); font-family:"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif; }
+    a { color:var(--blue); text-decoration:none; }
+    a:hover { text-decoration:underline; }
+    .wrap { max-width:1040px; margin:0 auto; padding:0 24px; }
+    header { display:flex; align-items:center; justify-content:space-between; gap:18px; padding:20px 0; }
+    .brand { display:flex; align-items:center; gap:10px; font-weight:800; color:var(--ink); }
+    .brand img { width:32px; height:32px; border-radius:8px; }
+    nav { display:flex; gap:18px; align-items:center; font-size:13px; font-weight:700; flex-wrap:wrap; }
+    nav a { color:var(--muted); }
+    h1 { font-size:clamp(34px,6vw,52px); margin:24px 0 8px; letter-spacing:-1.4px; }
+    .lead { color:var(--muted); line-height:1.8; margin:0 0 24px; max-width:760px; }
+    .notice { border:1px solid #E7C46A; background:#FFF8E5; color:#7A5A12; padding:14px 16px; border-radius:12px; line-height:1.7; font-size:12px; margin:16px 0 22px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:14px; }
+    .card { background:#fff; border:1px solid var(--line); border-radius:14px; padding:20px; box-shadow:0 8px 26px rgba(31,80,130,.05); }
+    .card h2 { margin:0 0 6px; font-size:18px; }
+    .card p { color:var(--muted); font-size:12px; line-height:1.7; margin:0 0 14px; }
+    .meta { display:flex; gap:8px; flex-wrap:wrap; margin:8px 0 14px; }
+    .chip { font-size:10px; padding:4px 7px; border-radius:5px; background:#EAF3FF; color:#175EA8; font-weight:700; }
+    .btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:10px 16px; border-radius:9px; background:var(--blue); color:#fff; font-weight:700; font-size:12px; margin:4px 8px 4px 0; }
+    .btn.ghost { background:#fff; color:var(--blue); border:1px solid var(--line); }
+    .hash { font-size:10px; color:var(--muted); word-break:break-all; line-height:1.6; margin-top:10px; }
+    .footer { color:var(--muted); font-size:11px; padding:28px 0 36px; }
+    @media (max-width:720px) { header { flex-direction:column; align-items:flex-start; } h1 { margin-top:10px; } }
+  </style>
+  <link rel="stylesheet" href="./site-common.css">
+  <script>try{var t=localStorage.getItem('emcl-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t;var l=localStorage.getItem('emcl-lang')||'zh-CN';document.documentElement.lang=l;document.documentElement.dataset.lang=l;}catch(e){}</script>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="brand" href="./index.html"><img src="./assets/emcl-icon.png" alt="EMCL"><span>EMCL</span></a>
+    <nav>
+      <a href="./index.html">首页</a>
+      <a href="./download.html">下载</a>
+      <a href="./harmony.html">鸿蒙版</a>
+      <a href="./announcements.html">公告</a>
+      <a href="./dev/">开发者</a>
+    </nav>
+  </header>
+
+  <main>
+    <h1>EMCL 鸿蒙版</h1>
+    <p class="lead">面向 HarmonyOS 手机、平板和鸿蒙电脑的 Minecraft Java 版启动器。基于 ArkTS 原生界面，保留 Java 运行时、版本安装、模组、整合包、账户、皮肤、服务器和日志能力。</p>
+
+    <div class="notice">
+      <b>当前为未签名测试构建。</b><br>
+      鸿蒙手机/平板和鸿蒙电脑 HAP 不能直接安装到真机。需要先在 DevEco Studio 中配置签名，或使用 DevEco 模拟器运行。正式上架包会在华为 AppGallery Connect 完成发布签名后提供。
+    </div>
+
+    <section class="grid">
+      <article class="card">
+        <h2>鸿蒙手机 / 平板</h2>
+        <p>支持 phone、tablet、2in1 设备。包含 EMCL 宽屏侧栏、资源推荐、版本管理、设置、日志和关于页。</p>
+        <div class="meta"><span class="chip">HAP</span><span class="chip">1.0.0</span><span class="chip">未签名</span></div>
+        <a class="btn" href="./downloads/harmony/EMCL-Harmony-1.0.0-unsigned.hap">下载 HAP</a>
+        <a class="btn ghost" href="./downloads/harmony/EMCL-Harmony-1.0.0-unsigned.app">下载 APP 包</a>
+        <div class="hash">SHA256：E7313E6DEE1F5B5DB0E1A8B577E0B540B29A571FE803AC228D6157A2D88DFB06</div>
+      </article>
+
+      <article class="card">
+        <h2>鸿蒙电脑版</h2>
+        <p>仅面向 2in1 设备，宽屏侧栏 180vp，首页四列快捷入口，资源推荐双列卡片。</p>
+        <div class="meta"><span class="chip">HAP</span><span class="chip">1.0.0</span><span class="chip">2in1</span></div>
+        <a class="btn" href="./downloads/harmony/EMCL-Harmony-PC-1.0.0-unsigned.hap">下载电脑版 HAP</a>
+        <div class="hash">SHA256：5A2E30A684C0330F2BD7E1CB78581A10174946D17F5134927D33FF5F2B8A1653</div>
+      </article>
+
+      <article class="card">
+        <h2>安装前准备</h2>
+        <p>未签名 HAP 只适合开发测试。安装到真机需要华为开发者账号和 DevEco Studio 自动/发布签名。</p>
+        <p>正式上架时使用 <b>APP 包</b>，在 AppGallery Connect 创建应用、上传发布证书和 Profile，再提交审核。</p>
+        <a class="btn ghost" href="./download.html">返回普通下载</a>
+      </article>
+    </section>
+
+    <div class="footer">EMCL Studio · 鸿蒙版测试构建 · 2026-11-28</div>
+  </main>
+</div>
+<script src="./site-common.js"></script>
+</body>
+</html>
